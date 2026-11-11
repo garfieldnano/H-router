@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { Card, Badge, Button } from "@/shared/components";
+import { Button, Card, Tag } from "antd";
 import ProviderIcon from "@/shared/components/ProviderIcon";
 import { AI_PROVIDERS, getProvidersByKind } from "@/shared/constants/providers";
 
@@ -24,21 +24,21 @@ function ProviderCard({ provider, kind, connections }) {
   const allDisabled = total > 0 && providerConns.every((c) => c.isActive === false);
 
   const renderStatus = () => {
-    if (isNoAuth) return <Badge variant="success" size="sm">Ready</Badge>;
-    if (allDisabled) return <Badge variant="default" size="sm">Disabled</Badge>;
+    if (isNoAuth) return <Tag color="success">Ready</Tag>;
+    if (allDisabled) return <Tag>Disabled</Tag>;
     if (total === 0) return <span className="text-xs text-text-muted">No connections</span>;
     return (
       <>
-        {connected > 0 && <Badge variant="success" size="sm" dot>{connected} Connected</Badge>}
-        {error > 0 && <Badge variant="error" size="sm" dot>{error} Error</Badge>}
-        {connected === 0 && error === 0 && <Badge variant="default" size="sm">{total} Added</Badge>}
+        {connected > 0 && <Tag color="success">{connected} Connected</Tag>}
+        {error > 0 && <Tag color="error">{error} Error</Tag>}
+        {connected === 0 && error === 0 && <Tag>{total} Added</Tag>}
       </>
     );
   };
 
   return (
     <Link href={`/dashboard/media-providers/${kind}/${provider.id}`} className="group">
-      <Card padding="xs" className={`h-full hover:bg-black/[0.01] dark:hover:bg-white/[0.01] transition-colors cursor-pointer ${allDisabled ? "opacity-50" : ""}`}>
+      <Card styles={{ body: { padding: 12 } }} className={`h-full hover:bg-black/[0.01] dark:hover:bg-white/[0.01] transition-colors cursor-pointer ${allDisabled ? "opacity-50" : ""}`}>
         <div className="flex min-w-0 items-center gap-3">
           <div
             className="size-8 rounded-lg flex items-center justify-center shrink-0"
@@ -71,7 +71,7 @@ function ComboList({ combos }) {
     <div className="flex flex-col gap-2">
       {combos.map((combo) => (
         <Link key={combo.id} href={`/dashboard/media-providers/combo/${combo.id}`}>
-          <Card padding="xs" className="hover:bg-black/[0.02] dark:hover:bg-white/[0.02] transition-colors cursor-pointer">
+          <Card styles={{ body: { padding: 12 } }} className="hover:bg-black/[0.02] dark:hover:bg-white/[0.02] transition-colors cursor-pointer">
             <div className="flex min-w-0 items-center gap-3">
               <span className="material-symbols-outlined text-primary text-[18px]">layers</span>
               <code className="text-sm font-mono font-medium flex-1 truncate">{combo.name}</code>
@@ -117,7 +117,7 @@ function Section({ title, icon, kind, providers, connections, combos, onCreateCo
           <h2 className="text-base font-semibold">{title}</h2>
           <span className="text-xs text-text-muted">({providers.length} providers · {combos.length} combos)</span>
         </div>
-        <Button size="sm" icon="add" onClick={onCreateCombo}>Create Combo</Button>
+        <Button size="small" type="primary" icon={<span className="material-symbols-outlined text-[18px]">add</span>} onClick={onCreateCombo}>Create Combo</Button>
       </div>
 
       {/* Combos — top */}

@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { Card, Statistic, Table, Typography } from "antd";
 
 // Member Quota Tracker (read-only): the member's OWN quota only — per-key
 // RPM limit + current-minute usage and IP cap + active IPs, plus 30-day
@@ -11,6 +12,45 @@ function maskKey(key) {
   if (!key || key.length <= 18) return key || "-";
   return `${key.slice(0, 14)}…${key.slice(-4)}`;
 }
+
+const columns = [
+  {
+    title: "Kunci",
+    dataIndex: "key",
+    key: "key",
+    render: (_v, k) => (
+      <div>
+        <div className="font-medium">{k.name || "-"}</div>
+        <div className="font-mono text-xs opacity-60">{maskKey(k.key)}</div>
+      </div>
+    ),
+  },
+  {
+    title: "Batas RPM",
+    dataIndex: "rpm",
+    key: "rpm",
+    render: (_v, k) =>
+      `${k.rate?.limit ?? k.rpmLimit ?? "-"}${k.rate?.packageName ? ` (${k.rate.packageName})` : ""}`,
+  },
+  {
+    title: "Dipakai (menit ini)",
+    dataIndex: "used",
+    key: "used",
+    render: (_v, k) => k.rate?.used ?? 0,
+  },
+  {
+    title: "Sisa",
+    dataIndex: "remaining",
+    key: "remaining",
+    render: (_v, k) => k.rate?.remaining ?? "-",
+  },
+  {
+    title: "IP aktif / batas",
+    dataIndex: "ip",
+    key: "ip",
+    render: (_v, k) => (k.ip ? `${k.ip.activeCount} / ${k.ip.cap}` : "-"),
+  },
+];
 
 export default function MemberQuota() {
   const [keys, setKeys] = useState(null);
@@ -40,65 +80,45 @@ export default function MemberQuota() {
     };
   }, []);
 
-  if (error) return <p className="text-sm text-error">{error}</p>;
-  if (keys === null) return <p className="text-sm text-text-muted">Memuat kuota…</p>;
+  if (error) return <Typography.Text type="danger">{error}</Typography.Text>;
+  if (keys === null) return <Typography.Text type="secondary">Memuat kuota…</Typography.Text>;
 
   return (
     <div className="flex min-w-0 flex-col gap-6 px-1 sm:px-0">
       <div className="grid grid-cols-2 gap-3 sm:gap-4">
-        <div className="rounded-xl border border-border-subtle bg-surface p-4">
-          <p className="text-xs text-text-muted">Request (30 hari)</p>
-          <p className="mt-1 text-2xl font-semibold text-text-main">
-            {(stats?.totalRequests ?? 0).toLocaleString("id-ID")}
-          </p>
-        </div>
-        <div className="rounded-xl border border-border-subtle bg-surface p-4">
-          <p className="text-xs text-text-muted">Biaya (30 hari)</p>
-          <p className="mt-1 text-2xl font-semibold text-text-main">
-            ${(stats?.totalCost ?? 0).toFixed(4)}
-          </p>
-        </div>
+        <Card>
+          <Statistic
+            title="Request (30 hari)"
+            value={(stats?.totalRequests ?? 0).toLocaleString("id-ID")}
+          />
+        </Card>
+        <Card>
+          <Statistic
+            title="Biaya (30 hari)"
+            value={(stats?.totalCost ?? 0).toFixed(4)}
+            prefix="$"
+          />
+        </Card>
       </div>
 
       {keys.length === 0 ? (
-        <p className="text-sm text-text-muted">Belum ada kunci API. Minta admin untuk menetapkan kunci ke akun Anda.</p>
+        <Typography.Text type="secondary">
+          Belum ada kunci API. Minta admin untuk menetapkan kunci ke akun Anda.
+        </Typography.Text>
       ) : (
-        <div className="overflow-x-auto rounded-xl border border-border-subtle bg-surface">
-          <table className="w-full min-w-[640px] text-left text-sm">
-            <thead>
-              <tr className="border-b border-border-subtle text-xs text-text-muted">
-                <th className="px-4 py-3 font-medium">Kunci</th>
-                <th className="px-4 py-3 font-medium">Batas RPM</th>
-                <th className="px-4 py-3 font-medium">Dipakai (menit ini)</th>
-                <th className="px-4 py-3 font-medium">Sisa</th>
-                <th className="px-4 py-3 font-medium">IP aktif / batas</th>
-              </tr>
-            </thead>
-            <tbody>
-              {keys.map((k) => (
-                <tr key={k.id} className="border-b border-border-subtle last:border-0">
-                  <td className="px-4 py-3">
-                    <p className="font-medium text-text-main">{k.name || "-"}</p>
-                    <p className="font-mono text-xs text-text-muted">{maskKey(k.key)}</p>
-                  </td>
-                  <td className="px-4 py-3 text-text-main">
-                    {k.rate?.limit ?? k.rpmLimit ?? "-"}
-                    {k.rate?.packageName ? ` (${k.rate.packageName})` : ""}
-                  </td>
-                  <td className="px-4 py-3 text-text-main">{k.rate?.used ?? 0}</td>
-                  <td className="px-4 py-3 text-text-main">{k.rate?.remaining ?? "-"}</td>
-                  <td className="px-4 py-3 text-text-main">
-                    {k.ip ? `${k.ip.activeCount} / ${k.ip.cap}` : "-"}
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+        <Card styles={{ body: { padding: 0 } }}>
+          <Table
+            columns={columns}
+            dataSource={keys}
+            rowKey="id"
+            pagination={false}
+            scroll={{ x: 640 }}
+          />
+        </Card>
       )}
-      <p className="text-xs text-text-muted">
+      <Typography.Text type="secondary" className="text-xs">
         Kuota dihitung per kunci. Batas RPM dan IP diatur oleh admin — hubungi admin bila butuh penyesuaian.
-      </p>
+      </Typography.Text>
     </div>
   );
 }

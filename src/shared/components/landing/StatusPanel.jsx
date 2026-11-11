@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
+import { Badge, Card, Statistic, Typography } from "antd";
 import { fetchWithTimeout, formatLatency } from "@/shared/utils/landing.js";
 import { LANDING_CONFIG } from "@/shared/constants/landing.js";
 
@@ -39,60 +40,49 @@ export default function StatusPanel({ modelCount, modelsSource }) {
 
   const statusLabel =
     health.status === "online" ? "Online" : health.status === "offline" ? "Offline" : "Memeriksa…";
-  const statusDot =
-    health.status === "online"
-      ? "bg-[#05f170]"
-      : health.status === "offline"
-        ? "bg-red-500"
-        : "bg-zinc-400";
+  const badgeStatus = health.status === "online" ? "success" : health.status === "offline" ? "error" : "default";
   const host = LANDING_CONFIG.baseUrl.replace(/^https?:\/\//, "");
 
   return (
     <section aria-label="Status gateway" className="mx-auto mt-10 w-full max-w-6xl px-6">
-      <div className="rounded-2xl border border-zinc-200 bg-white p-5 shadow-sm dark:border-zinc-800 dark:bg-zinc-900">
+      <Card>
         <div className="flex flex-wrap items-center justify-between gap-3">
-          <div className="flex items-center gap-2">
-            <span className={`inline-block size-2.5 rounded-full ${statusDot}`} />
-            <span className="text-sm font-semibold text-zinc-900 dark:text-white">
-              {host} · {statusLabel}
-            </span>
-          </div>
-          <span className="text-xs text-zinc-500 dark:text-zinc-400">
+          <Badge
+            status={badgeStatus}
+            text={
+              <Typography.Text strong>
+                {host} · {statusLabel}
+              </Typography.Text>
+            }
+          />
+          <Typography.Text type="secondary" className="text-xs">
             {health.updatedAt ? `Diperbarui ${health.updatedAt.toLocaleTimeString("id-ID")}` : "Memeriksa status…"}
-          </span>
+          </Typography.Text>
         </div>
-        <dl className="mt-4 grid grid-cols-2 gap-4 md:grid-cols-4">
-          <div>
-            <dt className="text-xs uppercase tracking-wide text-zinc-500 dark:text-zinc-400">Status</dt>
-            <dd className="mt-1 text-lg font-bold text-zinc-900 dark:text-white">{statusLabel}</dd>
-          </div>
-          <div>
-            <dt className="text-xs uppercase tracking-wide text-zinc-500 dark:text-zinc-400">Model</dt>
-            <dd className="mt-1 text-lg font-bold text-zinc-900 dark:text-white">
-              {typeof modelCount === "number" ? `${modelCount} model` : "—"}
-            </dd>
-          </div>
-          <div>
-            <dt className="text-xs uppercase tracking-wide text-zinc-500 dark:text-zinc-400">Latensi</dt>
-            <dd className="mt-1 text-lg font-bold text-zinc-900 dark:text-white">{formatLatency(health.latencyMs)}</dd>
-          </div>
-          <div>
-            <dt className="text-xs uppercase tracking-wide text-zinc-500 dark:text-zinc-400">Base URL</dt>
-            <dd className="mt-1 truncate font-mono text-sm font-semibold text-zinc-900 dark:text-white">{host}</dd>
-          </div>
-        </dl>
-        <p className="mt-4 text-xs text-zinc-500 dark:text-zinc-400">
-          Status dibaca langsung dari <code className="font-mono">/api/health</code>
+        <div className="mt-4 grid grid-cols-2 gap-4 md:grid-cols-4">
+          <Statistic title="Status" value={statusLabel} valueStyle={{ fontSize: 18 }} />
+          <Statistic
+            title="Model"
+            value={typeof modelCount === "number" ? `${modelCount} model` : "—"}
+            valueStyle={{ fontSize: 18 }}
+          />
+          <Statistic title="Latensi" value={formatLatency(health.latencyMs)} valueStyle={{ fontSize: 18 }} />
+          <Statistic title="Base URL" value={host} valueStyle={{ fontSize: 14 }} />
+        </div>
+        <Typography.Text type="secondary" className="mt-4 block text-xs">
+          Status dibaca langsung dari <Typography.Text code>/api/health</Typography.Text>
           {modelsSource === "live" ? (
-            <>; jumlah model dari <code className="font-mono">/v1/models</code> gateway ini</>
+            <>
+              ; jumlah model dari <Typography.Text code>/v1/models</Typography.Text> gateway ini
+            </>
           ) : modelsSource === "fallback" ? (
             <>; daftar model dari konfigurasi cadangan (gateway tidak mengembalikan daftar tanpa kunci)</>
           ) : (
             <>; latensi adalah waktu respons permintaan health barusan</>
           )}
           .
-        </p>
-      </div>
+        </Typography.Text>
+      </Card>
     </section>
   );
 }

@@ -1,7 +1,8 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { Card, Button, ManualConfigModal, ComboFormModal, McpMarketplaceModal, ModelSelectModal } from "@/shared/components";
+import { ManualConfigModal, ComboFormModal, McpMarketplaceModal, ModelSelectModal } from "@/shared/components";
+import { Button, Card } from "antd";
 import Image from "next/image";
 import BaseUrlSelect from "./BaseUrlSelect";
 import { rememberEndpoint } from "./cliEndpointPresets";
@@ -251,7 +252,7 @@ export default function CoworkToolCard({
   };
 
   return (
-    <Card padding="xs" className="overflow-hidden">
+    <Card styles={{ body: { padding: 12 } }} className="overflow-hidden">
       <div className="flex items-start justify-between gap-3 hover:cursor-pointer sm:items-center" onClick={onToggle}>
         <div className="flex min-w-0 items-center gap-3">
           <div className="size-8 flex items-center justify-center shrink-0">
@@ -289,7 +290,7 @@ export default function CoworkToolCard({
                 </div>
               </div>
               <div className="pl-9">
-                <Button variant="secondary" size="sm" onClick={() => setShowManualConfigModal(true)} className="!bg-yellow-500/20 !border-yellow-500/40 !text-yellow-700 dark:!text-yellow-300 hover:!bg-yellow-500/30">
+                <Button size="small" onClick={() => setShowManualConfigModal(true)} className="!bg-yellow-500/20 !border-yellow-500/40 !text-yellow-700 dark:!text-yellow-300 hover:!bg-yellow-500/30">
                   <span className="material-symbols-outlined text-[18px] mr-1">content_copy</span>
                   Manual Config
                 </Button>
@@ -502,16 +503,16 @@ export default function CoworkToolCard({
 
               <div className="flex flex-col sm:flex-row sm:items-center gap-2">
                 {!readOnly && (
-<Button variant="primary" size="sm" onClick={handleApply} disabled={selectedModels.length === 0} loading={applying} className="w-full sm:w-auto">
+<Button type="primary" size="small" onClick={handleApply} disabled={selectedModels.length === 0} loading={applying} className="w-full sm:w-auto">
                   <span className="material-symbols-outlined text-[14px] mr-1">save</span>Apply
                 </Button>
                 )}
                 {!readOnly && (
-<Button variant="outline" size="sm" onClick={handleReset} disabled={!status.has9Router} loading={restoring} className="w-full sm:w-auto">
+<Button size="small" onClick={handleReset} disabled={!status.has9Router} loading={restoring} className="w-full sm:w-auto">
                   <span className="material-symbols-outlined text-[14px] mr-1">restore</span>Reset
                 </Button>
                 )}
-                <Button variant="ghost" size="sm" onClick={() => setShowManualConfigModal(true)} className="w-full sm:w-auto">
+                <Button type="text" size="small" onClick={() => setShowManualConfigModal(true)} className="w-full sm:w-auto">
                   <span className="material-symbols-outlined text-[14px] mr-1">content_copy</span>Manual Config
                 </Button>
               </div>

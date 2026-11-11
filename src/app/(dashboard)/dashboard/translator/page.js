@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Card, Button } from "@/shared/components";
+import { Button, Card, Tag } from "antd";
 import { useCopyToClipboard } from "@/shared/hooks/useCopyToClipboard";
 import dynamic from "next/dynamic";
 import { MONACO_VS_PATH } from "@/shared/constants/monaco";
@@ -211,9 +211,9 @@ export default function TranslatorPage() {
 
   // Render action button per step
   const getAction = (stepId) => {
-    if (stepId === 1) return <Button size="sm" icon="arrow_forward" loading={loading["toOpenAI"]} onClick={handleToOpenAI}>→ OpenAI</Button>;
-    if (stepId === 3) return <Button size="sm" icon="arrow_forward" loading={loading["toTarget"]} onClick={handleToTarget}>→ Target</Button>;
-    if (stepId === 4) return <Button size="sm" icon="send" loading={loading["send"]} onClick={handleSend}>Send</Button>;
+    if (stepId === 1) return <Button size="small" type="primary" loading={loading["toOpenAI"]} onClick={handleToOpenAI}>→ OpenAI</Button>;
+    if (stepId === 3) return <Button size="small" type="primary" loading={loading["toTarget"]} onClick={handleToTarget}>→ Target</Button>;
+    if (stepId === 4) return <Button size="small" type="primary" loading={loading["send"]} onClick={handleSend}>Send</Button>;
     return null;
   };
 
@@ -257,7 +257,7 @@ export default function TranslatorPage() {
                 </button>
                 {!isExpanded && (
                   <div className="flex gap-1 shrink-0">
-                    <Button size="sm" variant="ghost" icon="folder_open" loading={loading[`load-${step.id}`]} onClick={() => handleLoad(step.id)} />
+                    <Button size="small" type="text" loading={loading[`load-${step.id}`]} onClick={() => handleLoad(step.id)} icon={<span className="material-symbols-outlined text-[16px]">folder_open</span>} />
                     {action}
                   </div>
                 )}
@@ -280,9 +280,9 @@ export default function TranslatorPage() {
                     />
                   </div>
                   <div className="flex gap-2 flex-wrap">
-                    <Button size="sm" variant="outline" icon="folder_open" loading={loading[`load-${step.id}`]} onClick={() => handleLoad(step.id)}>Load</Button>
-                    <Button size="sm" variant="outline" icon="data_object" onClick={() => handleFormat(step.id)}>Format</Button>
-                    <Button size="sm" variant="outline" icon="content_copy" onClick={() => handleCopy(step.id)}>Copy</Button>
+                    <Button size="small" loading={loading[`load-${step.id}`]} onClick={() => handleLoad(step.id)} icon={<span className="material-symbols-outlined text-[16px]">folder_open</span>}>Load</Button>
+                    <Button size="small" onClick={() => handleFormat(step.id)} icon={<span className="material-symbols-outlined text-[16px]">data_object</span>}>Format</Button>
+                    <Button size="small" onClick={() => handleCopy(step.id)} icon={<span className="material-symbols-outlined text-[16px]">content_copy</span>}>Copy</Button>
                     {action}
                   </div>
                 </>
@@ -296,15 +296,9 @@ export default function TranslatorPage() {
 }
 
 function MetaBadge({ label, value, color }) {
-  const colors = {
-    blue: "bg-blue-500/10 text-blue-500",
-    orange: "bg-orange-500/10 text-orange-500",
-    green: "bg-green-500/10 text-green-500",
-    purple: "bg-purple-500/10 text-purple-500",
-  };
   return (
-    <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded text-xs font-mono ${colors[color]}`}>
-      <span className="text-text-muted/70 font-sans text-[10px]">{label}:</span>{value}
-    </span>
+    <Tag color={color} className="font-mono">
+      <span className="text-[10px] opacity-70">{label}:</span> {value}
+    </Tag>
   );
 }

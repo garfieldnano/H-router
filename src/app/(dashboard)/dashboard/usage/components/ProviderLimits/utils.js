@@ -23,9 +23,12 @@ export const QUOTA_SORT_OPTIONS = [
 
 // ─── Pure helpers ─────────────────────────────────────────────────────────────
 export function getConnectionLabel(connection) {
-  return connection.name?.trim()
-    || connection.email?.trim()
-    || connection.displayName?.trim()
+  // Null-safe: callers pass `state?.connection`, which is undefined while
+  // the reset-credits modal is closed — and antd evaluates Modal props
+  // (title) on every render even when closed.
+  return connection?.name?.trim()
+    || connection?.email?.trim()
+    || connection?.displayName?.trim()
     || null;
 }
 

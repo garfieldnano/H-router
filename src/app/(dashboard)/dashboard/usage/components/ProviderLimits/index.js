@@ -4,8 +4,6 @@ import { useState, useEffect, useCallback, useRef, useMemo } from "react";
 import { useSearchParams, useRouter, usePathname } from "next/navigation";
 import ProviderIcon from "@/shared/components/ProviderIcon";
 import QuotaTable from "./QuotaTable";
-import Toggle from "@/shared/components/Toggle";
-import Tooltip from "@/shared/components/Tooltip";
 import {
   parseQuotaData,
   calculatePercentage,
@@ -39,8 +37,8 @@ import {
   ACCOUNT_FILTER_OPTIONS,
   QUOTA_SORT_OPTIONS,
 } from "./utils";
-import Card from "@/shared/components/Card";
-import { ConfirmModal, EditConnectionModal } from "@/shared/components";
+import { EditConnectionModal } from "@/shared/components";
+import { Card, Modal, Switch, Tooltip } from "antd";
 import AutoPingScheduleModal from "@/app/(dashboard)/dashboard/providers/[id]/AutoPingScheduleModal";
 import { getScheduleSlotLabels } from "@/shared/services/quotaPingSchedule";
 import { USAGE_SUPPORTED_PROVIDERS, AI_PROVIDERS } from "@/shared/constants/providers";
@@ -854,7 +852,7 @@ export default function ProviderLimits() {
 
   if (!connectionsLoading && !hasEligibleConnections) {
     return (
-      <Card padding="lg">
+      <Card styles={{ body: { padding: 32 } }}>
         <div className="text-center py-12">
           <span className="material-symbols-outlined text-[64px] text-text-muted opacity-20">
             cloud_off
@@ -873,7 +871,7 @@ export default function ProviderLimits() {
 
   if (!connectionsLoading && !hasVisibleConnections) {
     return (
-      <Card padding="lg">
+      <Card styles={{ body: { padding: 32 } }}>
         <div className="text-center py-12">
           <span className="material-symbols-outlined text-[64px] text-text-muted opacity-20">
             {emptyState.icon}
@@ -1136,7 +1134,7 @@ export default function ProviderLimits() {
           return (
             <Card
               key={conn.id}
-              padding="none"
+              styles={{ body: { padding: 0 } }}
               className={`min-w-0 ${isInactive ? "opacity-60" : ""}`}
             >
               <div className="px-3 py-2 border-b border-black/10 dark:border-white/10">
@@ -1214,7 +1212,7 @@ export default function ProviderLimits() {
                     {(isCodex || claudeReset) && (
                       <>
                         <Tooltip
-                          text={
+                          title={
                             resetCreditCount > 0
                               ? claudeReset
                                 ? `Use your reset now (${resetCreditCount} left, use by ${formatCreditDate(claudeReset.expiresAt)}) · refills ${formatClaudeResetClears(claudeReset.clears)}`
@@ -1243,7 +1241,7 @@ export default function ProviderLimits() {
                             <span>{resetCreditCount}</span>
                           </button>
                         </Tooltip>
-                        <Tooltip text={isCodex ? "View Codex reset credit expiry" : "View Claude Code reset expiry"}>
+                        <Tooltip title={isCodex ? "View Codex reset credit expiry" : "View Claude Code reset expiry"}>
                           <button
                             type="button"
                             onClick={() => (isCodex ? handleViewCodexResetCredits(conn) : handleViewClaudeResets(conn, claudeReset))}
@@ -1276,7 +1274,7 @@ export default function ProviderLimits() {
                           : "Auto-starts a new window on quota reset or fixed schedule. Click to configure.";
 
                       return (
-                        <Tooltip text={tooltipText}>
+                        <Tooltip title={tooltipText}>
                           <button
                             type="button"
                             onClick={() => setScheduleConnection(conn)}
@@ -1288,7 +1286,7 @@ export default function ProviderLimits() {
                         </Tooltip>
                       );
                     })()}
-                    <Tooltip text="Refresh quota">
+                    <Tooltip title="Refresh quota">
                       <button
                         type="button"
                         onClick={() => refreshProvider(conn.id, conn.provider)}
@@ -1303,7 +1301,7 @@ export default function ProviderLimits() {
                         </span>
                       </button>
                     </Tooltip>
-                    <Tooltip text="Edit connection">
+                    <Tooltip title="Edit connection">
                       <button
                         type="button"
                         onClick={() => {
@@ -1319,7 +1317,7 @@ export default function ProviderLimits() {
                         </span>
                       </button>
                     </Tooltip>
-                    <Tooltip text="Delete connection">
+                    <Tooltip title="Delete connection">
                       <button
                         type="button"
                         onClick={() => handleDeleteConnection(conn.id)}
@@ -1342,14 +1340,7 @@ export default function ProviderLimits() {
                           : "Enable connection"
                       }
                     >
-                      <Toggle
-                        size="sm"
-                        checked={conn.isActive ?? true}
-                        disabled={rowBusy}
-                        onChange={(nextActive) =>
-                          handleToggleConnectionActive(conn.id, nextActive)
-                        }
-                      />
+                      <Switch size="small" checked={conn.isActive ?? true} disabled={rowBusy} onChange={(nextActive) => handleToggleConnectionActive(conn.id, nextActive)} />
                     </div>
                   </div>
                 </div>
@@ -1539,49 +1530,46 @@ export default function ProviderLimits() {
           </div>
         </div>
 
-      <ConfirmModal
-        isOpen={Boolean(resetConfirmState)}
-        onClose={() => {
+      <Modal
+        open={Boolean(resetConfirmState)}
+        onCancel={() => {
           if (!resettingLimitId) setResetConfirmState(null);
         }}
-        onConfirm={async () => {
+        onOk={async () => {
           const connection = resetConfirmState?.connection;
           if (!connection) return;
           await handleResetCodexLimit(connection.id, connection.provider);
           setResetConfirmState(null);
         }}
         title={resetConfirmState?.connection?.provider === "claude" ? "Reset Claude limits?" : "Reset Codex limit?"}
-        message={resetConfirmState?.connection?.provider === "claude"
+        okText="Reset limit"
+        cancelText="Cancel"
+        okButtonProps={{ danger: true, loading: Boolean(resettingLimitId) }}
+      >
+        {resetConfirmState?.connection?.provider === "claude"
           ? `Refills your ${formatClaudeResetClears(quotaData[resetConfirmState.connection.id]?.raw?.resetCredits?.clears)} now for ${getConnectionLabel(resetConfirmState.connection) || "this account"} · your weekly reset day stays ${formatCreditDate(quotaData[resetConfirmState.connection.id]?.raw?.resetCredits?.weeklyResetsAt)}. This cannot be undone. Resets left: ${resetConfirmState.resetCreditCount ?? 0}.`
           : `Use 1 Codex reset credit for ${getConnectionLabel(resetConfirmState?.connection || {}) || "this account"}. This cannot be undone. Remaining credits: ${resetConfirmState?.resetCreditCount ?? 0}.`}
-        confirmText="Reset limit"
-        cancelText="Cancel"
-        variant="danger"
-        loading={Boolean(resettingLimitId)}
-      />
+      </Modal>
 
-      {resetCreditsState && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 px-4 backdrop-blur-sm">
-          <div className="w-full max-w-2xl overflow-hidden rounded-2xl border border-black/15 bg-white shadow-2xl ring-1 ring-black/10 dark:border-white/15 dark:bg-neutral-950 dark:ring-white/10">
-            <div className="flex items-start justify-between gap-3 border-b border-black/10 bg-black/[0.03] px-4 py-3 dark:border-white/10 dark:bg-white/[0.04]">
-              <div className="min-w-0">
-                <h3 className="text-base font-semibold text-text-primary">
-                  {resetCreditsState.data?.kind === "claude" ? "Claude Code Limit Resets" : "Codex Reset Credit Expiry"}
-                </h3>
-                <p className="mt-0.5 truncate text-xs text-text-muted">
-                  {getConnectionLabel(resetCreditsState.connection) || (resetCreditsState.data?.kind === "claude" ? "Claude account" : "Codex account")}
-                </p>
+      <Modal
+        open={!!resetCreditsState}
+        onCancel={() => setResetCreditsState(null)}
+        title={
+          resetCreditsState ? (
+            <div className="min-w-0">
+              <div className="text-base font-semibold text-text-primary">
+                {resetCreditsState?.data?.kind === "claude" ? "Claude Code Limit Resets" : "Codex Reset Credit Expiry"}
               </div>
-              <button
-                type="button"
-                onClick={() => setResetCreditsState(null)}
-                className="flex h-8 w-8 items-center justify-center rounded-lg text-text-muted transition-colors hover:bg-black/5 hover:text-text-primary dark:hover:bg-white/5"
-                aria-label="Close reset credit expiry modal"
-              >
-                <span className="material-symbols-outlined text-[18px]">close</span>
-              </button>
+              <div className="mt-0.5 truncate text-xs text-text-muted">
+                {getConnectionLabel(resetCreditsState?.connection) || (resetCreditsState?.data?.kind === "claude" ? "Claude account" : "Codex account")}
+              </div>
             </div>
-
+          ) : null
+        }
+        width={672}
+        footer={null}
+      >
+        {resetCreditsState && (
             <div className="max-h-[70vh] overflow-auto bg-white p-4 dark:bg-neutral-950">
               {resetCreditsState.loading ? (
                 <div className="flex items-center justify-center gap-2 py-10 text-sm text-text-muted">
@@ -1667,9 +1655,8 @@ export default function ProviderLimits() {
                 </div>
               )}
             </div>
-          </div>
-        </div>
-      )}
+        )}
+      </Modal>
 
       <EditConnectionModal
         isOpen={showEditModal}

@@ -1,8 +1,7 @@
 "use client";
 
 import { useState, useEffect, useRef } from "react";
-import { Card, Button, Toggle, Input } from "@/shared/components";
-import Modal, { ConfirmModal } from "@/shared/components/Modal";
+import { Button, Card, Input, Modal, Switch } from "antd";
 import LanguageSwitcher from "@/shared/components/LanguageSwitcher";
 import { useTheme } from "@/shared/hooks/useTheme";
 import { cn } from "@/shared/utils/cn";
@@ -828,8 +827,7 @@ export default function ProfilePage() {
             </div>
             <div className="flex flex-col sm:flex-row gap-2">
               <Button
-                variant="secondary"
-                icon="download"
+                icon={<span className="material-symbols-outlined text-[18px]">download</span>}
                 onClick={() => setDbAuth({ open: true, mode: "export", password: "" })}
                 loading={dbLoading}
                 className="w-full sm:w-auto"
@@ -837,8 +835,7 @@ export default function ProfilePage() {
                 Download Backup
               </Button>
               <Button
-                variant="outline"
-                icon="upload"
+                icon={<span className="material-symbols-outlined text-[18px]">upload</span>}
                 onClick={() => importFileRef.current?.click()}
                 disabled={dbLoading}
                 className="w-full sm:w-auto"
@@ -895,7 +892,7 @@ export default function ProfilePage() {
                   When ON, dashboard requires password. When OFF, access without login.
                 </p>
               </div>
-              <Toggle
+              <Switch
                 checked={settings.requireLogin === true}
                 onChange={() => updateRequireLogin(!settings.requireLogin)}
                 disabled={loading}
@@ -906,7 +903,7 @@ export default function ProfilePage() {
                 {settings.hasPassword && (
                   <div className="flex flex-col gap-2">
                     <label className="text-xs sm:text-sm font-medium">Current Password</label>
-                    <Input
+                    <Input.Password
                       type="password"
                       placeholder="Enter current password"
                       value={passwords.current}
@@ -925,7 +922,7 @@ export default function ProfilePage() {
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div className="flex flex-col gap-2">
                     <label className="text-xs sm:text-sm font-medium">New Password</label>
-                    <Input
+                    <Input.Password
                       type="password"
                       placeholder="Enter new password"
                       value={passwords.new}
@@ -935,7 +932,7 @@ export default function ProfilePage() {
                   </div>
                   <div className="flex flex-col gap-2">
                     <label className="text-xs sm:text-sm font-medium">Confirm New Password</label>
-                    <Input
+                    <Input.Password
                       type="password"
                       placeholder="Confirm new password"
                       value={passwords.confirm}
@@ -952,7 +949,7 @@ export default function ProfilePage() {
                 )}
 
                 <div className="pt-2">
-                  <Button type="submit" variant="primary" loading={passLoading} className="w-full sm:w-auto">
+                  <Button type="primary" htmlType="submit" loading={passLoading} className="w-full sm:w-auto">
                     {settings.hasPassword ? "Update Password" : "Set Password"}
                   </Button>
                 </div>
@@ -1183,10 +1180,8 @@ export default function ProfilePage() {
                       <p className="text-xs text-text-muted">Auto-fill SSO URL, Issuer & Cert from XML metadata</p>
                     </div>
                     <Button
-                      type="button"
-                      variant="outline"
-                      size="sm"
-                      icon="upload_file"
+                      size="small"
+                      icon={<span className="material-symbols-outlined text-[18px]">upload_file</span>}
                       onClick={() => idpMetadataFileRef.current?.click()}
                     >
                       Upload Metadata XML
@@ -1225,10 +1220,8 @@ export default function ProfilePage() {
                       <div className="flex items-center justify-between">
                         <label className="font-medium text-sm sm:text-base">IdP X.509 Certificate (samlCert)</label>
                         <Button
-                          type="button"
-                          variant="outline"
-                          size="sm"
-                          icon="file_upload"
+                          size="small"
+                          icon={<span className="material-symbols-outlined text-[18px]">file_upload</span>}
                           onClick={() => certFileRef.current?.click()}
                         >
                           Upload Certificate
@@ -1241,12 +1234,12 @@ export default function ProfilePage() {
                           onChange={handleCertFileUpload}
                         />
                       </div>
-                      <textarea
+                      <Input.TextArea
                         rows={4}
                         placeholder="-----BEGIN CERTIFICATE-----&#10;MIIC...&#10;-----END CERTIFICATE-----"
                         value={samlForm.samlCert}
                         onChange={(e) => updateSamlForm("samlCert", e.target.value)}
-                        className="w-full p-2.5 rounded-lg border border-border bg-bg text-xs font-mono text-text-main focus:outline-none focus:border-primary"
+                        className="w-full text-xs font-mono"
                         disabled={loading || samlLoading}
                       />
                       <p className="text-xs text-text-muted">Paste raw Base64 certificate or PEM block.</p>
@@ -1292,10 +1285,8 @@ export default function ProfilePage() {
                         <code className="block break-all font-mono text-xs">{samlAcsUrl}</code>
                       </div>
                       <Button
-                        type="button"
-                        variant="outline"
-                        size="sm"
-                        icon="content_copy"
+                        size="small"
+                        icon={<span className="material-symbols-outlined text-[18px]">content_copy</span>}
                         onClick={() => {
                           navigator.clipboard.writeText(samlAcsUrl);
                           setSamlStatus({ type: "success", message: "ACS URL copied to clipboard!" });
@@ -1324,8 +1315,7 @@ export default function ProfilePage() {
 
                   <div className="flex flex-col sm:flex-row gap-2 pt-2 border-t border-border/50">
                     <Button
-                      type="button"
-                      variant="primary"
+                      type="primary"
                       loading={samlLoading}
                       onClick={() => saveSamlSettings(oidcForm.authMode)}
                       className="w-full sm:w-auto"
@@ -1333,8 +1323,6 @@ export default function ProfilePage() {
                       Save SAML settings
                     </Button>
                     <Button
-                      type="button"
-                      variant="outline"
                       loading={samlTestLoading}
                       onClick={testSamlConnection}
                       className="w-full sm:w-auto"
@@ -1381,7 +1369,7 @@ export default function ProfilePage() {
 
                     <div className="flex flex-col gap-2">
                       <label className="font-medium text-sm sm:text-base">Client Secret</label>
-                      <Input
+                      <Input.Password
                         type="password"
                         placeholder="Leave blank to keep existing secret"
                         value={oidcClientSecret}
@@ -1418,10 +1406,10 @@ export default function ProfilePage() {
                   </div>
 
                   <div className="flex flex-col sm:flex-row gap-2 pt-2 border-t border-border/50">
-                    <Button type="button" variant="primary" loading={oidcLoading} onClick={() => saveOidcSettings()} className="w-full sm:w-auto">
+                    <Button type="primary" loading={oidcLoading} onClick={() => saveOidcSettings()} className="w-full sm:w-auto">
                       Save OIDC settings
                     </Button>
-                    <Button type="button" variant="outline" loading={oidcTestLoading} onClick={testOidcConnection} className="w-full sm:w-auto">
+                    <Button loading={oidcTestLoading} onClick={testOidcConnection} className="w-full sm:w-auto">
                       Test connection
                     </Button>
                   </div>
@@ -1471,7 +1459,7 @@ export default function ProfilePage() {
                   Cycle through accounts to distribute load
                 </p>
               </div>
-              <Toggle
+              <Switch
                 checked={settings.fallbackStrategy === "round-robin"}
                 onChange={() => updateFallbackStrategy(settings.fallbackStrategy === "round-robin" ? "fill-first" : "round-robin")}
                 disabled={loading}
@@ -1507,7 +1495,7 @@ export default function ProfilePage() {
                   Cycle through providers in combos instead of always starting with first
                 </p>
               </div>
-              <Toggle
+              <Switch
                 checked={settings.comboStrategy === "round-robin"}
                 onChange={() => updateComboStrategy(settings.comboStrategy === "round-robin" ? "fallback" : "round-robin")}
                 disabled={loading}
@@ -1580,7 +1568,7 @@ export default function ProfilePage() {
                 <p className="font-medium text-sm sm:text-base">Outbound Proxy</p>
                 <p className="text-xs sm:text-sm text-text-muted">Enable proxy for OAuth + provider outbound requests.</p>
               </div>
-              <Toggle
+              <Switch
                 checked={settings.outboundProxyEnabled === true}
                 onChange={() => updateOutboundProxyEnabled(!(settings.outboundProxyEnabled === true))}
                 disabled={loading || proxyLoading}
@@ -1613,8 +1601,6 @@ export default function ProfilePage() {
 
                 <div className="pt-2 border-t border-border/50 flex flex-col sm:flex-row items-stretch sm:items-center gap-2">
                   <Button
-                    type="button"
-                    variant="secondary"
                     loading={proxyTestLoading}
                     disabled={loading || proxyLoading}
                     onClick={testOutboundProxy}
@@ -1622,7 +1608,7 @@ export default function ProfilePage() {
                   >
                     Test proxy URL
                   </Button>
-                  <Button type="submit" variant="primary" loading={proxyLoading} className="w-full sm:w-auto">
+                  <Button type="primary" htmlType="submit" loading={proxyLoading} className="w-full sm:w-auto">
                     Apply
                   </Button>
                 </div>
@@ -1652,7 +1638,7 @@ export default function ProfilePage() {
                 Record request details for inspection in the logs view
               </p>
             </div>
-            <Toggle
+            <Switch
               checked={observabilityEnabled}
               onChange={updateObservabilityEnabled}
               disabled={loading}
@@ -1663,18 +1649,16 @@ export default function ProfilePage() {
         {/* Account actions */}
         <div className="flex flex-col sm:flex-row gap-2">
           <Button
-            variant="outline"
-            fullWidth
-            icon="power_settings_new"
+            block
+            danger
+            icon={<span className="material-symbols-outlined text-[18px]">power_settings_new</span>}
             onClick={() => setShutdownOpen(true)}
-            className="text-red-500 border-red-200 hover:bg-red-50 hover:border-red-300"
           >
             Shutdown
           </Button>
           <Button
-            variant="outline"
-            fullWidth
-            icon="logout"
+            block
+            icon={<span className="material-symbols-outlined text-[18px]">logout</span>}
             onClick={handleLogout}
           >
             Logout
@@ -1696,29 +1680,33 @@ export default function ProfilePage() {
           setLocale(next);
         }}
       />
-      <ConfirmModal
-        isOpen={shutdownOpen}
-        onClose={() => setShutdownOpen(false)}
-        onConfirm={handleShutdown}
+      {/* antd Modal evaluates title/children on every render even while
+          closed, so the body is guarded by shutdownOpen (quota-crash
+          lesson, wave 2). */}
+      <Modal
+        open={shutdownOpen}
+        onCancel={() => setShutdownOpen(false)}
+        onOk={handleShutdown}
         title="Close Proxy"
-        message="Are you sure you want to close the proxy server?"
-        confirmText="Close"
+        okText="Close"
         cancelText="Cancel"
-        variant="danger"
-        loading={isShuttingDown}
-      />
+        okButtonProps={{ danger: true }}
+        confirmLoading={isShuttingDown}
+      >
+        {shutdownOpen ? <p className="text-text-muted">Are you sure you want to close the proxy server?</p> : null}
+      </Modal>
 
       <Modal
-        isOpen={dbAuth.open}
-        onClose={() => setDbAuth({ open: false, mode: "", password: "" })}
+        open={dbAuth.open}
+        onCancel={() => setDbAuth({ open: false, mode: "", password: "" })}
         title="Confirm Password"
-        size="sm"
+        width={400}
         footer={
           <>
-            <Button variant="ghost" onClick={() => setDbAuth({ open: false, mode: "", password: "" })} disabled={dbLoading}>
+            <Button type="text" onClick={() => setDbAuth({ open: false, mode: "", password: "" })} disabled={dbLoading}>
               Cancel
             </Button>
-            <Button variant="primary" onClick={handleDbAuthConfirm} loading={dbLoading} disabled={!dbAuth.password}>
+            <Button type="primary" onClick={handleDbAuthConfirm} loading={dbLoading} disabled={!dbAuth.password}>
               Confirm
             </Button>
           </>
@@ -1727,7 +1715,7 @@ export default function ProfilePage() {
         <p className="text-text-muted mb-3 text-sm">
           Enter your current password to {dbAuth.mode === "export" ? "export" : "import"} the database.
         </p>
-        <Input
+        <Input.Password
           type="password"
           value={dbAuth.password}
           onChange={(e) => setDbAuth((s) => ({ ...s, password: e.target.value }))}

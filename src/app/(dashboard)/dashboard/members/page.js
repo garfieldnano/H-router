@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
+import { Alert, Button, Card, Input, Select, Spin, Tag, Typography } from "antd";
 
 // Admin-only member management (v1): list/create members, activate/deactivate,
 // assign/unassign API keys. Members have no password — they log in with an
@@ -82,66 +83,54 @@ export default function MembersPage() {
         </p>
       </div>
 
-      {error && (
-        <div className="rounded-lg border border-error/30 bg-error/10 p-3 text-sm text-text-main">{error}</div>
-      )}
+      {error && <Alert type="error" message={error} showIcon />}
 
       {/* Create member */}
-      <form onSubmit={createMember} className="bg-surface-2 border border-border-subtle rounded-lg p-4">
-        <h2 className="mb-3 text-lg font-semibold text-text-main">Buat member baru</h2>
-        <div className="flex flex-wrap gap-3">
-          <input
+      <Card title="Buat member baru">
+        <form onSubmit={createMember} className="flex flex-wrap gap-3">
+          <Input
             value={name}
             onChange={(e) => setName(e.target.value)}
             placeholder="Nama"
-            className="rounded-lg border border-border bg-surface px-3 py-2 text-sm text-text-main focus:outline-none focus:ring-2 focus:ring-primary/50"
+            style={{ width: 220 }}
           />
-          <input
+          <Input
             value={email}
             onChange={(e) => setEmail(e.target.value)}
             placeholder="Email"
             type="email"
             required
-            className="rounded-lg border border-border bg-surface px-3 py-2 text-sm text-text-main focus:outline-none focus:ring-2 focus:ring-primary/50"
+            style={{ width: 260 }}
           />
-          <button
-            type="submit"
-            disabled={creating}
-            className="rounded-lg bg-primary px-4 py-2 text-sm font-medium text-white hover:opacity-90 disabled:opacity-50"
-          >
+          <Button type="primary" htmlType="submit" loading={creating}>
             {creating ? "Membuat…" : "Buat member"}
-          </button>
-        </div>
-        <p className="mt-2 text-xs text-text-muted">
+          </Button>
+        </form>
+        <Typography.Text type="secondary" className="text-xs">
           Setelah dibuat, tetapkan API key di bawah — member login dengan kunci itu (tanpa password).
-        </p>
-      </form>
+        </Typography.Text>
+      </Card>
 
       {/* Member list */}
       {loading ? (
-        <p className="text-sm text-text-muted">Memuat…</p>
+        <Spin tip="Memuat…" />
       ) : members.length === 0 ? (
-        <p className="text-sm text-text-muted">Belum ada member.</p>
+        <Typography.Text type="secondary">Belum ada member.</Typography.Text>
       ) : (
         members.map((m) => (
-          <div key={m.id} className="bg-surface-2 border border-border-subtle rounded-lg p-4">
+          <Card key={m.id}>
             <div className="flex flex-wrap items-center justify-between gap-3">
               <div>
                 <div className="font-semibold text-text-main">{m.name || m.email}</div>
                 <div className="text-sm text-text-muted">{m.email}</div>
                 <div className="text-xs text-text-muted">
                   Dibuat {m.createdAt ? new Date(m.createdAt).toLocaleString("id-ID") : "-"} ·{" "}
-                  <span className={m.isActive ? "text-success" : "text-error"}>
-                    {m.isActive ? "Aktif" : "Nonaktif"}
-                  </span>
+                  <Tag color={m.isActive ? "success" : "error"}>{m.isActive ? "Aktif" : "Nonaktif"}</Tag>
                 </div>
               </div>
-              <button
-                onClick={() => patchMember(m.id, { isActive: !m.isActive })}
-                className="rounded-lg border border-border-subtle bg-surface px-3 py-1.5 text-sm text-text-main hover:bg-bg-hover"
-              >
+              <Button onClick={() => patchMember(m.id, { isActive: !m.isActive })}>
                 {m.isActive ? "Nonaktifkan" : "Aktifkan"}
-              </button>
+              </Button>
             </div>
 
             {/* Assigned keys */}
@@ -150,44 +139,42 @@ export default function MembersPage() {
                 <div key={k.id} className="flex flex-wrap items-center justify-between gap-2 rounded-lg border border-border-subtle bg-bg-subtle px-3 py-2 text-sm">
                   <span className="text-text-main">
                     {k.name || "Unnamed key"} · <span className="font-mono text-xs text-text-muted">{k.keyMasked}</span>{" "}
-                    <span className={k.isActive ? "text-success" : "text-error"}>{k.isActive ? "· Aktif" : "· Nonaktif"}</span>
+                    <Tag color={k.isActive ? "success" : "error"}>{k.isActive ? "Aktif" : "Nonaktif"}</Tag>
                   </span>
-                  <button
-                    onClick={() => patchMember(m.id, { unassignKeyId: k.id })}
-                    className="rounded-lg border border-border-subtle bg-surface px-2 py-1 text-xs text-text-main hover:bg-bg-hover"
-                  >
+                  <Button size="small" onClick={() => patchMember(m.id, { unassignKeyId: k.id })}>
                     Lepas kunci
-                  </button>
+                  </Button>
                 </div>
               ))}
               {unassignedKeys.length > 0 && (
                 <div className="flex flex-wrap items-center gap-2">
-                  <select
+                  <Select
                     value={assignKey[m.id] || ""}
-                    onChange={(e) => setAssignKey((s) => ({ ...s, [m.id]: e.target.value }))}
-                    className="rounded-lg border border-border bg-surface px-3 py-1.5 text-sm text-text-main focus:outline-none focus:ring-2 focus:ring-primary/50"
-                  >
-                    <option value="">Pilih kunci untuk ditetapkan…</option>
-                    {unassignedKeys.map((k) => (
-                      <option key={k.id} value={k.id}>
-                        {k.name || "Unnamed key"} ({k.keyMasked})
-                      </option>
-                    ))}
-                  </select>
-                  <button
+                    onChange={(v) => setAssignKey((s) => ({ ...s, [m.id]: v }))}
+                    placeholder="Pilih kunci untuk ditetapkan…"
+                    style={{ width: 320 }}
+                    options={[
+                      { value: "", label: "Pilih kunci untuk ditetapkan…" },
+                      ...unassignedKeys.map((k) => ({
+                        value: k.id,
+                        label: `${k.name || "Unnamed key"} (${k.keyMasked})`,
+                      })),
+                    ]}
+                  />
+                  <Button
+                    type="primary"
                     disabled={!assignKey[m.id]}
                     onClick={() => {
                       patchMember(m.id, { assignKeyId: assignKey[m.id] });
                       setAssignKey((s) => ({ ...s, [m.id]: "" }));
                     }}
-                    className="rounded-lg bg-primary px-3 py-1.5 text-sm font-medium text-white hover:opacity-90 disabled:opacity-50"
                   >
                     Tetapkan kunci
-                  </button>
+                  </Button>
                 </div>
               )}
             </div>
-          </div>
+          </Card>
         ))
       )}
     </div>

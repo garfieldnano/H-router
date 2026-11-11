@@ -1,9 +1,8 @@
 "use client";
 
-import { useState, useEffect, useCallback, useMemo, Fragment } from "react";
+import { useState, useEffect, useCallback, useMemo } from "react";
 import PropTypes from "prop-types";
-import Card from "@/shared/components/Card";
-import Badge from "@/shared/components/Badge";
+import { Card, Table } from "antd";
 
 const fmt = (n) => new Intl.NumberFormat().format(n || 0);
 const fmtCost = (n) => `$${(n || 0).toFixed(2)}`;
@@ -17,79 +16,57 @@ function fmtTime(iso) {
   return new Date(iso).toLocaleDateString();
 }
 
-function SortIcon({ field, currentSort, currentOrder }) {
-  if (currentSort !== field) return <span className="ml-1 opacity-20">↕</span>;
-  return <span className="ml-1">{currentOrder === "asc" ? "↑" : "↓"}</span>;
-}
-
-SortIcon.propTypes = {
-  field: PropTypes.string.isRequired,
-  currentSort: PropTypes.string.isRequired,
-  currentOrder: PropTypes.string.isRequired,
-};
-
-/**
- * Render 3 token or cost cells based on viewMode
- */
-function ValueCells({ item, viewMode, isSummary = false }) {
+// Cell content for one value column (tokens or costs). `item` is a group
+// summary (isSummary) or a detail row item.
+function valueContent(item, field, viewMode, isSummary) {
   if (viewMode === "tokens") {
-    return (
-      <>
-        <td className="px-6 py-3 text-right text-text-muted">
-          {isSummary && item.promptTokens === undefined ? "—" : fmt(item.promptTokens)}
-        </td>
-        <td className="px-6 py-3 text-right text-text-muted">
-          {item.cachedTokens ? fmt(item.cachedTokens) : "—"}
-        </td>
-        <td className="px-6 py-3 text-right text-text-muted">
-          {isSummary && item.completionTokens === undefined ? "—" : fmt(item.completionTokens)}
-        </td>
-        <td className="px-6 py-3 text-right font-medium">
-          {fmt(item.totalTokens)}
-        </td>
-      </>
-    );
+    switch (field) {
+      case "promptTokens":
+        return isSummary && item.promptTokens === undefined ? "—" : fmt(item.promptTokens);
+      case "cachedTokens":
+        return item.cachedTokens ? fmt(item.cachedTokens) : "—";
+      case "completionTokens":
+        return isSummary && item.completionTokens === undefined ? "—" : fmt(item.completionTokens);
+      case "totalTokens":
+        return <span className="font-medium">{fmt(item.totalTokens)}</span>;
+      default:
+        return "—";
+    }
   }
-  return (
-    <>
-      <td className="px-6 py-3 text-right text-text-muted">
-        {isSummary && item.inputCost === undefined ? "—" : fmtCost(item.inputCost)}
-      </td>
-      <td className="px-6 py-3 text-right text-text-muted">
-        {item.cachedCost ? fmtCost(item.cachedCost) : "—"}
-      </td>
-      <td className="px-6 py-3 text-right text-text-muted">
-        {isSummary && item.outputCost === undefined ? "—" : fmtCost(item.outputCost)}
-      </td>
-      <td className="px-6 py-3 text-right font-medium text-warning">
-        {fmtCost(item.totalCost || item.cost)}
-      </td>
-    </>
-  );
+  switch (field) {
+    case "promptTokens":
+      return isSummary && item.inputCost === undefined ? "—" : fmtCost(item.inputCost);
+    case "cachedCost":
+      return item.cachedCost ? fmtCost(item.cachedCost) : "—";
+    case "completionTokens":
+      return isSummary && item.outputCost === undefined ? "—" : fmtCost(item.outputCost);
+    case "cost":
+      return <span className="font-medium text-warning">{fmtCost(item.totalCost || item.cost)}</span>;
+    default:
+      return "—";
+  }
 }
 
-ValueCells.propTypes = {
-  item: PropTypes.object.isRequired,
-  viewMode: PropTypes.string.isRequired,
-  isSummary: PropTypes.bool,
-};
-
 /**
- * Reusable sortable usage table with expandable group rows.
+ * Sortable usage table with expandable group rows, rendered with Ant Design.
+ *
+ * Data comes pre-grouped (groupDataByKey) and pre-sorted (sortData, driven by
+ * the sortBy/sortOrder URL params) from the UsageStats orchestrator — the
+ * table itself does not sort; a header click calls onToggleSort, exactly like
+ * the previous custom table.
  *
  * @param {object} props
- * @param {string} props.title - Table title
- * @param {Array} props.columns - Column definitions [{field, label}]
+ * @param {string} props.title - Table title (empty hides the Card header)
+ * @param {Array} props.columns - Column definitions [{field, label, align}]
  * @param {Array} props.groupedData - Grouped data from groupDataByKey
  * @param {string} props.tableType - Table type key for sort URL params
  * @param {string} props.sortBy - Current sort field
- * @param {string} props.sortOrder - Current sort order
+ * @param {string} props.sortOrder - Current sort order ("asc" | "desc")
  * @param {function} props.onToggleSort - Sort toggle handler
  * @param {string} props.viewMode - "tokens" or "costs"
  * @param {string} props.storageKey - localStorage key for expanded state
- * @param {function} props.renderGroupLabel - Render group summary first cell content
- * @param {function} props.renderDetailCells - Render detail row custom cells (before value cells)
- * @param {function} props.renderSummaryCells - Render summary row cells after group label (placeholder cols)
+ * @param {function} props.renderCell - (record, field) => cell content.
+ *   record.isGroup distinguishes group summary rows from detail rows.
  * @param {string} props.emptyMessage - Empty state message
  */
 export default function UsageTable({
@@ -102,8 +79,7 @@ export default function UsageTable({
   onToggleSort,
   viewMode,
   storageKey,
-  renderDetailCells,
-  renderSummaryCells,
+  renderCell,
   emptyMessage,
 }) {
   const [expanded, setExpanded] = useState(new Set());
@@ -152,82 +128,80 @@ export default function UsageTable({
     ];
   }, [viewMode]);
 
-  const totalColSpan = columns.length + valueColumns.length;
+  const dataSource = useMemo(
+    () =>
+      groupedData.map((group) => ({
+        key: group.groupKey,
+        isGroup: true,
+        groupKey: group.groupKey,
+        summary: group.summary,
+        children: group.items.map((item) => ({
+          ...item,
+          key: `detail-${item.key}`,
+          isGroup: false,
+        })),
+      })),
+    [groupedData]
+  );
+
+  const antdColumns = useMemo(() => {
+    const sortOrderFor = (field) =>
+      sortBy === field ? (sortOrder === "asc" ? "ascend" : "descend") : undefined;
+    const detail = columns.map((col) => ({
+      title: col.label,
+      dataIndex: col.field,
+      key: col.field,
+      align: col.align === "right" ? "right" : "left",
+      sorter: true,
+      sortOrder: sortOrderFor(col.field),
+      render: (_, record) => renderCell(record, col.field),
+    }));
+    const values = valueColumns.map((col) => ({
+      title: col.label,
+      dataIndex: col.field,
+      key: `value-${col.field}`,
+      align: "right",
+      sorter: true,
+      sortOrder: sortOrderFor(col.field),
+      render: (_, record) => {
+        const item = record.isGroup ? record.summary : record;
+        return valueContent(item, col.field, viewMode, record.isGroup);
+      },
+    }));
+    return [...detail, ...values];
+  }, [columns, valueColumns, sortBy, sortOrder, renderCell, viewMode]);
+
+  // antd reports sorter changes (ascend/descend/undefined). The orchestrator
+  // owns sorting via URL params, so translate a real change back into one
+  // onToggleSort call; ignore the "clear sort" click (old table only flipped
+  // asc <-> desc) and no-op changes.
+  const handleChange = (_pagination, _filters, sorter) => {
+    const s = Array.isArray(sorter) ? sorter[0] : sorter;
+    if (!s || !s.column || !s.order) return;
+    const field = s.column.dataIndex;
+    const desired = s.order === "ascend" ? "asc" : "desc";
+    if (sortBy === field && sortOrder === desired) return;
+    onToggleSort(tableType, field);
+  };
+
+  const expandedKeys = useMemo(() => [...expanded], [expanded]);
 
   return (
-    <Card className="overflow-hidden">
-      <div className="p-4 border-b border-border bg-bg-subtle/50">
-        <h3 className="font-semibold">{title}</h3>
-      </div>
-      <div className="overflow-x-auto">
-        <table className="w-full text-sm text-left">
-          <thead className="bg-bg-subtle/30 text-text-muted uppercase text-xs">
-            <tr>
-              {columns.map((col) => (
-                <th
-                  key={col.field}
-                  className={`px-6 py-3 cursor-pointer hover:bg-bg-subtle/50 ${col.align === "right" ? "text-right" : ""}`}
-                  onClick={() => onToggleSort(tableType, col.field)}
-                >
-                  {col.label}{" "}
-                  <SortIcon field={col.field} currentSort={sortBy} currentOrder={sortOrder} />
-                </th>
-              ))}
-              {valueColumns.map((col) => (
-                <th
-                  key={col.field}
-                  className="px-6 py-3 text-right cursor-pointer hover:bg-bg-subtle/50"
-                  onClick={() => onToggleSort(tableType, col.field)}
-                >
-                  {col.label}{" "}
-                  <SortIcon field={col.field} currentSort={sortBy} currentOrder={sortOrder} />
-                </th>
-              ))}
-            </tr>
-          </thead>
-          <tbody className="divide-y divide-border">
-            {groupedData.map((group) => (
-              <Fragment key={group.groupKey}>
-                {/* Group summary row */}
-                <tr
-                  className="group-summary cursor-pointer hover:bg-bg-subtle/50 transition-colors"
-                  onClick={() => toggleGroup(group.groupKey)}
-                >
-                  <td className="px-6 py-3">
-                    <div className="flex items-center gap-2">
-                      <span className={`material-symbols-outlined text-[18px] text-text-muted transition-transform ${expanded.has(group.groupKey) ? "rotate-90" : ""}`}>
-                        chevron_right
-                      </span>
-                      <span className={`font-medium transition-colors ${group.summary.pending > 0 ? "text-primary" : ""}`}>
-                        {group.groupKey}
-                      </span>
-                    </div>
-                  </td>
-                  {renderSummaryCells(group)}
-                  <ValueCells item={group.summary} viewMode={viewMode} isSummary />
-                </tr>
-                {/* Detail rows */}
-                {expanded.has(group.groupKey) && group.items.map((item) => (
-                  <tr
-                    key={`detail-${item.key}`}
-                    className="group-detail hover:bg-bg-subtle/20 transition-colors"
-                  >
-                    {renderDetailCells(item)}
-                    <ValueCells item={item} viewMode={viewMode} />
-                  </tr>
-                ))}
-              </Fragment>
-            ))}
-            {groupedData.length === 0 && (
-              <tr>
-                <td colSpan={totalColSpan} className="px-6 py-8 text-center text-text-muted">
-                  {emptyMessage}
-                </td>
-              </tr>
-            )}
-          </tbody>
-        </table>
-      </div>
+    <Card title={title || undefined} styles={{ body: { padding: 0 } }}>
+      <Table
+        columns={antdColumns}
+        dataSource={dataSource}
+        rowKey="key"
+        pagination={false}
+        size="middle"
+        scroll={{ x: 900 }}
+        locale={{ emptyText: emptyMessage }}
+        expandable={{
+          expandedRowKeys: expandedKeys,
+          onExpand: (_isExpanded, record) => toggleGroup(record.key),
+        }}
+        onChange={handleChange}
+      />
     </Card>
   );
 }
@@ -246,8 +220,7 @@ UsageTable.propTypes = {
   onToggleSort: PropTypes.func.isRequired,
   viewMode: PropTypes.string.isRequired,
   storageKey: PropTypes.string.isRequired,
-  renderDetailCells: PropTypes.func.isRequired,
-  renderSummaryCells: PropTypes.func.isRequired,
+  renderCell: PropTypes.func.isRequired,
   emptyMessage: PropTypes.string.isRequired,
 };
 

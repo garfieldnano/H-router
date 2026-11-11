@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, useRef } from "react";
-import { Card, Button } from "@/shared/components";
+import { Button, Card } from "antd";
 import { CONSOLE_LOG_CONFIG } from "@/shared/constants/config";
 
 const LOG_LEVEL_COLORS = {
@@ -70,9 +70,13 @@ export default function ConsoleLogClient() {
 
   return (
     <div className="">
-      <Card>
+      <Card styles={{ body: { padding: 0 } }}>
         <div className="flex items-center justify-end px-4 pt-3 pb-2">
-          <Button size="sm" variant="outline" icon="delete" onClick={handleClear}>
+          <Button
+            size="small"
+            onClick={handleClear}
+            icon={<span className="material-symbols-outlined text-[16px]">delete</span>}
+          >
             Clear
           </Button>
         </div>

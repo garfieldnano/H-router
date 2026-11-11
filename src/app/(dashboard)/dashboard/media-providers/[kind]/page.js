@@ -3,7 +3,8 @@
 import { useParams, notFound, useRouter } from "next/navigation";
 import Link from "next/link";
 import { useEffect, useState } from "react";
-import { Card, Badge, Button, Toggle, AddCustomEmbeddingModal } from "@/shared/components";
+import { Button, Card, Switch, Tag } from "antd";
+import { AddCustomEmbeddingModal } from "@/shared/components";
 import ProviderIcon from "@/shared/components/ProviderIcon";
 import { MEDIA_PROVIDER_KINDS, AI_PROVIDERS, getProvidersByKind } from "@/shared/constants/providers";
 
@@ -36,14 +37,14 @@ function MediaProviderCard({ provider, kind, connections, isCustom, onToggle }) 
   };
 
   const renderStatus = () => {
-    if (isNoAuth) return <Badge variant="success" size="sm">Ready</Badge>;
-    if (allDisabled) return <Badge variant="default" size="sm">Disabled</Badge>;
+    if (isNoAuth) return <Tag color="success">Ready</Tag>;
+    if (allDisabled) return <Tag>Disabled</Tag>;
     if (total === 0) return <span className="text-xs text-text-muted">No connections</span>;
     return (
       <>
-        {connected > 0 && <Badge variant="success" size="sm" dot>{connected} Connected</Badge>}
-        {error > 0 && <Badge variant="error" size="sm" dot>{error} Error</Badge>}
-        {connected === 0 && error === 0 && <Badge variant="default" size="sm">{total} Added</Badge>}
+        {connected > 0 && <Tag color="success">{connected} Connected</Tag>}
+        {error > 0 && <Tag color="error">{error} Error</Tag>}
+        {connected === 0 && error === 0 && <Tag>{total} Added</Tag>}
       </>
     );
   };
@@ -51,7 +52,7 @@ function MediaProviderCard({ provider, kind, connections, isCustom, onToggle }) 
   return (
     <Link href={`/dashboard/media-providers/${kind}/${provider.id}`} className="group">
       <Card
-        padding="xs"
+        styles={{ body: { padding: 12 } }}
         className={`h-full hover:bg-black/[0.01] dark:hover:bg-white/[0.01] transition-colors cursor-pointer ${allDisabled ? "opacity-50" : ""}`}
       >
         <div className="flex min-w-0 items-center justify-between gap-3">
@@ -72,7 +73,7 @@ function MediaProviderCard({ provider, kind, connections, isCustom, onToggle }) 
             <div className="min-w-0">
               <h3 className="font-semibold text-sm">{provider.name}</h3>
               <div className="flex items-center gap-2 mt-0.5 flex-wrap">
-                {isCustom && <Badge variant="default" size="sm">Custom</Badge>}
+                {isCustom && <Tag>Custom</Tag>}
                 {renderStatus()}
               </div>
             </div>
@@ -82,8 +83,8 @@ function MediaProviderCard({ provider, kind, connections, isCustom, onToggle }) 
               className="shrink-0 opacity-100 transition-opacity sm:opacity-0 sm:group-hover:opacity-100"
               onClick={handleToggleClick}
             >
-              <Toggle
-                size="sm"
+              <Switch
+                size="small"
                 checked={!allDisabled}
                 onChange={() => {}}
                 title={allDisabled ? "Enable provider" : "Disable provider"}
@@ -102,7 +103,7 @@ function ComboList({ combos }) {
     <div className="flex flex-col gap-2">
       {combos.map((combo) => (
         <Link key={combo.id} href={`/dashboard/media-providers/combo/${combo.id}`}>
-          <Card padding="xs" className="hover:bg-black/[0.02] dark:hover:bg-white/[0.02] transition-colors cursor-pointer">
+          <Card styles={{ body: { padding: 12 } }} className="hover:bg-black/[0.02] dark:hover:bg-white/[0.02] transition-colors cursor-pointer">
             <div className="flex min-w-0 items-center gap-3">
               <span className="material-symbols-outlined text-primary text-[18px]">layers</span>
               <code className="text-sm font-mono font-medium flex-1 truncate">{combo.name}</code>
@@ -232,10 +233,10 @@ export default function MediaProviderKindPage() {
       {(isEmbedding || supportsCombo) && (
         <div className="flex items-center justify-end gap-2">
           {supportsCombo && (
-            <Button size="sm" icon="add" onClick={handleCreateCombo}>Create Combo</Button>
+            <Button size="small" type="primary" icon={<span className="material-symbols-outlined text-[18px]">add</span>} onClick={handleCreateCombo}>Create Combo</Button>
           )}
           {isEmbedding && (
-            <Button size="sm" icon="add" onClick={() => setShowAddCustomEmbedding(true)}>
+            <Button size="small" type="primary" icon={<span className="material-symbols-outlined text-[18px]">add</span>} onClick={() => setShowAddCustomEmbedding(true)}>
               Add Custom Embedding
             </Button>
           )}

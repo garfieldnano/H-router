@@ -1,3 +1,8 @@
+/* Cascade layer order: Tailwind utilities must win over Ant Design styles.
+   AntdRegistry is mounted with `layer`, so all antd cssinjs output lands in
+   `@layer antd`. This declaration must come before the Tailwind import. */
+@layer theme, base, antd, components, utilities;
+
 /* source() sets scan base to src/ for both webpack + Turbopack; auto-detection still skips binaries + gitignore */
 @import "tailwindcss" source("../../");
 

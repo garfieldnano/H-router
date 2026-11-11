@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
+import { Alert, Button, Card, Select, Table, Typography } from "antd";
 
 // Admin-only downtime compensation (§0d): incidents recorded by the
 // gateway-uptime prober + manual time-extension grants. The system never
@@ -27,6 +28,38 @@ function fmtDate(ts) {
 }
 
 const TIERS = [1, 3, 5, 8];
+
+const INCIDENT_COLUMNS = [
+  {
+    title: "Status",
+    dataIndex: "status",
+    key: "status",
+    render: (s) => (s === "open" ? "🔴 Berlangsung" : "✅ Selesai"),
+  },
+  { title: "Mulai", dataIndex: "startedAt", key: "startedAt", render: (v) => fmtTime(v) },
+  { title: "Selesai", dataIndex: "endedAt", key: "endedAt", render: (v) => (v ? fmtTime(v) : "—") },
+  { title: "Durasi", dataIndex: "durationMinutes", key: "duration", render: (v) => `${v ?? "?"} mnt` },
+  { title: "Penyebab", dataIndex: "reason", key: "reason", render: (v) => v || "-" },
+  { title: "Tier", dataIndex: "derivedTierHours", key: "tier", render: (v) => `+${v} jam` },
+  { title: "Diberi", dataIndex: "compensationsGranted", key: "granted", render: (v) => `${v} kunci` },
+];
+
+const COMPENSATION_COLUMNS = [
+  { title: "Diberikan", dataIndex: "grantedAt", key: "grantedAt", render: (v) => fmtTime(v) },
+  { title: "Tambahan", dataIndex: "amount", key: "amount", render: (v) => `+${v} jam` },
+  { title: "Kunci", dataIndex: "keyId", key: "keyId", render: (v) => <span className="font-mono text-xs">{(v || "").slice(0, 8)}</span> },
+  {
+    title: "Insiden",
+    key: "incident",
+    render: (_v, c) => (
+      <span>
+        {c.incidentStartedAt ? fmtDate(c.incidentStartedAt) : (c.incidentId || "").slice(0, 8)}
+        {c.incidentDurationMinutes != null ? ` (${c.incidentDurationMinutes} mnt)` : ""}
+      </span>
+    ),
+  },
+  { title: "Masa berlaku baru", dataIndex: "newExpiresAt", key: "newExpiresAt", render: (v) => (v ? fmtTime(v) : "—") },
+];
 
 export default function CompensationsPage() {
   const [incidents, setIncidents] = useState([]);
@@ -117,178 +150,112 @@ export default function CompensationsPage() {
         </p>
       </div>
 
-      {error && (
-        <div className="rounded-lg border border-red-200 bg-red-50 dark:bg-red-900/20 dark:border-red-800 p-3 text-sm text-text-main">
-          {error}
-        </div>
-      )}
-      {notice && (
-        <div className="rounded-lg border border-green-200 bg-green-50 dark:bg-green-900/20 dark:border-green-800 p-3 text-sm text-text-main">
-          {notice}
-        </div>
-      )}
+      {error && <Alert type="error" message={error} showIcon />}
+      {notice && <Alert type="success" message={notice} showIcon />}
 
       {/* Grant form */}
-      <div className="bg-surface-2 border border-border-subtle rounded-lg p-4">
-        <h2 className="mb-3 text-lg font-semibold text-text-main">Beri Kompensasi</h2>
+      <Card title="Beri Kompensasi">
         <form onSubmit={grant} className="flex flex-col gap-3">
           <label className="flex flex-col gap-1 text-sm">
             <span className="text-text-muted">Insiden</span>
-            <select
-              value={incidentId}
-              onChange={(e) => { setIncidentId(e.target.value); setTierHours(""); }}
-              className="rounded-lg border border-border-subtle bg-surface px-3 py-2 text-text-main"
-            >
-              <option value="">— Pilih insiden —</option>
-              {incidents.map((i) => (
-                <option key={i.id} value={i.id}>
-                  {i.status === "open" ? "🔴 " : "✅ "}
-                  {fmtDate(i.startedAt)} · {i.durationMinutes ?? "?"} menit · tier +{i.derivedTierHours}j · {i.compensationsGranted} diberi
-                </option>
-              ))}
-            </select>
+            <Select
+              value={incidentId || undefined}
+              onChange={(v) => { setIncidentId(v); setTierHours(""); }}
+              placeholder="— Pilih insiden —"
+              options={incidents.map((i) => ({
+                value: i.id,
+                label: `${i.status === "open" ? "🔴 " : "✅ "}${fmtDate(i.startedAt)} · ${i.durationMinutes ?? "?"} menit · tier +${i.derivedTierHours}j · ${i.compensationsGranted} diberi`,
+              }))}
+            />
           </label>
           {selectedIncident && (
-            <p className="text-xs text-text-muted">
+            <Typography.Text type="secondary" className="text-xs">
               Durasi gangguan: {selectedIncident.durationMinutes ?? "?"} menit → tier dari durasi: +{derivedTier} jam.
               {selectedIncident.status === "open" ? " Insiden masih berlangsung — durasi dihitung sampai sekarang." : ""}
-            </p>
+            </Typography.Text>
           )}
           <label className="flex flex-col gap-1 text-sm">
             <span className="text-text-muted">Member</span>
-            <select
-              value={memberId}
-              onChange={(e) => { setMemberId(e.target.value); setKeyId(""); }}
-              className="rounded-lg border border-border-subtle bg-surface px-3 py-2 text-text-main"
-            >
-              <option value="">— Pilih member —</option>
-              {members.map((m) => (
-                <option key={m.id} value={m.id}>{m.name || m.email || m.id.slice(0, 8)}</option>
-              ))}
-            </select>
+            <Select
+              value={memberId || undefined}
+              onChange={(v) => { setMemberId(v); setKeyId(""); }}
+              placeholder="— Pilih member —"
+              options={members.map((m) => ({
+                value: m.id,
+                label: m.name || m.email || m.id.slice(0, 8),
+              }))}
+            />
           </label>
           <label className="flex flex-col gap-1 text-sm">
             <span className="text-text-muted">Kunci</span>
-            <select
-              value={keyId}
-              onChange={(e) => setKeyId(e.target.value)}
+            <Select
+              value={keyId || undefined}
+              onChange={setKeyId}
               disabled={!memberId}
-              className="rounded-lg border border-border-subtle bg-surface px-3 py-2 text-text-main disabled:opacity-50"
-            >
-              <option value="">— Pilih kunci —</option>
-              {memberKeys.map((k) => (
-                <option key={k.id} value={k.id} disabled={!(k.isActive && k.expiresAt)}>
-                  {k.name || "Unnamed"} — {k.isActive ? "aktif" : "nonaktif"}
-                  {k.expiresAt ? ` · berakhir ${fmtTime(k.expiresAt)}` : " · tanpa masa berlaku (tidak bisa diberi kompensasi)"}
-                </option>
-              ))}
-            </select>
+              placeholder="— Pilih kunci —"
+              options={memberKeys.map((k) => ({
+                value: k.id,
+                disabled: !(k.isActive && k.expiresAt),
+                label: `${k.name || "Unnamed"} — ${k.isActive ? "aktif" : "nonaktif"}${k.expiresAt ? ` · berakhir ${fmtTime(k.expiresAt)}` : " · tanpa masa berlaku (tidak bisa diberi kompensasi)"}`,
+              }))}
+            />
           </label>
           {selectedKey && !keyEligible && (
-            <p className="text-xs text-error">
+            <Typography.Text type="danger" className="text-xs">
               Kunci ini tidak bisa diberi kompensasi: {!selectedKey.isActive ? "kunci nonaktif. " : ""}
               {!selectedKey.expiresAt ? "kunci tanpa masa berlaku (expiresAt kosong) — perpanjangan tidak bisa diterapkan." : ""}
-            </p>
+            </Typography.Text>
           )}
           <label className="flex flex-col gap-1 text-sm">
             <span className="text-text-muted">Tier (jam tambahan)</span>
-            <select
-              value={tierHours}
-              onChange={(e) => setTierHours(e.target.value)}
-              className="rounded-lg border border-border-subtle bg-surface px-3 py-2 text-text-main"
-            >
-              <option value="">
-                {derivedTier ? `Pakai tier dari durasi (+${derivedTier} jam)` : "— Pilih tier —"}
-              </option>
-              {TIERS.map((h) => (
-                <option key={h} value={h}>+{h} jam{h === derivedTier ? " (tier dari durasi)" : ""}</option>
-              ))}
-            </select>
+            <Select
+              value={tierHours || undefined}
+              onChange={setTierHours}
+              placeholder={derivedTier ? `Pakai tier dari durasi (+${derivedTier} jam)` : "— Pilih tier —"}
+              options={TIERS.map((h) => ({
+                value: String(h),
+                label: `+${h} jam${h === derivedTier ? " (tier dari durasi)" : ""}`,
+              }))}
+            />
           </label>
-          <button
-            type="submit"
-            disabled={!incidentId || !keyId || !keyEligible || granting}
-            className="rounded-lg bg-primary px-4 py-2 text-sm font-medium text-white disabled:opacity-50 w-fit"
-          >
-            {granting ? "Memberi kompensasi…" : effectiveTier ? `Beri kompensasi +${effectiveTier} jam` : "Beri kompensasi"}
-          </button>
+          <div>
+            <Button
+              type="primary"
+              htmlType="submit"
+              disabled={!incidentId || !keyId || !keyEligible || granting}
+              loading={granting}
+            >
+              {granting ? "Memberi kompensasi…" : effectiveTier ? `Beri kompensasi +${effectiveTier} jam` : "Beri kompensasi"}
+            </Button>
+          </div>
         </form>
-      </div>
+      </Card>
 
       {/* Incidents */}
-      <div className="bg-surface-2 border border-border-subtle rounded-lg p-4">
-        <h2 className="mb-3 text-lg font-semibold text-text-main">Insiden</h2>
-        {loading ? (
-          <p className="text-sm text-text-muted">Memuat…</p>
-        ) : incidents.length === 0 ? (
-          <p className="text-sm text-text-muted">Belum ada insiden gangguan yang tercatat.</p>
-        ) : (
-          <div className="overflow-x-auto">
-            <table className="w-full text-sm">
-              <thead>
-                <tr className="text-left text-text-muted">
-                  <th className="py-2 pr-3 font-medium">Status</th>
-                  <th className="py-2 pr-3 font-medium">Mulai</th>
-                  <th className="py-2 pr-3 font-medium">Selesai</th>
-                  <th className="py-2 pr-3 font-medium">Durasi</th>
-                  <th className="py-2 pr-3 font-medium">Penyebab</th>
-                  <th className="py-2 pr-3 font-medium">Tier</th>
-                  <th className="py-2 font-medium">Diberi</th>
-                </tr>
-              </thead>
-              <tbody>
-                {incidents.map((i) => (
-                  <tr key={i.id} className="border-t border-border-subtle hover:bg-bg-subtle">
-                    <td className="py-2 pr-3">{i.status === "open" ? "🔴 Berlangsung" : "✅ Selesai"}</td>
-                    <td className="py-2 pr-3 whitespace-nowrap">{fmtTime(i.startedAt)}</td>
-                    <td className="py-2 pr-3 whitespace-nowrap">{i.endedAt ? fmtTime(i.endedAt) : "—"}</td>
-                    <td className="py-2 pr-3">{i.durationMinutes ?? "?"} mnt</td>
-                    <td className="py-2 pr-3">{i.reason || "-"}</td>
-                    <td className="py-2 pr-3">+{i.derivedTierHours} jam</td>
-                    <td className="py-2">{i.compensationsGranted} kunci</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        )}
-      </div>
+      <Card title="Insiden">
+        <Table
+          columns={INCIDENT_COLUMNS}
+          dataSource={incidents}
+          rowKey="id"
+          loading={loading}
+          pagination={false}
+          scroll={{ x: 800 }}
+          locale={{ emptyText: "Belum ada insiden gangguan yang tercatat." }}
+        />
+      </Card>
 
       {/* Granted compensations */}
-      <div className="bg-surface-2 border border-border-subtle rounded-lg p-4">
-        <h2 className="mb-3 text-lg font-semibold text-text-main">Kompensasi yang Diberikan</h2>
-        {compensations.length === 0 ? (
-          <p className="text-sm text-text-muted">Belum ada kompensasi yang diberikan.</p>
-        ) : (
-          <div className="overflow-x-auto">
-            <table className="w-full text-sm">
-              <thead>
-                <tr className="text-left text-text-muted">
-                  <th className="py-2 pr-3 font-medium">Diberikan</th>
-                  <th className="py-2 pr-3 font-medium">Tambahan</th>
-                  <th className="py-2 pr-3 font-medium">Kunci</th>
-                  <th className="py-2 pr-3 font-medium">Insiden</th>
-                  <th className="py-2 font-medium">Masa berlaku baru</th>
-                </tr>
-              </thead>
-              <tbody>
-                {compensations.map((c) => (
-                  <tr key={c.id} className="border-t border-border-subtle hover:bg-bg-subtle">
-                    <td className="py-2 pr-3 whitespace-nowrap">{fmtTime(c.grantedAt)}</td>
-                    <td className="py-2 pr-3">+{c.amount} jam</td>
-                    <td className="py-2 pr-3 font-mono text-xs">{c.keyId.slice(0, 8)}</td>
-                    <td className="py-2 pr-3">
-                      {c.incidentStartedAt ? fmtDate(c.incidentStartedAt) : c.incidentId.slice(0, 8)}
-                      {c.incidentDurationMinutes != null ? ` (${c.incidentDurationMinutes} mnt)` : ""}
-                    </td>
-                    <td className="py-2 whitespace-nowrap">{c.newExpiresAt ? fmtTime(c.newExpiresAt) : "—"}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        )}
-      </div>
+      <Card title="Kompensasi yang Diberikan">
+        <Table
+          columns={COMPENSATION_COLUMNS}
+          dataSource={compensations}
+          rowKey="id"
+          loading={loading}
+          pagination={false}
+          scroll={{ x: 800 }}
+          locale={{ emptyText: "Belum ada kompensasi yang diberikan." }}
+        />
+      </Card>
     </div>
   );
 }

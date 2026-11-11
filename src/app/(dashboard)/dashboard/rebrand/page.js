@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
+import { Alert, Button, Card, Checkbox, Input, Segmented, Select, Table, Tag, Typography } from "antd";
 
 // Admin-only rebranding + live system prompts (plan #2).
 // Brands: client-facing model id (e.g. "h-router/ultra-pro") → upstream
@@ -20,6 +21,41 @@ function targetLabel(p) {
   if (p.provider) return `${p.provider} (semua model)`;
   return "—";
 }
+
+const BRAND_COLUMNS = (toggleBrand, deleteBrand) => [
+  {
+    title: "Brand",
+    dataIndex: "brandModelId",
+    key: "brand",
+    render: (_v, b) => (
+      <div>
+        <div className="font-medium">{b.brandModelId}</div>
+        <div className="text-xs text-text-muted">
+          → {b.upstreamProvider}/{b.upstreamModel}
+        </div>
+      </div>
+    ),
+  },
+  { title: "Nama tampil", dataIndex: "displayName", key: "display", render: (v) => v || "—" },
+  {
+    title: "Status",
+    dataIndex: "isActive",
+    key: "status",
+    render: (v) => <Tag color={v ? "success" : "error"}>{v ? "Aktif" : "Nonaktif"}</Tag>,
+  },
+  {
+    title: "",
+    key: "actions",
+    render: (_v, b) => (
+      <div className="flex gap-2">
+        <Button size="small" onClick={() => toggleBrand(b)}>
+          {b.isActive ? "Nonaktifkan" : "Aktifkan"}
+        </Button>
+        <Button size="small" danger onClick={() => deleteBrand(b)}>Hapus</Button>
+      </div>
+    ),
+  },
+];
 
 export default function RebrandPage() {
   const [tab, setTab] = useState("brands");
@@ -267,13 +303,6 @@ export default function RebrandPage() {
     }
   };
 
-  const tabBtn = (id, label) => (
-    <button key={id} onClick={() => setTab(id)}
-      className={`rounded-lg px-4 py-2 text-sm font-medium ${tab === id ? "bg-primary text-white" : "border border-border-subtle bg-surface text-text-main"}`}>
-      {label}
-    </button>
-  );
-
   return (
     <div className="flex flex-col gap-6">
       <div>
@@ -284,161 +313,151 @@ export default function RebrandPage() {
         </p>
       </div>
 
-      <div className="flex gap-2">
-        {tabBtn("brands", "Rebranding Model")}
-        {tabBtn("prompts", "System Prompt (applyLive)")}
-        {tabBtn("vision", "Vision Adapter")}
-      </div>
+      <Segmented
+        value={tab}
+        onChange={setTab}
+        options={[
+          { value: "brands", label: "Rebranding Model" },
+          { value: "prompts", label: "System Prompt (applyLive)" },
+          { value: "vision", label: "Vision Adapter" },
+        ]}
+      />
 
-      {error && <p className="text-sm text-error">{error}</p>}
+      {error && <Alert type="error" message={error} showIcon />}
 
       {tab === "brands" && (
         <>
-          <div className="bg-surface-2 border border-border-subtle rounded-lg p-4">
-            <h2 className="mb-3 text-lg font-semibold text-text-main">Buat brand baru</h2>
+          <Card title="Buat brand baru">
             <form onSubmit={createBrand} className="flex flex-wrap items-end gap-3">
               <label className="flex flex-col gap-1 text-sm">
                 <span className="text-text-muted">Brand model id</span>
-                <input value={brandId} onChange={(e) => setBrandId(e.target.value)} required
-                  className="rounded-lg border border-border-subtle bg-surface px-3 py-2 text-text-main" placeholder="h-router/ultra-pro" />
+                <Input value={brandId} onChange={(e) => setBrandId(e.target.value)} required placeholder="h-router/ultra-pro" style={{ width: 220 }} />
               </label>
               <label className="flex flex-col gap-1 text-sm">
                 <span className="text-text-muted">Upstream provider/model</span>
-                <select value={upstream} onChange={(e) => setUpstream(e.target.value)} required
-                  className="rounded-lg border border-border-subtle bg-surface px-3 py-2 text-text-main">
-                  <option value="">— pilih —</option>
-                  {upstreamOptions.map((f) => <option key={f} value={f}>{f}</option>)}
-                </select>
+                <Select
+                  value={upstream || undefined}
+                  onChange={setUpstream}
+                  placeholder="— pilih —"
+                  style={{ width: 260 }}
+                  showSearch
+                  options={upstreamOptions.map((f) => ({ value: f, label: f }))}
+                />
               </label>
               <label className="flex flex-col gap-1 text-sm">
                 <span className="text-text-muted">Nama tampil (opsional)</span>
-                <input value={displayName} onChange={(e) => setDisplayName(e.target.value)}
-                  className="rounded-lg border border-border-subtle bg-surface px-3 py-2 text-text-main" placeholder="Ultra Pro" />
+                <Input value={displayName} onChange={(e) => setDisplayName(e.target.value)} placeholder="Ultra Pro" style={{ width: 180 }} />
               </label>
-              <button type="submit" disabled={creatingBrand}
-                className="rounded-lg bg-primary px-4 py-2 text-sm font-medium text-white disabled:opacity-50">
+              <Button type="primary" htmlType="submit" loading={creatingBrand}>
                 {creatingBrand ? "Membuat…" : "Buat brand"}
-              </button>
+              </Button>
             </form>
-            <p className="mt-2 text-xs text-text-muted">
+            <Typography.Text type="secondary" className="text-xs">
               Brand aktif tampil di /v1/models sebagai <code>owned_by: h-router</code> dan menggantikan entri
               upstream-nya. Brand nonaktif disembunyikan dan request dengan id itu gagal.
-            </p>
-          </div>
+            </Typography.Text>
+          </Card>
 
-          <div className="bg-surface-2 border border-border-subtle rounded-lg p-4">
-            <h2 className="mb-3 text-lg font-semibold text-text-main">Daftar brand</h2>
-            {loading ? (
-              <p className="text-sm text-text-muted">Memuat…</p>
-            ) : brands.length === 0 ? (
-              <p className="text-sm text-text-muted">Belum ada brand. Buat brand pertama di atas.</p>
-            ) : (
-              <div className="flex flex-col gap-3">
-                {brands.map((b) => (
-                  <div key={b.id} className="flex flex-wrap items-center justify-between gap-3 rounded-lg border border-border-subtle bg-bg-subtle p-3">
-                    <div>
-                      <div className="font-medium text-text-main">
-                        {b.brandModelId}{" "}
-                        <span className="text-xs text-text-muted">→ {b.upstreamProvider}/{b.upstreamModel}</span>
-                      </div>
-                      <div className="text-sm text-text-muted">
-                        {b.displayName} · <span className={b.isActive ? "text-success" : "text-error"}>{b.isActive ? "Aktif" : "Nonaktif"}</span>
-                      </div>
-                    </div>
-                    <div className="flex gap-2">
-                      <button onClick={() => toggleBrand(b)}
-                        className="rounded-lg border border-border-subtle bg-surface px-3 py-1.5 text-sm text-text-main">
-                        {b.isActive ? "Nonaktifkan" : "Aktifkan"}
-                      </button>
-                      <button onClick={() => deleteBrand(b)}
-                        className="rounded-lg border border-border-subtle bg-surface px-3 py-1.5 text-sm text-error">Hapus</button>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            )}
-          </div>
+          <Card title="Daftar brand">
+            <Table
+              columns={BRAND_COLUMNS(toggleBrand, deleteBrand)}
+              dataSource={brands}
+              rowKey="id"
+              loading={loading}
+              pagination={false}
+              scroll={{ x: 700 }}
+              locale={{ emptyText: "Belum ada brand. Buat brand pertama di atas." }}
+            />
+          </Card>
         </>
       )}
 
       {tab === "prompts" && (
         <>
-          <div className="bg-surface-2 border border-border-subtle rounded-lg p-4">
-            <h2 className="mb-3 text-lg font-semibold text-text-main">Buat live prompt</h2>
+          <Card title="Buat live prompt">
             <form onSubmit={createPrompt} className="flex flex-col gap-3">
               <div className="flex flex-wrap items-end gap-3">
                 <label className="flex flex-col gap-1 text-sm">
                   <span className="text-text-muted">Target</span>
-                  <select value={targetKind} onChange={(e) => setTargetKind(e.target.value)}
-                    className="rounded-lg border border-border-subtle bg-surface px-3 py-2 text-text-main">
-                    <option value="brand">Brand</option>
-                    <option value="model">Provider + model</option>
-                    <option value="provider">Satu provider (semua model)</option>
-                  </select>
+                  <Select
+                    value={targetKind}
+                    onChange={setTargetKind}
+                    style={{ width: 220 }}
+                    options={[
+                      { value: "brand", label: "Brand" },
+                      { value: "model", label: "Provider + model" },
+                      { value: "provider", label: "Satu provider (semua model)" },
+                    ]}
+                  />
                 </label>
                 {targetKind === "brand" && (
                   <label className="flex flex-col gap-1 text-sm">
                     <span className="text-text-muted">Brand</span>
-                    <select value={targetBrand} onChange={(e) => setTargetBrand(e.target.value)} required
-                      className="rounded-lg border border-border-subtle bg-surface px-3 py-2 text-text-main">
-                      <option value="">— pilih brand —</option>
-                      {brands.filter((b) => b.isActive).map((b) => <option key={b.id} value={b.brandModelId}>{b.brandModelId}</option>)}
-                    </select>
+                    <Select
+                      value={targetBrand || undefined}
+                      onChange={setTargetBrand}
+                      placeholder="— pilih brand —"
+                      style={{ width: 220 }}
+                      options={brands.filter((b) => b.isActive).map((b) => ({ value: b.brandModelId, label: b.brandModelId }))}
+                    />
                   </label>
                 )}
                 {targetKind === "model" && (
                   <label className="flex flex-col gap-1 text-sm">
                     <span className="text-text-muted">Provider/model</span>
-                    <select value={targetUpstream} onChange={(e) => setTargetUpstream(e.target.value)} required
-                      className="rounded-lg border border-border-subtle bg-surface px-3 py-2 text-text-main">
-                      <option value="">— pilih —</option>
-                      {upstreamOptions.map((f) => <option key={f} value={f}>{f}</option>)}
-                    </select>
+                    <Select
+                      value={targetUpstream || undefined}
+                      onChange={setTargetUpstream}
+                      placeholder="— pilih —"
+                      style={{ width: 260 }}
+                      showSearch
+                      options={upstreamOptions.map((f) => ({ value: f, label: f }))}
+                    />
                   </label>
                 )}
                 {targetKind === "provider" && (
                   <label className="flex flex-col gap-1 text-sm">
                     <span className="text-text-muted">Provider</span>
-                    <select value={targetProvider} onChange={(e) => setTargetProvider(e.target.value)} required
-                      className="rounded-lg border border-border-subtle bg-surface px-3 py-2 text-text-main">
-                      <option value="">— pilih —</option>
-                      {providerOptions.map((p) => <option key={p} value={p}>{p}</option>)}
-                    </select>
+                    <Select
+                      value={targetProvider || undefined}
+                      onChange={setTargetProvider}
+                      placeholder="— pilih —"
+                      style={{ width: 200 }}
+                      options={providerOptions.map((p) => ({ value: p, label: p }))}
+                    />
                   </label>
                 )}
                 <label className="flex flex-col gap-1 text-sm">
                   <span className="text-text-muted">Mode</span>
-                  <select value={promptMode} onChange={(e) => setPromptMode(e.target.value)}
-                    className="rounded-lg border border-border-subtle bg-surface px-3 py-2 text-text-main">
-                    {MODES.map((m) => <option key={m.value} value={m.value}>{m.label}</option>)}
-                  </select>
+                  <Select
+                    value={promptMode}
+                    onChange={setPromptMode}
+                    style={{ width: 280 }}
+                    options={MODES.map((m) => ({ value: m.value, label: m.label }))}
+                  />
                 </label>
               </div>
               <label className="flex flex-col gap-1 text-sm">
                 <span className="text-text-muted">System prompt</span>
-                <textarea value={promptText} onChange={(e) => setPromptText(e.target.value)} required rows={4}
-                  className="rounded-lg border border-border-subtle bg-surface px-3 py-2 text-text-main"
-                  placeholder="Kamu adalah asisten yang…" />
+                <Input.TextArea value={promptText} onChange={(e) => setPromptText(e.target.value)} required rows={4} placeholder="Kamu adalah asisten yang…" />
               </label>
               <div>
-                <button type="submit" disabled={creatingPrompt}
-                  className="rounded-lg bg-primary px-4 py-2 text-sm font-medium text-white disabled:opacity-50">
+                <Button type="primary" htmlType="submit" loading={creatingPrompt}>
                   {creatingPrompt ? "Menyimpan…" : "Buat live prompt"}
-                </button>
+                </Button>
               </div>
             </form>
-            <p className="mt-2 text-xs text-text-muted">
+            <Typography.Text type="secondary" className="text-xs">
               Prioritas: prompt brand mengalahkan prompt provider+model, yang mengalahkan prompt satu provider.
               Prompt disuntik sebelum RTK/translasi dan tidak pernah tersimpan di log/usage.
-            </p>
-          </div>
+            </Typography.Text>
+          </Card>
 
-          <div className="bg-surface-2 border border-border-subtle rounded-lg p-4">
-            <h2 className="mb-3 text-lg font-semibold text-text-main">Daftar live prompt</h2>
+          <Card title="Daftar live prompt">
             {loading ? (
-              <p className="text-sm text-text-muted">Memuat…</p>
+              <Typography.Text type="secondary">Memuat…</Typography.Text>
             ) : prompts.length === 0 ? (
-              <p className="text-sm text-text-muted">Belum ada live prompt. Buat yang pertama di atas.</p>
+              <Typography.Text type="secondary">Belum ada live prompt. Buat yang pertama di atas.</Typography.Text>
             ) : (
               <div className="flex flex-col gap-3">
                 {prompts.map((p) => (
@@ -450,43 +469,39 @@ export default function RebrandPage() {
                           <span className="text-xs text-text-muted">· mode {p.mode}</span>
                         </div>
                         <div className="text-sm text-text-muted">
-                          <span className={p.isActive ? "text-success" : "text-error"}>{p.isActive ? "Aktif" : "Nonaktif"}</span>
+                          <Tag color={p.isActive ? "success" : "error"}>{p.isActive ? "Aktif" : "Nonaktif"}</Tag>
                         </div>
                       </div>
                       <div className="flex gap-2">
                         {editingPrompt?.id === p.id ? (
                           <>
-                            <button onClick={() => savePromptEdit(p.id)}
-                              className="rounded-lg bg-primary px-3 py-1.5 text-sm font-medium text-white">Simpan</button>
-                            <button onClick={() => setEditingPrompt(null)}
-                              className="rounded-lg border border-border-subtle bg-surface px-3 py-1.5 text-sm text-text-main">Batal</button>
+                            <Button type="primary" size="small" onClick={() => savePromptEdit(p.id)}>Simpan</Button>
+                            <Button size="small" onClick={() => setEditingPrompt(null)}>Batal</Button>
                           </>
                         ) : (
                           <>
-                            <button onClick={() => setEditingPrompt({ id: p.id, systemPrompt: p.systemPrompt, mode: p.mode, isActive: p.isActive })}
-                              className="rounded-lg border border-border-subtle bg-surface px-3 py-1.5 text-sm text-text-main">Ubah</button>
-                            <button onClick={() => deletePrompt(p)}
-                              className="rounded-lg border border-border-subtle bg-surface px-3 py-1.5 text-sm text-error">Hapus</button>
+                            <Button size="small" onClick={() => setEditingPrompt({ id: p.id, systemPrompt: p.systemPrompt, mode: p.mode, isActive: p.isActive })}>Ubah</Button>
+                            <Button size="small" danger onClick={() => deletePrompt(p)}>Hapus</Button>
                           </>
                         )}
                       </div>
                     </div>
                     {editingPrompt?.id === p.id ? (
                       <div className="flex flex-col gap-2">
-                        <textarea value={editingPrompt.systemPrompt}
-                          onChange={(e) => setEditingPrompt({ ...editingPrompt, systemPrompt: e.target.value })} rows={4}
-                          className="rounded-lg border border-border-subtle bg-surface px-3 py-2 text-sm text-text-main" />
+                        <Input.TextArea value={editingPrompt.systemPrompt}
+                          onChange={(e) => setEditingPrompt({ ...editingPrompt, systemPrompt: e.target.value })} rows={4} />
                         <div className="flex gap-3">
-                          <select value={editingPrompt.mode}
-                            onChange={(e) => setEditingPrompt({ ...editingPrompt, mode: e.target.value })}
-                            className="rounded-lg border border-border-subtle bg-surface px-2 py-1 text-sm text-text-main">
-                            {MODES.map((m) => <option key={m.value} value={m.value}>{m.label}</option>)}
-                          </select>
-                          <label className="inline-flex items-center gap-1 text-sm">
-                            <input type="checkbox" checked={editingPrompt.isActive}
-                              onChange={(e) => setEditingPrompt({ ...editingPrompt, isActive: e.target.checked })} />
+                          <Select value={editingPrompt.mode}
+                            onChange={(e) => setEditingPrompt({ ...editingPrompt, mode: e })}
+                            style={{ width: 280 }}
+                            options={MODES.map((m) => ({ value: m.value, label: m.label }))}
+                          />
+                          <Checkbox
+                            checked={editingPrompt.isActive}
+                            onChange={(e) => setEditingPrompt({ ...editingPrompt, isActive: e.target.checked })}
+                          >
                             Aktif
-                          </label>
+                          </Checkbox>
                         </div>
                       </div>
                     ) : (
@@ -496,13 +511,12 @@ export default function RebrandPage() {
                 ))}
               </div>
             )}
-          </div>
+          </Card>
         </>
       )}
       {tab === "vision" && (
         <>
-          <div className="bg-surface-2 border border-border-subtle rounded-lg p-4">
-            <h2 className="mb-3 text-lg font-semibold text-text-main">Vision Adapter (G10)</h2>
+          <Card title="Vision Adapter (G10)">
             <p className="mb-3 text-sm text-text-muted">
               Request berisi gambar hanya dikirim ke model yang bisa baca gambar. Model non-vision ditolak
               dengan error 400 yang menyebut modelnya + alternatif vision-capable — kecuali admin mengaktifkan
@@ -510,9 +524,9 @@ export default function RebrandPage() {
             </p>
             <h3 className="mb-2 text-sm font-semibold text-text-main">Brand &amp; kemampuan vision upstream-nya</h3>
             {loading ? (
-              <p className="text-sm text-text-muted">Memuat…</p>
+              <Typography.Text type="secondary">Memuat…</Typography.Text>
             ) : brands.length === 0 ? (
-              <p className="text-sm text-text-muted">Belum ada brand. Buat brand dulu di tab Rebranding Model.</p>
+              <Typography.Text type="secondary">Belum ada brand. Buat brand dulu di tab Rebranding Model.</Typography.Text>
             ) : (
               <div className="flex flex-col gap-2">
                 {brands.map((b) => {
@@ -527,11 +541,11 @@ export default function RebrandPage() {
                         </div>
                         <div className="text-sm text-text-muted">
                           {vision === true ? (
-                            <span className="text-success">Bisa baca gambar (vision)</span>
+                            <Tag color="success">Bisa baca gambar (vision)</Tag>
                           ) : vision === false ? (
-                            <span className="text-error">Teks saja — request gambar ditolak 400</span>
+                            <Tag color="error">Teks saja — request gambar ditolak 400</Tag>
                           ) : (
-                            <span>Tidak diketahui</span>
+                            <Tag>Tidak diketahui</Tag>
                           )}
                           {override !== undefined && (
                             <span> · override admin: {override ? "vision" : "teks saja"}</span>
@@ -549,50 +563,48 @@ export default function RebrandPage() {
                 : "—"}
               {visionModels.length > 30 && ` (+${visionModels.length - 30} lagi)`}
             </p>
-          </div>
+          </Card>
 
-          <div className="bg-surface-2 border border-border-subtle rounded-lg p-4">
-            <h2 className="mb-3 text-lg font-semibold text-text-main">Override kemampuan vision</h2>
+          <Card title="Override kemampuan vision">
             <form onSubmit={saveVisionOverride} className="flex flex-wrap items-end gap-3">
               <label className="flex flex-col gap-1 text-sm">
                 <span className="text-text-muted">Provider/model atau id brand</span>
-                <input value={visionKey} onChange={(e) => setVisionKey(e.target.value)} required
-                  className="rounded-lg border border-border-subtle bg-surface px-3 py-2 text-text-main"
-                  placeholder="kimi/kimi-latest atau h-router/ultra" />
+                <Input value={visionKey} onChange={(e) => setVisionKey(e.target.value)} required
+                  placeholder="kimi/kimi-latest atau h-router/ultra" style={{ width: 300 }} />
               </label>
               <label className="flex flex-col gap-1 text-sm">
                 <span className="text-text-muted">Bisa baca gambar?</span>
-                <select value={visionValue} onChange={(e) => setVisionValue(e.target.value)}
-                  className="rounded-lg border border-border-subtle bg-surface px-3 py-2 text-text-main">
-                  <option value="true">Ya — vision</option>
-                  <option value="false">Tidak — teks saja</option>
-                </select>
+                <Select value={visionValue} onChange={setVisionValue}
+                  style={{ width: 180 }}
+                  options={[
+                    { value: "true", label: "Ya — vision" },
+                    { value: "false", label: "Tidak — teks saja" },
+                  ]}
+                />
               </label>
-              <button type="submit" disabled={savingVision}
-                className="rounded-lg bg-primary px-4 py-2 text-sm font-medium text-white disabled:opacity-50">
+              <Button type="primary" htmlType="submit" loading={savingVision}>
                 {savingVision ? "Menyimpan…" : "Simpan override"}
-              </button>
+              </Button>
             </form>
-            <p className="mt-2 text-xs text-text-muted">
+            <Typography.Text type="secondary" className="text-xs">
               Override menang atas tabel kapabilitas — dipakai gate chat DAN daftar /v1/models. Berguna saat
               metadata model salah atau belum ada. Kosongkan dengan hapus di bawah.
-            </p>
+            </Typography.Text>
             <div className="mt-3 flex flex-col gap-2">
               {Object.keys(visionOverrides).length === 0 ? (
-                <p className="text-sm text-text-muted">Belum ada override.</p>
+                <Typography.Text type="secondary">Belum ada override.</Typography.Text>
               ) : (
                 Object.entries(visionOverrides).map(([key, value]) => (
                   <div key={key} className="flex flex-wrap items-center justify-between gap-3 rounded-lg border border-border-subtle bg-bg-subtle p-3">
                     <div className="font-medium text-text-main">
                       {key} <span className="text-sm text-text-muted">→ {value ? "vision" : "teks saja"}</span>
                     </div>
-                    <button onClick={() => deleteVisionOverride(key)}
-                      className="rounded-lg border border-border-subtle bg-surface px-3 py-1.5 text-sm text-error">Hapus</button>
+                    <Button size="small" danger onClick={() => deleteVisionOverride(key)}>Hapus</Button>
                   </div>
                 ))
               )}
             </div>
-          </div>
+          </Card>
         </>
       )}
     </div>

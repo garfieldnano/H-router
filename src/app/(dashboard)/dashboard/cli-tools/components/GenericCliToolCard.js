@@ -1,7 +1,8 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { Card, Button, ModelSelectModal, ManualConfigModal } from "@/shared/components";
+import { ModelSelectModal, ManualConfigModal } from "@/shared/components";
+import { Button, Card } from "antd";
 import Image from "next/image";
 import BaseUrlSelect from "./BaseUrlSelect";
 import { rememberEndpoint } from "./cliEndpointPresets";
@@ -431,7 +432,7 @@ export default function GenericCliToolCard({
   };
 
   return (
-    <Card padding="xs" className="overflow-hidden">
+    <Card styles={{ body: { padding: 12 } }} className="overflow-hidden">
       {/* Header clickable */}
       <div className="flex items-start justify-between gap-3 hover:cursor-pointer sm:items-center" onClick={onToggle}>
         <div className="flex min-w-0 items-center gap-3">
@@ -504,15 +505,15 @@ export default function GenericCliToolCard({
                 </div>
                 <div className="flex items-center gap-2 pl-9">
                   <Button
-                    variant="secondary"
-                    size="sm"
+                   
+                    size="small"
                     onClick={() => setShowManualConfigModal(true)}
                     className="!bg-yellow-500/20 !border-yellow-500/40 !text-yellow-700 dark:!text-yellow-300 hover:!bg-yellow-500/30"
                   >
                     <span className="material-symbols-outlined text-[18px] mr-1">content_copy</span>
                     Manual Config
                   </Button>
-                  <Button variant="outline" size="sm" onClick={() => setShowInstallGuide(!showInstallGuide)}>
+                  <Button size="small" onClick={() => setShowInstallGuide(!showInstallGuide)}>
                     <span className="material-symbols-outlined text-[18px] mr-1">{showInstallGuide ? "expand_less" : "help"}</span>
                     {showInstallGuide ? "Hide" : "How to Install"}
                   </Button>
@@ -627,8 +628,8 @@ export default function GenericCliToolCard({
                       <div className="flex flex-wrap items-center gap-2">
                         <Button
                           type="button"
-                          size="sm"
-                          variant="secondary"
+                          size="small"
+                         
                           onClick={() => setModalOpen(true)}
                           disabled={!activeProviders?.length}
                         >
@@ -637,8 +638,8 @@ export default function GenericCliToolCard({
                         </Button>
                         <Button
                           type="button"
-                          size="sm"
-                          variant="ghost"
+                          size="small"
+                          type="text"
                           onClick={handleAddAllActiveModels}
                           disabled={addingAll}
                           className="text-xs text-primary hover:text-primary-hover"
@@ -715,8 +716,8 @@ export default function GenericCliToolCard({
                 <div className="flex items-center gap-2">
                   {!readOnly && (
 <Button
-                    variant="primary"
-                    size="sm"
+                    type="primary"
+                    size="small"
                     onClick={handleApply}
                     disabled={applying || checking}
                   >
@@ -725,8 +726,8 @@ export default function GenericCliToolCard({
                   )}
                   {status?.has9Router && !readOnly && (
                     <Button
-                      variant="outline"
-                      size="sm"
+                     
+                      size="small"
                       onClick={handleRestore}
                       disabled={restoring || checking}
                       className="text-red-500 hover:text-red-600 hover:border-red-500/50"
@@ -736,8 +737,8 @@ export default function GenericCliToolCard({
                   )}
                 </div>
                 <Button
-                  variant="outline"
-                  size="sm"
+                 
+                  size="small"
                   onClick={() => setShowManualConfigModal(true)}
                 >
                   <span className="material-symbols-outlined text-[18px] mr-1">code</span>

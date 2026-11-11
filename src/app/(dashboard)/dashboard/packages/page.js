@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
+import { Alert, Button, Card, Checkbox, Input, Select, Spin, Tag, Typography } from "antd";
 
 // Admin-only packages management (v1): create/edit/deactivate packages sold
 // via the Telegram bot. Prices are INTEGER rupiah, admin-editable here and
@@ -125,57 +126,53 @@ export default function PackagesPage() {
         </p>
       </div>
 
-      {error && <p className="text-sm text-error">{error}</p>}
+      {error && <Alert type="error" message={error} showIcon />}
 
-      <div className="bg-surface-2 border border-border-subtle rounded-lg p-4">
-        <h2 className="mb-3 text-lg font-semibold text-text-main">Buat paket baru</h2>
+      <Card title="Buat paket baru">
         <form onSubmit={createPackage} className="flex flex-wrap items-end gap-3">
           <label className="flex flex-col gap-1 text-sm">
             <span className="text-text-muted">Nama</span>
-            <input value={name} onChange={(e) => setName(e.target.value)} required
-              className="rounded-lg border border-border-subtle bg-surface px-3 py-2 text-text-main" placeholder="Basic 30 hari" />
+            <Input value={name} onChange={(e) => setName(e.target.value)} required placeholder="Basic 30 hari" style={{ width: 180 }} />
           </label>
           <label className="flex flex-col gap-1 text-sm">
             <span className="text-text-muted">Harga (Rp)</span>
-            <input value={price} onChange={(e) => setPrice(e.target.value)} required inputMode="numeric"
-              className="rounded-lg border border-border-subtle bg-surface px-3 py-2 text-text-main" placeholder="150000" />
+            <Input value={price} onChange={(e) => setPrice(e.target.value)} required inputMode="numeric" placeholder="150000" style={{ width: 140 }} />
           </label>
           <label className="flex flex-col gap-1 text-sm">
             <span className="text-text-muted">Durasi (hari)</span>
-            <input value={durationDays} onChange={(e) => setDurationDays(e.target.value)} required inputMode="numeric"
-              className="rounded-lg border border-border-subtle bg-surface px-3 py-2 text-text-main" placeholder="30" />
+            <Input value={durationDays} onChange={(e) => setDurationDays(e.target.value)} required inputMode="numeric" placeholder="30" style={{ width: 110 }} />
           </label>
           <label className="flex flex-col gap-1 text-sm">
             <span className="text-text-muted">Tipe</span>
-            <select value={type} onChange={(e) => setType(e.target.value)}
-              className="rounded-lg border border-border-subtle bg-surface px-3 py-2 text-text-main">
-              <option value="paid">Berbayar</option>
-              <option value="trial">Trial (gratis)</option>
-            </select>
+            <Select
+              value={type}
+              onChange={setType}
+              style={{ width: 150 }}
+              options={[
+                { value: "paid", label: "Berbayar" },
+                { value: "trial", label: "Trial (gratis)" },
+              ]}
+            />
           </label>
           <label className="flex flex-col gap-1 text-sm">
             <span className="text-text-muted">RPM (opsional)</span>
-            <input value={rpmLimit} onChange={(e) => setRpmLimit(e.target.value)} inputMode="numeric"
-              className="rounded-lg border border-border-subtle bg-surface px-3 py-2 text-text-main" placeholder="kosong = ikut default" />
+            <Input value={rpmLimit} onChange={(e) => setRpmLimit(e.target.value)} inputMode="numeric" placeholder="kosong = ikut default" style={{ width: 170 }} />
           </label>
           <label className="flex flex-col gap-1 text-sm">
             <span className="text-text-muted">Catatan (opsional)</span>
-            <input value={note} onChange={(e) => setNote(e.target.value)}
-              className="rounded-lg border border-border-subtle bg-surface px-3 py-2 text-text-main" placeholder="Akses semua model" />
+            <Input value={note} onChange={(e) => setNote(e.target.value)} placeholder="Akses semua model" style={{ width: 180 }} />
           </label>
-          <button type="submit" disabled={creating}
-            className="rounded-lg bg-primary px-4 py-2 text-sm font-medium text-white disabled:opacity-50">
+          <Button type="primary" htmlType="submit" loading={creating}>
             {creating ? "Membuat…" : "Buat paket"}
-          </button>
+          </Button>
         </form>
-      </div>
+      </Card>
 
-      <div className="bg-surface-2 border border-border-subtle rounded-lg p-4">
-        <h2 className="mb-3 text-lg font-semibold text-text-main">Daftar paket</h2>
+      <Card title="Daftar paket">
         {loading ? (
-          <p className="text-sm text-text-muted">Memuat…</p>
+          <Spin tip="Memuat…" />
         ) : packages.length === 0 ? (
-          <p className="text-sm text-text-muted">Belum ada paket. Buat paket pertama di atas — bot tidak bisa menjual apa pun tanpa paket.</p>
+          <Typography.Text type="secondary">Belum ada paket. Buat paket pertama di atas — bot tidak bisa menjual apa pun tanpa paket.</Typography.Text>
         ) : (
           <div className="flex flex-col gap-3">
             {packages.map((p) => (
@@ -191,23 +188,24 @@ export default function PackagesPage() {
                     {editing?.id === p.id ? (
                       <span className="inline-flex flex-wrap items-center gap-2">
                         Rp
-                        <input value={editing.price} onChange={(e) => setEditing({ ...editing, price: e.target.value })}
-                          inputMode="numeric" className="w-28 rounded border border-border-subtle bg-surface px-2 py-1 text-text-main" />
+                        <Input value={editing.price} onChange={(e) => setEditing({ ...editing, price: e.target.value })}
+                          inputMode="numeric" style={{ width: 110 }} />
                         <label className="inline-flex items-center gap-1">
                           RPM
-                          <input value={editing.rpmLimit} onChange={(e) => setEditing({ ...editing, rpmLimit: e.target.value })}
-                            inputMode="numeric" placeholder="ikut default" className="w-20 rounded border border-border-subtle bg-surface px-2 py-1 text-text-main" />
+                          <Input value={editing.rpmLimit} onChange={(e) => setEditing({ ...editing, rpmLimit: e.target.value })}
+                            inputMode="numeric" placeholder="ikut default" style={{ width: 90 }} />
                         </label>
-                        <label className="inline-flex items-center gap-1">
-                          <input type="checkbox" checked={editing.isActive}
-                            onChange={(e) => setEditing({ ...editing, isActive: e.target.checked })} />
+                        <Checkbox
+                          checked={editing.isActive}
+                          onChange={(e) => setEditing({ ...editing, isActive: e.target.checked })}
+                        >
                           Aktif
-                        </label>
+                        </Checkbox>
                       </span>
                     ) : (
                       <span>
                         {fmtIdr(p.price)} ·{" "}
-                        <span className={p.isActive ? "text-success" : "text-error"}>{p.isActive ? "Aktif" : "Nonaktif"}</span>
+                        <Tag color={p.isActive ? "success" : "error"}>{p.isActive ? "Aktif" : "Nonaktif"}</Tag>
                         {p.access?.note ? ` · ${p.access.note}` : ""}
                         {` · RPM: ${p.rpmLimit != null ? p.rpmLimit : p.type === "trial" ? "20 (default trial)" : `ikut global (${globalRpm})`}`}
                       </span>
@@ -217,17 +215,15 @@ export default function PackagesPage() {
                 <div className="flex gap-2">
                   {editing?.id === p.id ? (
                     <>
-                      <button onClick={() => saveEdit(p.id)}
-                        className="rounded-lg bg-primary px-3 py-1.5 text-sm font-medium text-white">Simpan</button>
-                      <button onClick={() => setEditing(null)}
-                        className="rounded-lg border border-border-subtle bg-surface px-3 py-1.5 text-sm text-text-main">Batal</button>
+                      <Button type="primary" onClick={() => saveEdit(p.id)}>Simpan</Button>
+                      <Button onClick={() => setEditing(null)}>Batal</Button>
                     </>
                   ) : (
                     <>
-                      <button onClick={() => setEditing({ id: p.id, price: String(p.price), isActive: p.isActive, rpmLimit: p.rpmLimit != null ? String(p.rpmLimit) : "" })}
-                        className="rounded-lg border border-border-subtle bg-surface px-3 py-1.5 text-sm text-text-main">Ubah harga</button>
-                      <button onClick={() => deletePkg(p.id)}
-                        className="rounded-lg border border-border-subtle bg-surface px-3 py-1.5 text-sm text-error">Hapus</button>
+                      <Button onClick={() => setEditing({ id: p.id, price: String(p.price), isActive: p.isActive, rpmLimit: p.rpmLimit != null ? String(p.rpmLimit) : "" })}>
+                        Ubah harga
+                      </Button>
+                      <Button danger onClick={() => deletePkg(p.id)}>Hapus</Button>
                     </>
                   )}
                 </div>
@@ -235,7 +231,7 @@ export default function PackagesPage() {
             ))}
           </div>
         )}
-      </div>
+      </Card>
     </div>
   );
 }

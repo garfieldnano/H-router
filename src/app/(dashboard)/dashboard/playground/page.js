@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
+import { Alert, Button, Card, Input, Select, Statistic, Typography } from "antd";
 
 // Playground (plan G7) — test one model at a time through the gateway.
 // The picker shows brand models first; "Muat semua model" loads the full
@@ -63,8 +64,13 @@ export default function PlaygroundPage() {
   };
 
   const options = allModels
-    ? allModels.map((m) => ({ id: m.id, label: m.ownedBy === "h-router" ? `${m.id} (brand)` : m.id }))
-    : brands.map((b) => ({ id: b.id, label: `${b.displayName} → ${b.upstream}` }));
+    ? allModels.map((m) => ({ value: m.id, label: m.ownedBy === "h-router" ? `${m.id} (brand)` : m.id }))
+    : brands.map((b) => ({ value: b.id, label: `${b.displayName} → ${b.upstream}` }));
+
+  const keyOptions = [
+    { value: "", label: "Otomatis (key aktif pertama)" },
+    ...keys.map((k) => ({ value: k.id, label: `${k.name} (${k.maskedKey})` })),
+  ];
 
   const send = async () => {
     setSending(true);
@@ -106,141 +112,131 @@ export default function PlaygroundPage() {
         </p>
       </div>
 
-      {error && <div className="rounded-lg border border-error/40 bg-error/10 px-3 py-2 text-sm text-error">{error}</div>}
+      {error && <Alert type="error" message={error} showIcon />}
 
       <div className="grid gap-4 md:grid-cols-[1fr_1fr]">
-        <div className="flex flex-col gap-3 rounded-lg border border-border-subtle bg-surface p-4">
-          <div>
-            <label className="mb-1 block text-sm font-medium text-text-main">Model</label>
-            <select
-              value={model}
-              onChange={(e) => setModel(e.target.value)}
-              disabled={loadingModels}
-              className="w-full rounded-lg border border-border-subtle bg-surface px-3 py-2 text-sm text-text-main"
-            >
-              {loadingModels ? (
-                <option value="">Memuat model…</option>
-              ) : options.length === 0 ? (
-                <option value="">Tidak ada model</option>
-              ) : (
-                options.map((o) => <option key={o.id} value={o.id}>{o.label}</option>)
+        <Card>
+          <div className="flex flex-col gap-3">
+            <div>
+              <Typography.Text strong>Model</Typography.Text>
+              <Select
+                value={model || undefined}
+                onChange={setModel}
+                disabled={loadingModels}
+                loading={loadingModels}
+                options={options}
+                placeholder={loadingModels ? "Memuat model…" : options.length === 0 ? "Tidak ada model" : "Pilih model"}
+                style={{ width: "100%", marginTop: 4 }}
+                showSearch
+                optionFilterProp="label"
+              />
+              {!allModels && (
+                <Button
+                  onClick={loadAllModels}
+                  disabled={loadingAll || loadingModels}
+                  loading={loadingAll}
+                  style={{ marginTop: 8 }}
+                >
+                  {loadingAll ? "Memuat semua model…" : "Muat semua model → Playground"}
+                </Button>
               )}
-            </select>
-            {!allModels && (
-              <button
-                onClick={loadAllModels}
-                disabled={loadingAll || loadingModels}
-                className="mt-2 rounded-lg border border-border-subtle px-3 py-1.5 text-sm text-text-main hover:bg-bg-subtle disabled:opacity-50"
-              >
-                {loadingAll ? "Memuat semua model…" : "Muat semua model → Playground"}
-              </button>
-            )}
-            {allModels && <p className="mt-2 text-xs text-text-muted">{allModels.length} model dimuat (brand + upstream).</p>}
-          </div>
+              {allModels && <p className="mt-2 text-xs text-text-muted">{allModels.length} model dimuat (brand + upstream).</p>}
+            </div>
 
-          <div>
-            <label className="mb-1 block text-sm font-medium text-text-main">API Key (yang dipakai untuk uji)</label>
-            <select
-              value={apiKeyId}
-              onChange={(e) => setApiKeyId(e.target.value)}
-              className="w-full rounded-lg border border-border-subtle bg-surface px-3 py-2 text-sm text-text-main"
+            <div>
+              <Typography.Text strong>API Key (yang dipakai untuk uji)</Typography.Text>
+              <Select
+                value={apiKeyId}
+                onChange={setApiKeyId}
+                options={keyOptions}
+                style={{ width: "100%", marginTop: 4 }}
+              />
+              {keys.length === 0 && !loadingModels && (
+                <p className="mt-1 text-xs text-warning">Belum ada API key aktif — buat dulu di halaman Endpoint &amp; Key.</p>
+              )}
+            </div>
+
+            <div>
+              <Typography.Text strong>System prompt (opsional)</Typography.Text>
+              <Input.TextArea
+                value={systemPrompt}
+                onChange={(e) => setSystemPrompt(e.target.value)}
+                rows={2}
+                placeholder="Instruksi sistem untuk model…"
+                style={{ marginTop: 4 }}
+              />
+            </div>
+
+            <div>
+              <Typography.Text strong>Prompt</Typography.Text>
+              <Input.TextArea
+                value={prompt}
+                onChange={(e) => setPrompt(e.target.value)}
+                rows={5}
+                placeholder="Tulis prompt untuk diuji…"
+                style={{ marginTop: 4 }}
+              />
+            </div>
+
+            <div className="flex gap-3">
+              <div className="flex-1">
+                <Typography.Text strong>Temperature (0–2)</Typography.Text>
+                <Input
+                  value={temperature}
+                  onChange={(e) => setTemperature(e.target.value)}
+                  placeholder="kosong = default"
+                  inputMode="decimal"
+                  style={{ marginTop: 4 }}
+                />
+              </div>
+              <div className="flex-1">
+                <Typography.Text strong>Max tokens</Typography.Text>
+                <Input
+                  value={maxTokens}
+                  onChange={(e) => setMaxTokens(e.target.value)}
+                  placeholder="kosong = default"
+                  inputMode="numeric"
+                  style={{ marginTop: 4 }}
+                />
+              </div>
+            </div>
+
+            <Button
+              type="primary"
+              onClick={send}
+              loading={sending}
+              disabled={sending || !model || !prompt.trim()}
             >
-              <option value="">Otomatis (key aktif pertama)</option>
-              {keys.map((k) => (
-                <option key={k.id} value={k.id}>{k.name} ({k.maskedKey})</option>
-              ))}
-            </select>
-            {keys.length === 0 && !loadingModels && (
-              <p className="mt-1 text-xs text-warning">Belum ada API key aktif — buat dulu di halaman Endpoint &amp; Key.</p>
-            )}
+              {sending ? "Mengirim…" : "Kirim"}
+            </Button>
+            {sendError && <Alert type="error" message={sendError} showIcon />}
           </div>
+        </Card>
 
-          <div>
-            <label className="mb-1 block text-sm font-medium text-text-main">System prompt (opsional)</label>
-            <textarea
-              value={systemPrompt}
-              onChange={(e) => setSystemPrompt(e.target.value)}
-              rows={2}
-              placeholder="Instruksi sistem untuk model…"
-              className="w-full rounded-lg border border-border-subtle bg-surface px-3 py-2 text-sm text-text-main"
-            />
-          </div>
-
-          <div>
-            <label className="mb-1 block text-sm font-medium text-text-main">Prompt</label>
-            <textarea
-              value={prompt}
-              onChange={(e) => setPrompt(e.target.value)}
-              rows={5}
-              placeholder="Tulis prompt untuk diuji…"
-              className="w-full rounded-lg border border-border-subtle bg-surface px-3 py-2 text-sm text-text-main"
-            />
-          </div>
-
-          <div className="flex gap-3">
-            <div className="flex-1">
-              <label className="mb-1 block text-sm font-medium text-text-main">Temperature (0–2)</label>
-              <input
-                value={temperature}
-                onChange={(e) => setTemperature(e.target.value)}
-                placeholder="kosong = default"
-                inputMode="decimal"
-                className="w-full rounded-lg border border-border-subtle bg-surface px-3 py-2 text-sm text-text-main"
-              />
-            </div>
-            <div className="flex-1">
-              <label className="mb-1 block text-sm font-medium text-text-main">Max tokens</label>
-              <input
-                value={maxTokens}
-                onChange={(e) => setMaxTokens(e.target.value)}
-                placeholder="kosong = default"
-                inputMode="numeric"
-                className="w-full rounded-lg border border-border-subtle bg-surface px-3 py-2 text-sm text-text-main"
-              />
-            </div>
-          </div>
-
-          <button
-            onClick={send}
-            disabled={sending || !model || !prompt.trim()}
-            className="rounded-lg bg-primary px-4 py-2 text-sm font-medium text-white disabled:opacity-50"
-          >
-            {sending ? "Mengirim…" : "Kirim"}
-          </button>
-          {sendError && <div className="rounded-lg border border-error/40 bg-error/10 px-3 py-2 text-sm text-error">{sendError}</div>}
-        </div>
-
-        <div className="flex flex-col gap-3 rounded-lg border border-border-subtle bg-surface p-4">
-          <h2 className="text-sm font-semibold text-text-main">Jawaban</h2>
+        <Card title="Jawaban">
           {!result ? (
             <p className="text-sm text-text-muted">Jawaban model akan muncul di sini.</p>
           ) : (
-            <>
+            <div className="flex flex-col gap-3">
               <pre className="max-h-[480px] overflow-auto whitespace-pre-wrap break-words rounded-lg border border-border-subtle bg-bg-subtle p-3 font-sans text-sm text-text-main">{result.content || "(jawaban kosong)"}</pre>
-              <div className="grid grid-cols-2 gap-2 text-sm md:grid-cols-4">
-                <div className="rounded-lg border border-border-subtle p-2">
-                  <div className="text-lg font-semibold text-text-main">{(result.usage?.promptTokens ?? 0).toLocaleString("id-ID")}</div>
-                  <div className="text-xs text-text-muted">Token input</div>
-                </div>
-                <div className="rounded-lg border border-border-subtle p-2">
-                  <div className="text-lg font-semibold text-text-main">{(result.usage?.completionTokens ?? 0).toLocaleString("id-ID")}</div>
-                  <div className="text-xs text-text-muted">Token output</div>
-                </div>
-                <div className="rounded-lg border border-border-subtle p-2">
-                  <div className="text-lg font-semibold text-text-main">{result.cost === null || result.cost === undefined ? "—" : `$${Number(result.cost).toFixed(4)}`}</div>
-                  <div className="text-xs text-text-muted">Biaya</div>
-                </div>
-                <div className="rounded-lg border border-border-subtle p-2">
-                  <div className="text-lg font-semibold text-text-main">{result.finishReason || "—"}</div>
-                  <div className="text-xs text-text-muted">Finish reason</div>
-                </div>
+              <div className="grid grid-cols-2 gap-2 md:grid-cols-4">
+                {[
+                  ["Token input", (result.usage?.promptTokens ?? 0).toLocaleString("id-ID")],
+                  ["Token output", (result.usage?.completionTokens ?? 0).toLocaleString("id-ID")],
+                  ["Biaya", result.cost === null || result.cost === undefined ? "—" : `$${Number(result.cost).toFixed(4)}`],
+                  ["Finish reason", result.finishReason || "—"],
+                ].map(([label, value]) => (
+                  <Card key={label} size="small">
+                    <Statistic title={label} value={value} />
+                  </Card>
+                ))}
               </div>
               <p className="text-xs text-text-muted">
                 Model: {result.model} · Key: {result.apiKeyName || "—"} · Tercatat di Usage &amp; Trafik Langsung.
               </p>
-            </>
+            </div>
           )}
-        </div>
+        </Card>
       </div>
     </div>
   );

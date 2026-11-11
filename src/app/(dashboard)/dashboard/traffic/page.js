@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
+import { Alert, Button, Card, Statistic, Table, Tag } from "antd";
 
 // Live Traffic (plan G7) — real-time gateway traffic monitor.
 //
@@ -30,11 +31,11 @@ function fmtCost(c) {
   return `$${(c ?? 0).toFixed(4)}`;
 }
 
-function statusClass(status) {
+function statusTagColor(status) {
   const s = String(status || "").toLowerCase();
-  if (s === "ok" || s === "success" || s.startsWith("200")) return "text-success";
-  if (s.startsWith("4") || s.includes("fail") || s.includes("error")) return "text-error";
-  return "text-text-muted";
+  if (s === "ok" || s === "success" || s.startsWith("200")) return "success";
+  if (s.startsWith("4") || s.includes("fail") || s.includes("error")) return "error";
+  return "default";
 }
 
 export default function TrafficPage() {
@@ -117,6 +118,16 @@ export default function TrafficPage() {
   const feedFail = feed.length - feedOk;
   const secondsAgo = lastUpdate ? Math.max(0, Math.round((Date.now() - lastUpdate) / 1000)) : null;
 
+  const columns = [
+    { title: "Waktu", dataIndex: "timestamp", key: "time", render: (ts) => fmtTime(ts) },
+    { title: "Kunci", dataIndex: "apiKey", key: "key", render: (v) => <span className="font-mono text-xs">{v || "—"}</span> },
+    { title: "Model", dataIndex: "model", key: "model" },
+    { title: "Provider", dataIndex: "provider", key: "provider", render: (v) => v || "—" },
+    { title: "Token", key: "tokens", align: "right", render: (_v, r) => fmtNum((r.promptTokens || 0) + (r.completionTokens || 0)) },
+    { title: "Biaya", dataIndex: "cost", key: "cost", align: "right", render: (c) => fmtCost(c) },
+    { title: "Status", dataIndex: "status", key: "status", render: (s) => <Tag color={statusTagColor(s)}>{s || "ok"}</Tag> },
+  ];
+
   return (
     <div className="flex flex-col gap-4 p-4">
       <div className="flex flex-wrap items-center justify-between gap-3">
@@ -127,20 +138,17 @@ export default function TrafficPage() {
           </p>
         </div>
         <div className="flex items-center gap-2">
-          <span className={`rounded-lg border px-3 py-2 text-sm ${transport === "sse" ? "border-success/40 bg-success/10 text-success" : "border-warning/40 bg-warning/10 text-warning"}`}>
+          <Tag color={transport === "sse" ? "success" : "warning"}>
             {transport === "sse" ? "● STREAM AKTIF" : "◌ POLLING"}
-          </span>
-          <button
-            onClick={() => setPaused((p) => !p)}
-            className="rounded-lg border border-border-subtle px-3 py-2 text-sm text-text-main hover:bg-bg-subtle"
-          >
+          </Tag>
+          <Button onClick={() => setPaused((p) => !p)}>
             {paused ? `▶ Lanjutkan${pendingCount > 0 ? ` (+${pendingCount} baru)` : ""}` : "⏸ Jeda"}
-          </button>
+          </Button>
         </div>
       </div>
 
       {error && transport === "polling" && (
-        <div className="rounded-lg border border-warning/40 bg-warning/10 px-3 py-2 text-sm text-warning">{error}</div>
+        <Alert type="warning" message={error} showIcon />
       )}
       <p className="text-xs text-text-muted">
         {secondsAgo === null ? "Menunggu data pertama…" : `Terakhir diperbarui ${secondsAgo} dtk lalu`}
@@ -149,21 +157,19 @@ export default function TrafficPage() {
 
       <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
         {[
-          ["Permintaan hari ini", fmtNum(stats?.totalRequests), "text-text-main"],
-          ["Sedang berjalan", fmtNum(inFlight), inFlight > 0 ? "text-warning" : "text-success"],
-          ["Total token hari ini", fmtNum(totalTokens), "text-text-main"],
-          ["Biaya hari ini", fmtCost(stats?.totalCost), "text-text-main"],
-        ].map(([label, value, cls]) => (
-          <div key={label} className="rounded-lg border border-border-subtle bg-surface p-3">
-            <div className={`text-2xl font-semibold ${cls}`}>{value}</div>
-            <div className="text-xs text-text-muted">{label}</div>
-          </div>
+          ["Permintaan hari ini", fmtNum(stats?.totalRequests)],
+          ["Sedang berjalan", fmtNum(inFlight)],
+          ["Total token hari ini", fmtNum(totalTokens)],
+          ["Biaya hari ini", fmtCost(stats?.totalCost)],
+        ].map(([label, value]) => (
+          <Card key={label} styles={{ body: { padding: "12px 16px" } }}>
+            <Statistic title={label} value={value} />
+          </Card>
         ))}
       </div>
 
-      {active.length > 0 && (
-        <div className="rounded-lg border border-border-subtle bg-surface p-3">
-          <h2 className="mb-2 text-sm font-semibold text-text-main">Sedang Berjalan ({inFlight})</h2>
+      {active.length > 0 ? (
+        <Card title={`Sedang Berjalan (${inFlight})`} styles={{ body: { padding: "12px 16px" } }}>
           <div className="flex flex-col gap-1">
             {active.map((a, i) => (
               <div key={`${a.model}-${a.account}-${i}`} className="flex flex-wrap items-center justify-between gap-2 text-sm">
@@ -172,52 +178,25 @@ export default function TrafficPage() {
               </div>
             ))}
           </div>
-        </div>
-      )}
-      {active.length === 0 && (
+        </Card>
+      ) : (
         <p className="text-sm text-text-muted">Menganggur. Belum ada permintaan yang sedang berjalan.</p>
       )}
 
-      <div className="rounded-lg border border-border-subtle bg-surface p-3">
-        <div className="mb-2 flex flex-wrap items-center justify-between gap-2">
-          <h2 className="text-sm font-semibold text-text-main">Feed Permintaan</h2>
-          <span className="text-xs text-text-muted">
-            {feed.length} terbaru · {feedOk} OK · {feedFail} gagal
-          </span>
-        </div>
-        {feed.length === 0 ? (
-          <p className="text-sm text-text-muted">Belum ada permintaan hari ini.</p>
-        ) : (
-          <div className="overflow-x-auto">
-            <table className="w-full text-sm">
-              <thead>
-                <tr className="border-b border-border-subtle text-left text-text-muted">
-                  <th className="px-3 py-2">Waktu</th>
-                  <th className="px-3 py-2">Kunci</th>
-                  <th className="px-3 py-2">Model</th>
-                  <th className="px-3 py-2">Provider</th>
-                  <th className="px-3 py-2 text-right">Token</th>
-                  <th className="px-3 py-2 text-right">Biaya</th>
-                  <th className="px-3 py-2">Status</th>
-                </tr>
-              </thead>
-              <tbody>
-                {feed.map((r, i) => (
-                  <tr key={`${r.timestamp}-${r.model}-${i}`} className="border-b border-border-subtle last:border-0">
-                    <td className="whitespace-nowrap px-3 py-2 text-text-muted">{fmtTime(r.timestamp)}</td>
-                    <td className="px-3 py-2 font-mono text-xs text-text-main">{r.apiKey || "—"}</td>
-                    <td className="px-3 py-2 text-text-main">{r.model}</td>
-                    <td className="px-3 py-2 text-text-muted">{r.provider || "—"}</td>
-                    <td className="px-3 py-2 text-right text-text-main">{fmtNum((r.promptTokens || 0) + (r.completionTokens || 0))}</td>
-                    <td className="px-3 py-2 text-right text-text-muted">{fmtCost(r.cost)}</td>
-                    <td className={`px-3 py-2 ${statusClass(r.status)}`}>{r.status || "ok"}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        )}
-      </div>
+      <Card
+        title="Feed Permintaan"
+        extra={<span className="text-xs text-text-muted">{feed.length} terbaru · {feedOk} OK · {feedFail} gagal</span>}
+        styles={{ body: { padding: 0 } }}
+      >
+        <Table
+          columns={columns}
+          dataSource={feed}
+          rowKey={(r, i) => `${r.timestamp}-${r.model}-${i}`}
+          pagination={false}
+          scroll={{ x: 800 }}
+          locale={{ emptyText: "Belum ada permintaan hari ini." }}
+        />
+      </Card>
     </div>
   );
 }

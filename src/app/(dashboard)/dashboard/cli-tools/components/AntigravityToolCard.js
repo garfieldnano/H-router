@@ -1,7 +1,8 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { Card, Button, Badge, Modal, Input, ModelSelectModal } from "@/shared/components";
+import { ModelSelectModal } from "@/shared/components";
+import { Button, Card, Input, Modal, Tag } from "antd";
 import Image from "next/image";
 
 export default function AntigravityToolCard({
@@ -226,7 +227,7 @@ export default function AntigravityToolCard({
   const isRunning = status?.running;
 
   return (
-    <Card padding="xs" className="overflow-hidden">
+    <Card styles={{ body: { padding: 12 } }} className="overflow-hidden">
       <div className="flex items-start justify-between gap-3 hover:cursor-pointer sm:items-center" onClick={onToggle}>
         <div className="flex min-w-0 items-center gap-3">
           <div className="size-8 flex items-center justify-center shrink-0">
@@ -246,9 +247,9 @@ export default function AntigravityToolCard({
             <div className="flex min-w-0 flex-wrap items-center gap-2">
               <h3 className="font-medium text-sm">{tool.name}</h3>
               {isRunning ? (
-                <Badge variant="success" size="sm">Active</Badge>
+                <Tag color="success">Active</Tag>
               ) : (
-                <Badge variant="default" size="sm">Inactive</Badge>
+                <Tag>Inactive</Tag>
               )}
             </div>
             <p className="text-xs text-text-muted truncate">{tool.description}</p>
@@ -372,8 +373,8 @@ export default function AntigravityToolCard({
 
               <div className="grid grid-cols-1 gap-2 sm:flex sm:items-center">
                 <Button
-                  variant="primary"
-                  size="sm"
+                  type="primary"
+                  size="small"
                   onClick={handleSaveMappings}
                   disabled={loading || Object.keys(modelMappings).length === 0}
                 >
@@ -410,14 +411,15 @@ export default function AntigravityToolCard({
 
       {/* Password Modal */}
       <Modal
-        isOpen={showPasswordModal}
-        onClose={() => {
+        open={showPasswordModal}
+        onCancel={() => {
           setShowPasswordModal(false);
           setSudoPassword("");
           setMessage(null);
         }}
         title="Sudo Password Required"
-        size="sm"
+        width={400}
+        footer={null}
       >
         <div className="flex flex-col gap-4">
           <div className="flex items-start gap-3 p-3 bg-yellow-500/10 border border-yellow-500/30 rounded-lg">
@@ -425,8 +427,7 @@ export default function AntigravityToolCard({
             <p className="text-xs text-text-muted">Required for SSL certificate and DNS configuration</p>
           </div>
 
-          <Input
-            type="password"
+          <Input.Password
             placeholder="Enter sudo password"
             value={sudoPassword}
             onChange={(e) => setSudoPassword(e.target.value)}
@@ -444,16 +445,16 @@ export default function AntigravityToolCard({
 
           <div className="flex items-center justify-end gap-2">
             <Button
-              variant="ghost"
-              size="sm"
+              type="text"
+              size="small"
               onClick={() => { setShowPasswordModal(false); setSudoPassword(""); setMessage(null); }}
               disabled={loading}
             >
               Cancel
             </Button>
             <Button
-              variant="primary"
-              size="sm"
+              type="primary"
+              size="small"
               onClick={handleConfirmPassword}
               loading={loading}
             >

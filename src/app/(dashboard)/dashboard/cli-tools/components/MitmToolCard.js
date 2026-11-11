@@ -1,7 +1,8 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
-import { Card, Button, Badge, Input, ModelSelectModal } from "@/shared/components";
+import { ModelSelectModal } from "@/shared/components";
+import { Button, Card, Input, Modal, Tag } from "antd";
 import { TOOL_HOSTS } from "@/shared/constants/mitmToolHosts";
 import Image from "next/image";
 
@@ -131,7 +132,7 @@ export default function MitmToolCard({
 
   return (
     <>
-      <Card padding="xs" className="overflow-hidden">
+      <Card styles={{ body: { padding: 12 } }} className="overflow-hidden">
         <div className="flex items-start justify-between gap-3 hover:cursor-pointer sm:items-center" onClick={onToggle}>
           <div className="flex min-w-0 items-center gap-3">
             <div className="size-8 flex items-center justify-center shrink-0">
@@ -151,11 +152,11 @@ export default function MitmToolCard({
               <div className="flex flex-wrap items-center gap-2">
                 <h3 className="font-medium text-sm">{tool.name}</h3>
                 {!serverRunning ? (
-                  <Badge variant="default" size="sm">Server off</Badge>
+                  <Tag>Server off</Tag>
                 ) : dnsActive ? (
-                  <Badge variant="success" size="sm">Active</Badge>
+                  <Tag color="success">Active</Tag>
                 ) : (
-                  <Badge variant="warning" size="sm">DNS off</Badge>
+                  <Tag color="warning">DNS off</Tag>
                 )}
               </div>
               <p className="text-xs text-text-muted sm:truncate">Intercept {tool.name} requests via MITM proxy</p>
@@ -272,16 +273,18 @@ export default function MitmToolCard({
       </Card>
 
       {/* Password Modal */}
-      {showPasswordModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm">
-          <div className="mx-4 flex w-full max-w-sm flex-col gap-4 rounded-xl border border-border bg-surface p-5 shadow-xl sm:p-6">
-            <h3 className="font-semibold text-text-main">Sudo Password Required</h3>
+      <Modal
+        open={showPasswordModal}
+        onCancel={() => { setShowPasswordModal(false); setSudoPassword(""); setModalError(null); }}
+        title="Sudo Password Required"
+        width={400}
+        footer={null}
+      >
             <div className="flex items-start gap-3 p-3 bg-yellow-500/10 border border-yellow-500/30 rounded-lg">
               <span className="material-symbols-outlined text-yellow-500 text-[20px]">warning</span>
               <p className="text-xs text-text-muted">Required to modify /etc/hosts and flush DNS cache</p>
             </div>
-            <Input
-              type="password"
+            <Input.Password
               placeholder="Enter sudo password"
               value={sudoPassword}
               onChange={(e) => setSudoPassword(e.target.value)}
@@ -294,16 +297,14 @@ export default function MitmToolCard({
               </div>
             )}
             <div className="flex items-center justify-end gap-2">
-              <Button variant="ghost" size="sm" onClick={() => { setShowPasswordModal(false); setSudoPassword(""); setModalError(null); }} disabled={loading}>
+              <Button type="text" size="small" onClick={() => { setShowPasswordModal(false); setSudoPassword(""); setModalError(null); }} disabled={loading}>
                 Cancel
               </Button>
-              <Button variant="primary" size="sm" onClick={handleConfirmPassword} loading={loading}>
+              <Button type="primary" size="small" onClick={handleConfirmPassword} loading={loading}>
                 Confirm
               </Button>
             </div>
-          </div>
-        </div>
-      )}
+      </Modal>
 
       {/* Model Select Modal */}
       {modalOpen && (

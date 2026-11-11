@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
+import { Alert, Button, Card, List, Segmented, Statistic, Table, Tag, Typography } from "antd";
 import { useCopyToClipboard } from "@/shared/hooks/useCopyToClipboard";
 
 // Member dashboard (v1, read-only): own usage + own API keys.
@@ -42,6 +43,34 @@ function fmtTime(ts) {
     return ts || "-";
   }
 }
+
+const byModelColumns = [
+  { title: "Model", dataIndex: "model", key: "model" },
+  { title: "Requests", dataIndex: "requests", key: "requests", render: (v) => fmtNum(v) },
+  { title: "Prompt", dataIndex: "promptTokens", key: "promptTokens", render: (v) => fmtNum(v) },
+  { title: "Completion", dataIndex: "completionTokens", key: "completionTokens", render: (v) => fmtNum(v) },
+  { title: "Biaya", dataIndex: "cost", key: "cost", render: (v) => fmtCost(v) },
+];
+
+const recentColumns = [
+  { title: "Waktu", dataIndex: "timestamp", key: "timestamp", render: (v) => fmtTime(v) },
+  { title: "Model", dataIndex: "model", key: "model", render: (v) => v || "-" },
+  { title: "Provider", dataIndex: "provider", key: "provider", render: (v) => v || "-" },
+  {
+    title: "Tokens",
+    dataIndex: "tokens",
+    key: "tokens",
+    render: (v) => fmtNum(v),
+  },
+  {
+    title: "Status",
+    dataIndex: "status",
+    key: "status",
+    render: (v) => (
+      <Tag color={v === "ok" ? "success" : "error"}>{v === "ok" ? "OK" : v || "-"}</Tag>
+    ),
+  },
+];
 
 export default function MemberDashboardPage() {
   const router = useRouter();
@@ -158,258 +187,216 @@ export default function MemberDashboardPage() {
     router.replace("/login");
   };
 
-  const byModel = stats?.byModel ? Object.entries(stats.byModel).sort((a, b) => b[1].requests - a[1].requests) : [];
-  const recent = Array.isArray(stats?.recentRequests) ? stats.recentRequests : [];
+  const byModel = stats?.byModel
+    ? Object.entries(stats.byModel)
+        .sort((a, b) => b[1].requests - a[1].requests)
+        .map(([key, v]) => ({
+          key,
+          model: v.rawModel || key,
+          requests: v.requests,
+          promptTokens: v.promptTokens,
+          completionTokens: v.completionTokens,
+          cost: v.cost,
+        }))
+    : [];
+  const recent = Array.isArray(stats?.recentRequests)
+    ? stats.recentRequests.map((r, i) => ({
+        key: `${r.timestamp}-${i}`,
+        timestamp: r.timestamp,
+        model: r.model,
+        provider: r.provider,
+        tokens: (r.promptTokens || 0) + (r.completionTokens || 0),
+        status: r.status,
+      }))
+    : [];
 
   return (
     <div className="flex flex-col gap-6">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
-          <h1 className="text-2xl font-bold text-text-main">Dashboard Member</h1>
-          <p className="text-sm text-text-muted">
+          <Typography.Title level={2} style={{ margin: 0 }}>
+            Dashboard Member
+          </Typography.Title>
+          <Typography.Text type="secondary">
             {memberName ? `Halo, ${memberName} — ` : ""}penggunaan &amp; kunci API kamu (read-only).
-          </p>
+          </Typography.Text>
         </div>
         <div className="flex items-center gap-2">
-          <span className="flex items-center gap-1.5 rounded-full border border-border-subtle bg-surface-2 px-3 py-1 text-xs text-text-muted">
-            <span className="block h-2 w-2 rounded-full bg-success animate-pulse" />
+          <Tag color="success">
             Live · diperbarui {lastUpdated ? fmtTime(lastUpdated) : "…"} (5 dtk)
-          </span>
-          <button
-            onClick={handleLogout}
-            className="rounded-lg border border-border-subtle bg-surface-2 px-3 py-1.5 text-sm text-text-main hover:bg-bg-hover"
-          >
-            Keluar
-          </button>
+          </Tag>
+          <Button onClick={handleLogout}>Keluar</Button>
         </div>
       </div>
 
       {/* Period selector */}
-      <div className="flex items-center gap-1 rounded-lg border border-border bg-bg-subtle p-1 w-fit">
-        {PERIODS.map((p) => (
-          <button
-            key={p.value}
-            onClick={() => setPeriod(p.value)}
-            className={`rounded-md px-3 py-1 text-sm font-medium transition-colors ${
-              period === p.value ? "bg-primary text-white shadow-sm" : "text-text-muted hover:bg-bg-hover hover:text-text"
-            }`}
-          >
-            {p.label}
-          </button>
-        ))}
-      </div>
+      <Segmented
+        options={PERIODS.map((p) => ({ label: p.label, value: p.value }))}
+        value={period}
+        onChange={(v) => setPeriod(v)}
+      />
 
       {statsError && (
-        <div className="rounded-lg border border-yellow-200 bg-yellow-50 dark:bg-yellow-900/20 dark:border-yellow-800 p-3 text-sm text-text-main">
-          {statsError} — data terakhir tetap ditampilkan.
-        </div>
+        <Alert
+          type="warning"
+          message={`${statsError} — data terakhir tetap ditampilkan.`}
+          showIcon
+        />
       )}
 
       {/* Stat cards */}
       <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
-        {[
-          { label: "Requests", value: fmtNum(stats?.totalRequests) },
-          { label: "Prompt tokens", value: fmtNum(stats?.totalPromptTokens) },
-          { label: "Completion tokens", value: fmtNum(stats?.totalCompletionTokens) },
-          { label: "Biaya", value: fmtCost(stats?.totalCost) },
-        ].map((c) => (
-          <div key={c.label} className="bg-surface-2 border border-border-subtle rounded-lg p-4">
-            <div className="text-xs text-text-muted">{c.label}</div>
-            <div className="mt-1 text-2xl font-bold text-text-main">{loading ? "…" : c.value}</div>
-          </div>
-        ))}
+        <Card>
+          <Statistic title="Requests" value={loading ? "…" : fmtNum(stats?.totalRequests)} />
+        </Card>
+        <Card>
+          <Statistic title="Prompt tokens" value={loading ? "…" : fmtNum(stats?.totalPromptTokens)} />
+        </Card>
+        <Card>
+          <Statistic title="Completion tokens" value={loading ? "…" : fmtNum(stats?.totalCompletionTokens)} />
+        </Card>
+        <Card>
+          <Statistic title="Biaya" value={loading ? "…" : fmtCost(stats?.totalCost)} />
+        </Card>
       </div>
 
       {/* Per-model breakdown */}
-      <div className="bg-surface-2 border border-border-subtle rounded-lg p-4">
-        <h2 className="mb-3 text-lg font-semibold text-text-main">Penggunaan per model</h2>
-        {byModel.length === 0 ? (
-          <p className="text-sm text-text-muted">Belum ada request pada periode ini.</p>
-        ) : (
-          <div className="overflow-x-auto">
-            <table className="w-full text-sm">
-              <thead>
-                <tr className="text-left text-text-muted">
-                  <th className="py-2 pr-3 font-medium">Model</th>
-                  <th className="py-2 pr-3 font-medium">Requests</th>
-                  <th className="py-2 pr-3 font-medium">Prompt</th>
-                  <th className="py-2 pr-3 font-medium">Completion</th>
-                  <th className="py-2 font-medium">Biaya</th>
-                </tr>
-              </thead>
-              <tbody>
-                {byModel.map(([key, v]) => (
-                  <tr key={key} className="border-t border-border-subtle hover:bg-bg-subtle">
-                    <td className="py-2 pr-3 text-text-main">{v.rawModel || key}</td>
-                    <td className="py-2 pr-3">{fmtNum(v.requests)}</td>
-                    <td className="py-2 pr-3">{fmtNum(v.promptTokens)}</td>
-                    <td className="py-2 pr-3">{fmtNum(v.completionTokens)}</td>
-                    <td className="py-2">{fmtCost(v.cost)}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        )}
-      </div>
+      <Card title="Penggunaan per model">
+        <Table
+          columns={byModelColumns}
+          dataSource={byModel}
+          pagination={false}
+          scroll={{ x: 600 }}
+          locale={{ emptyText: "Belum ada request pada periode ini." }}
+        />
+      </Card>
 
       {/* Recent requests */}
-      <div className="bg-surface-2 border border-border-subtle rounded-lg p-4">
-        <h2 className="mb-3 text-lg font-semibold text-text-main">Request terbaru</h2>
-        {recent.length === 0 ? (
-          <p className="text-sm text-text-muted">Belum ada request pada periode ini.</p>
-        ) : (
-          <div className="overflow-x-auto">
-            <table className="w-full text-sm">
-              <thead>
-                <tr className="text-left text-text-muted">
-                  <th className="py-2 pr-3 font-medium">Waktu</th>
-                  <th className="py-2 pr-3 font-medium">Model</th>
-                  <th className="py-2 pr-3 font-medium">Provider</th>
-                  <th className="py-2 pr-3 font-medium">Tokens</th>
-                  <th className="py-2 font-medium">Status</th>
-                </tr>
-              </thead>
-              <tbody>
-                {recent.map((r, i) => (
-                  <tr key={`${r.timestamp}-${i}`} className="border-t border-border-subtle hover:bg-bg-subtle">
-                    <td className="py-2 pr-3 whitespace-nowrap text-text-main">{fmtTime(r.timestamp)}</td>
-                    <td className="py-2 pr-3 text-text-main">{r.model || "-"}</td>
-                    <td className="py-2 pr-3">{r.provider || "-"}</td>
-                    <td className="py-2 pr-3">{fmtNum((r.promptTokens || 0) + (r.completionTokens || 0))}</td>
-                    <td className="py-2">
-                      <span className={`inline-block h-2 w-2 rounded-full ${r.status === "ok" ? "bg-success" : "bg-error"}`} />
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        )}
-      </div>
+      <Card title="Request terbaru">
+        <Table
+          columns={recentColumns}
+          dataSource={recent}
+          pagination={false}
+          scroll={{ x: 600 }}
+          locale={{ emptyText: "Belum ada request pada periode ini." }}
+        />
+      </Card>
 
       {/* Own API keys (read-only) */}
-      <div className="bg-surface-2 border border-border-subtle rounded-lg p-4">
-        <h2 className="mb-3 text-lg font-semibold text-text-main">Kunci API saya</h2>
-        {keysError && <p className="text-sm text-error">{keysError}</p>}
+      <Card title="Kunci API saya">
+        {keysError && <Alert type="error" message={keysError} showIcon className="mb-3" />}
         {keys.length === 0 && !keysError ? (
-          <p className="text-sm text-text-muted">
+          <Typography.Text type="secondary">
             Belum ada kunci API yang ditetapkan ke akunmu. Minta admin untuk menetapkan kunci.
-          </p>
+          </Typography.Text>
         ) : (
-          <div className="flex flex-col gap-3">
-            {keys.map((k) => (
-              <div key={k.id} className="flex flex-wrap items-center justify-between gap-3 rounded-lg border border-border-subtle bg-bg-subtle p-3">
-                <div>
-                  <div className="font-medium text-text-main">{k.name || "Unnamed key"}</div>
-                  <div className="font-mono text-xs text-text-muted">{maskKey(k.key)}</div>
-                  <div className="text-xs text-text-muted">
-                    Dibuat {k.createdAt ? fmtTime(k.createdAt) : "-"} ·{" "}
-                    <span className={k.isActive ? "text-success" : "text-error"}>
-                      {k.isActive ? "Aktif" : "Nonaktif"}
-                    </span>
-                  </div>
-                  <div className="text-xs text-text-muted">
-                    RPM: {k.rate ? `${k.rate.used}/${k.rate.limit} per menit` : "…"}
-                    {k.rate?.source ? ` · batas ${k.rate.source === "key" ? "per kunci" : k.rate.source === "package" ? `paket${k.rate.packageName ? ` (${k.rate.packageName})` : ""}` : k.rate.source === "trial-default" ? "default trial" : "global"}` : ""}
-                  </div>
-                  <div className="text-xs text-text-muted">
-                    IP aktif: {k.ip ? `${k.ip.activeCount}/${k.ip.cap} dalam 10 mnt` : "…"}
-                    {k.ip?.source === "key" ? " · batas per kunci" : " · default 3"}
-                  </div>
-                </div>
-                <button
-                  onClick={() => copy(k.key)}
-                  className="rounded-lg border border-border-subtle bg-surface px-3 py-1.5 text-sm text-text-main hover:bg-bg-hover"
-                >
-                  {copied ? "Disalin!" : "Salin kunci"}
-                </button>
-              </div>
-            ))}
-          </div>
+          <List
+            dataSource={keys}
+            renderItem={(k) => (
+              <List.Item
+                actions={[
+                  <Button key="copy" onClick={() => copy(k.key)}>
+                    {copied ? "Disalin!" : "Salin kunci"}
+                  </Button>,
+                ]}
+              >
+                <List.Item.Meta
+                  title={k.name || "Unnamed key"}
+                  description={
+                    <div className="flex flex-col gap-0.5">
+                      <span className="font-mono text-xs">{maskKey(k.key)}</span>
+                      <span>
+                        Dibuat {k.createdAt ? fmtTime(k.createdAt) : "-"} ·{" "}
+                        <Tag color={k.isActive ? "success" : "error"}>
+                          {k.isActive ? "Aktif" : "Nonaktif"}
+                        </Tag>
+                      </span>
+                      <span>
+                        RPM: {k.rate ? `${k.rate.used}/${k.rate.limit} per menit` : "…"}
+                        {k.rate?.source ? ` · batas ${k.rate.source === "key" ? "per kunci" : k.rate.source === "package" ? `paket${k.rate.packageName ? ` (${k.rate.packageName})` : ""}` : k.rate.source === "trial-default" ? "default trial" : "global"}` : ""}
+                      </span>
+                      <span>
+                        IP aktif: {k.ip ? `${k.ip.activeCount}/${k.ip.cap} dalam 10 mnt` : "…"}
+                        {k.ip?.source === "key" ? " · batas per kunci" : " · default 3"}
+                      </span>
+                    </div>
+                  }
+                />
+              </List.Item>
+            )}
+          />
         )}
-      </div>
+      </Card>
+
       {/* Riwayat Kompensasi (§0d, read-only) */}
-      <div className="bg-surface-2 border border-border-subtle rounded-lg p-4">
-        <h2 className="mb-3 text-lg font-semibold text-text-main">Riwayat Kompensasi</h2>
-        {compensationsError && <p className="text-sm text-error">{compensationsError}</p>}
-        {compensations.length === 0 && !compensationsError ? (
-          <p className="text-sm text-text-muted">
-            Belum ada kompensasi. Kalau gateway pernah gangguan, admin memberi perpanjangan masa aktif kunci — riwayatnya tampil di sini.
-          </p>
-        ) : (
-          <div className="flex flex-col gap-2">
-            {compensations.map((c) => (
-              <div key={c.id} className="rounded-lg border border-border-subtle bg-bg-subtle p-3 text-sm">
-                <div className="font-medium text-text-main">
-                  +{c.amount} jam — gangguan {c.incidentStartedAt ? fmtTime(c.incidentStartedAt) : c.incidentId.slice(0, 8)}
-                  {c.incidentDurationMinutes != null ? ` (${c.incidentDurationMinutes} menit)` : ""}
-                </div>
-                <div className="text-xs text-text-muted">
-                  Diberikan {c.grantedAt ? fmtTime(c.grantedAt) : "-"}
-                  {c.newExpiresAt ? ` · masa berlaku baru ${fmtTime(c.newExpiresAt)}` : ""}
-                </div>
-              </div>
-            ))}
-          </div>
+      <Card title="Riwayat Kompensasi">
+        {compensationsError && (
+          <Alert type="error" message={compensationsError} showIcon className="mb-3" />
         )}
-      </div>
+        {compensations.length === 0 && !compensationsError ? (
+          <Typography.Text type="secondary">
+            Belum ada kompensasi. Kalau gateway pernah gangguan, admin memberi perpanjangan masa aktif kunci — riwayatnya tampil di sini.
+          </Typography.Text>
+        ) : (
+          <List
+            dataSource={compensations}
+            renderItem={(c) => (
+              <List.Item key={c.id}>
+                <List.Item.Meta
+                  title={`+${c.amount} jam — gangguan ${c.incidentStartedAt ? fmtTime(c.incidentStartedAt) : c.incidentId.slice(0, 8)}${c.incidentDurationMinutes != null ? ` (${c.incidentDurationMinutes} menit)` : ""}`}
+                  description={`Diberikan ${c.grantedAt ? fmtTime(c.grantedAt) : "-"}${c.newExpiresAt ? ` · masa berlaku baru ${fmtTime(c.newExpiresAt)}` : ""}`}
+                />
+              </List.Item>
+            )}
+          />
+        )}
+      </Card>
 
       {/* Hubungkan Telegram */}
-      <div className="bg-surface-2 border border-border-subtle rounded-lg p-4">
-        <h2 className="mb-3 text-lg font-semibold text-text-main">Hubungkan Telegram</h2>
-        <p className="mb-3 text-sm text-text-muted">
+      <Card title="Hubungkan Telegram">
+        <Typography.Paragraph type="secondary">
           Hubungkan akun Telegram kamu untuk cek penggunaan, kunci, beli paket, dan klaim trial langsung dari bot.
-        </p>
-        {linkError && <p className="mb-2 text-sm text-error">{linkError}</p>}
+        </Typography.Paragraph>
+        {linkError && <Alert type="error" message={linkError} showIcon className="mb-3" />}
         {linkCode ? (
           <div className="flex flex-col gap-2">
-            <div className="text-sm text-text-main">
-              Kode kamu: <span className="font-mono text-lg font-bold tracking-widest">{linkCode}</span>
-              <span className="ml-2 text-xs text-text-muted">(berlaku {Math.floor(linkExpiresInSec / 60)} menit, sekali pakai)</span>
+            <div>
+              Kode kamu:{" "}
+              <Typography.Text strong copyable={false} className="font-mono text-lg tracking-widest">
+                {linkCode}
+              </Typography.Text>{" "}
+              <Typography.Text type="secondary">
+                (berlaku {Math.floor(linkExpiresInSec / 60)} menit, sekali pakai)
+              </Typography.Text>
             </div>
             {linkBotUsername ? (
-              <div className="text-sm text-text-muted">
+              <Typography.Text type="secondary">
                 Kirim ke bot:{" "}
-                <a
-                  className="font-mono text-primary underline"
+                <Typography.Link
                   href={`https://t.me/${linkBotUsername}?start=${linkCode}`}
                   target="_blank"
                   rel="noreferrer"
+                  className="font-mono"
                 >
                   t.me/{linkBotUsername}?start={linkCode}
-                </a>
-              </div>
+                </Typography.Link>
+              </Typography.Text>
             ) : (
-              <p className="text-sm text-text-muted">
-                Kirim <span className="font-mono">/start {linkCode}</span> ke bot Telegram h-router.
-              </p>
+              <Typography.Text type="secondary">
+                Kirim <Typography.Text code>/start {linkCode}</Typography.Text> ke bot Telegram h-router.
+              </Typography.Text>
             )}
             <div className="flex gap-2">
-              <button
-                onClick={() => copy(linkCode)}
-                className="rounded-lg border border-border-subtle bg-surface px-3 py-1.5 text-sm text-text-main hover:bg-bg-hover"
-              >
-                {copied ? "Disalin!" : "Salin kode"}
-              </button>
-              <button
-                onClick={requestLinkCode}
-                className="rounded-lg border border-border-subtle bg-surface px-3 py-1.5 text-sm text-text-main hover:bg-bg-hover"
-              >
-                Buat kode baru
-              </button>
+              <Button onClick={() => copy(linkCode)}>{copied ? "Disalin!" : "Salin kode"}</Button>
+              <Button onClick={requestLinkCode}>Buat kode baru</Button>
             </div>
           </div>
         ) : (
-          <button
-            onClick={requestLinkCode}
-            disabled={linkLoading}
-            className="rounded-lg bg-primary px-4 py-2 text-sm font-medium text-white disabled:opacity-50"
-          >
+          <Button type="primary" onClick={requestLinkCode} loading={linkLoading}>
             {linkLoading ? "Membuat kode…" : "Buat kode hubung"}
-          </button>
+          </Button>
         )}
-      </div>
+      </Card>
     </div>
   );
 }

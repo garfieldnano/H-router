@@ -1,7 +1,8 @@
 "use client";
 
 import { useState } from "react";
-import { Card, ModelSelectModal } from "@/shared/components";
+import { ModelSelectModal } from "@/shared/components";
+import { Card } from "antd";
 import { getProviderIconSrc, markProviderIconMissing } from "@/shared/utils/providerIcon";
 import { useCopyToClipboard } from "@/shared/hooks/useCopyToClipboard";
 import Image from "next/image";
@@ -249,7 +250,7 @@ export default function DefaultToolCard({ toolId, tool, isExpanded, onToggle, ba
   };
 
   return (
-    <Card padding="xs" className="overflow-hidden overflow-x-hidden">
+    <Card styles={{ body: { padding: 12 } }} className="overflow-hidden overflow-x-hidden">
       <div className="flex items-center justify-between hover:cursor-pointer" onClick={onToggle}>
         <div className="flex items-center gap-3">
           <div className="size-8 rounded-lg flex items-center justify-center shrink-0">

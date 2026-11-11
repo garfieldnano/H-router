@@ -3,7 +3,8 @@
 import { useParams, notFound, useRouter } from "next/navigation";
 import Link from "next/link";
 import { useState, useEffect } from "react";
-import { Card, Badge, Button, AddCustomEmbeddingModal, NoAuthProxyCard, ProviderInfoCard } from "@/shared/components";
+import { Button, Card, Tag } from "antd";
+import { AddCustomEmbeddingModal, NoAuthProxyCard, ProviderInfoCard } from "@/shared/components";
 import ProviderIcon from "@/shared/components/ProviderIcon";
 import { MEDIA_PROVIDER_KINDS, AI_PROVIDERS, OAUTH_PROVIDERS, isCustomEmbeddingProvider } from "@/shared/constants/providers";
 import ConnectionsCard from "@/app/(dashboard)/dashboard/providers/components/ConnectionsCard";
@@ -109,20 +110,20 @@ export default function MediaProviderDetailPage() {
               )}
             </div>
             <div className="flex items-center gap-1.5 mt-1 flex-wrap">
-              {isCustom && <Badge variant="default" size="sm">Custom · {customNode?.prefix}</Badge>}
+              {isCustom && <Tag>Custom · {customNode?.prefix}</Tag>}
               {kinds.map((k) => (
-                <Badge key={k} variant={k === kind ? "primary" : "default"} size="sm">
+                <Tag key={k} color={k === kind ? "#05f170" : "default"}>
                   {k.toUpperCase()}
-                </Badge>
+                </Tag>
               ))}
             </div>
           </div>
           {isCustom && (
             <div className="flex w-full flex-col gap-2 sm:w-auto sm:flex-row sm:items-center">
-              <Button size="sm" variant="secondary" icon="edit" onClick={() => setShowEditModal(true)}>
+              <Button size="small" icon={<span className="material-symbols-outlined text-[18px]">edit</span>} onClick={() => setShowEditModal(true)}>
                 Edit
               </Button>
-              <Button size="sm" variant="secondary" icon="delete" onClick={handleDeleteCustom}>
+              <Button size="small" icon={<span className="material-symbols-outlined text-[18px]">delete</span>} onClick={handleDeleteCustom}>
                 Delete
               </Button>
             </div>

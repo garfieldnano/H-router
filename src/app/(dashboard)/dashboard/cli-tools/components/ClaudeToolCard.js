@@ -1,7 +1,8 @@
 "use client";
 
 import { useState, useEffect, useRef } from "react";
-import { Card, Button, ModelSelectModal, ManualConfigModal, Tooltip } from "@/shared/components";
+import { ModelSelectModal, ManualConfigModal } from "@/shared/components";
+import { Button, Card, Tooltip } from "antd";
 import Image from "next/image";
 import BaseUrlSelect from "./BaseUrlSelect";
 import { rememberEndpoint } from "./cliEndpointPresets";
@@ -297,7 +298,7 @@ export default function ClaudeToolCard({
   };
 
   return (
-    <Card padding="xs" className="overflow-hidden">
+    <Card styles={{ body: { padding: 12 } }} className="overflow-hidden">
       <div className="flex items-start justify-between gap-3 hover:cursor-pointer sm:items-center" onClick={onToggle}>
         <div className="flex min-w-0 items-center gap-3">
           <div className="size-8 flex items-center justify-center shrink-0">
@@ -336,11 +337,11 @@ export default function ClaudeToolCard({
                   </div>
                 </div>
                 <div className="flex items-center gap-2 pl-9">
-                  <Button variant="secondary" size="sm" onClick={() => setShowManualConfigModal(true)} className="!bg-yellow-500/20 !border-yellow-500/40 !text-yellow-700 dark:!text-yellow-300 hover:!bg-yellow-500/30">
+                  <Button size="small" onClick={() => setShowManualConfigModal(true)} className="!bg-yellow-500/20 !border-yellow-500/40 !text-yellow-700 dark:!text-yellow-300 hover:!bg-yellow-500/30">
                     <span className="material-symbols-outlined text-[18px] mr-1">content_copy</span>
                     Manual Config
                   </Button>
-                  <Button variant="outline" size="sm" onClick={() => setShowInstallGuide(!showInstallGuide)}>
+                  <Button size="small" onClick={() => setShowInstallGuide(!showInstallGuide)}>
                     <span className="material-symbols-outlined text-[18px] mr-1">{showInstallGuide ? "expand_less" : "help"}</span>
                     {showInstallGuide ? "Hide" : "How to Install"}
                   </Button>
@@ -455,7 +456,7 @@ export default function ClaudeToolCard({
                   <label className="flex items-center gap-1.5 cursor-pointer select-none">
                     <input type="checkbox" checked={oneMContext} onChange={(e) => handleOneMContextToggle(e.target.checked)} className="w-3.5 h-3.5 accent-primary cursor-pointer shrink-0" />
                     <span className="text-xs text-text-muted">Append [1m] to the model name</span>
-                    <Tooltip text="Claude Code otherwise assumes a 200K window, which clamps the auto-compact window above. Applied to every mapped model — only enable it for models that really accept 1M.">
+                    <Tooltip title="Claude Code otherwise assumes a 200K window, which clamps the auto-compact window above. Applied to every mapped model — only enable it for models that really accept 1M.">
                       <span className="material-symbols-outlined text-text-muted text-[14px] cursor-help">info</span>
                     </Tooltip>
                   </label>
@@ -468,7 +469,7 @@ export default function ClaudeToolCard({
                   <label className="flex items-center gap-1.5 cursor-pointer select-none">
                     <input type="checkbox" checked={ccFilterNaming} onChange={handleCcFilterNamingToggle} disabled={readOnly} className="w-3.5 h-3.5 accent-primary cursor-pointer shrink-0 disabled:cursor-not-allowed disabled:opacity-50" />
                     <span className="text-xs text-text-muted">Filter naming requests</span>
-                    <Tooltip text="Intercepts Claude Code's topic-naming requests and returns a fake response locally, saving API tokens.">
+                    <Tooltip title="Intercepts Claude Code's topic-naming requests and returns a fake response locally, saving API tokens.">
                       <span className="material-symbols-outlined text-text-muted text-[14px] cursor-help">info</span>
                     </Tooltip>
                   </label>
@@ -481,7 +482,7 @@ export default function ClaudeToolCard({
                   <label className="flex items-center gap-1.5 cursor-pointer select-none">
                     <input type="checkbox" checked={exaMcpEnabled} onChange={(e) => setExaMcpEnabled(e.target.checked)} className="w-3.5 h-3.5 accent-primary cursor-pointer shrink-0" />
                     <span className="text-xs text-text-muted">Exa MCP</span>
-                    <Tooltip text="Injects Exa MCP into ~/.claude.json so non-Claude models gain web search. Restart Claude Code after Apply.">
+                    <Tooltip title="Injects Exa MCP into ~/.claude.json so non-Claude models gain web search. Restart Claude Code after Apply.">
                       <span className="material-symbols-outlined text-text-muted text-[14px] cursor-help">info</span>
                     </Tooltip>
                   </label>
@@ -497,16 +498,16 @@ export default function ClaudeToolCard({
 
               <div className="flex flex-wrap items-center gap-2">
                 {!readOnly && (
-<Button variant="primary" size="sm" onClick={handleApplySettings} disabled={!hasActiveProviders} loading={applying}>
+<Button type="primary" size="small" onClick={handleApplySettings} disabled={!hasActiveProviders} loading={applying}>
                   <span className="material-symbols-outlined text-[14px] mr-1">save</span>Apply
                 </Button>
                 )}
                 {!readOnly && (
-<Button variant="outline" size="sm" onClick={handleResetSettings} disabled={!claudeStatus?.has9Router} loading={restoring}>
+<Button size="small" onClick={handleResetSettings} disabled={!claudeStatus?.has9Router} loading={restoring}>
                   <span className="material-symbols-outlined text-[14px] mr-1">restore</span>Reset
                 </Button>
                 )}
-                <Button variant="ghost" size="sm" onClick={() => setShowManualConfigModal(true)}>
+                <Button type="text" size="small" onClick={() => setShowManualConfigModal(true)}>
                   <span className="material-symbols-outlined text-[14px] mr-1">content_copy</span>Manual Config
                 </Button>
               </div>

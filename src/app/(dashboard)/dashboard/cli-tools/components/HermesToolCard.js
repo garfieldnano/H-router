@@ -1,7 +1,8 @@
 "use client";
 
 import { useState, useEffect, useRef } from "react";
-import { Card, Button, ModelSelectModal, ManualConfigModal } from "@/shared/components";
+import { ModelSelectModal, ManualConfigModal } from "@/shared/components";
+import { Button, Card } from "antd";
 import Image from "next/image";
 import BaseUrlSelect from "./BaseUrlSelect";
 import { rememberEndpoint, readPresets } from "./cliEndpointPresets";
@@ -368,7 +369,7 @@ export default function HermesToolCard({
   };
 
   return (
-    <Card padding="xs" className="overflow-hidden">
+    <Card styles={{ body: { padding: 12 } }} className="overflow-hidden">
       <div className="flex items-start justify-between gap-3 hover:cursor-pointer sm:items-center" onClick={onToggle}>
         <div className="flex min-w-0 items-center gap-3">
           <div className="size-8 flex items-center justify-center shrink-0">
@@ -410,7 +411,7 @@ export default function HermesToolCard({
                   </div>
                 </div>
                 <div className="flex flex-col sm:flex-row sm:items-center gap-2 pl-0 sm:pl-9">
-                  <Button variant="secondary" size="sm" onClick={() => setShowManualConfigModal(true)} className="w-full sm:w-auto !bg-yellow-500/20 !border-yellow-500/40 !text-yellow-700 dark:!text-yellow-300 hover:!bg-yellow-500/30">
+                  <Button size="small" onClick={() => setShowManualConfigModal(true)} className="w-full sm:w-auto !bg-yellow-500/20 !border-yellow-500/40 !text-yellow-700 dark:!text-yellow-300 hover:!bg-yellow-500/30">
                     <span className="material-symbols-outlined text-[18px] mr-1">content_copy</span>
                     Manual Config
                   </Button>
@@ -584,14 +585,14 @@ export default function HermesToolCard({
 
               <div className="flex flex-col sm:flex-row sm:items-center gap-2">
                 {!readOnly && (
-<Button variant="primary" size="sm" onClick={handleApply} disabled={!selectedModel || (audioEnabled && !sttModel.trim())} title={audioEnabled && !sttModel.trim() ? "Select an STT model first" : undefined} loading={applying} className="w-full sm:w-auto">
+<Button type="primary" size="small" onClick={handleApply} disabled={!selectedModel || (audioEnabled && !sttModel.trim())} title={audioEnabled && !sttModel.trim() ? "Select an STT model first" : undefined} loading={applying} className="w-full sm:w-auto">
                   <span className="material-symbols-outlined text-[14px] mr-1">save</span>Apply
                 </Button>
                 )}
                 {profiles.length > 1 && !readOnly && (
                   <Button
-                    variant="secondary"
-                    size="sm"
+                   
+                    size="small"
                     onClick={handleApplyAll}
                     loading={applyingAll}
                     title="Set the endpoint and API key on every profile that routes through 9router. Each profile keeps its own model."
@@ -601,11 +602,11 @@ export default function HermesToolCard({
                   </Button>
                 )}
                 {!readOnly && (
-<Button variant="outline" size="sm" onClick={handleReset} disabled={!hermesStatus?.has9Router && !hermesStatus?.has9RouterStt} loading={restoring} className="w-full sm:w-auto">
+<Button size="small" onClick={handleReset} disabled={!hermesStatus?.has9Router && !hermesStatus?.has9RouterStt} loading={restoring} className="w-full sm:w-auto">
                   <span className="material-symbols-outlined text-[14px] mr-1">restore</span>Reset
                 </Button>
                 )}
-                <Button variant="ghost" size="sm" onClick={() => setShowManualConfigModal(true)} className="w-full sm:w-auto">
+                <Button type="text" size="small" onClick={() => setShowManualConfigModal(true)} className="w-full sm:w-auto">
                   <span className="material-symbols-outlined text-[14px] mr-1">content_copy</span>Manual Config
                 </Button>
               </div>

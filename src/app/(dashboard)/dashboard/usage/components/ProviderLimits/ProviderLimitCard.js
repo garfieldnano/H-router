@@ -1,17 +1,16 @@
 "use client";
 
 import { useState } from "react";
-import Card from "@/shared/components/Card";
+import { Card, Tag } from "antd";
 import ProviderIcon from "@/shared/components/ProviderIcon";
-import Badge from "@/shared/components/Badge";
 import QuotaProgressBar from "./QuotaProgressBar";
 import { calculatePercentage } from "./utils";
 
 const planVariants = {
   free: "default",
-  pro: "primary",
+  pro: "blue",
   ultra: "success",
-  enterprise: "info",
+  enterprise: "processing",
 };
 
 export default function ProviderLimitCard({
@@ -55,7 +54,7 @@ export default function ProviderLimitCard({
   const planVariant = planVariants[plan?.toLowerCase()] || "default";
 
   return (
-    <Card padding="md" className="flex flex-col gap-4">
+    <Card styles={{ body: { padding: 24 } }} className="flex flex-col gap-4">
       {/* Header */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-3">
@@ -79,12 +78,11 @@ export default function ProviderLimitCard({
               {name || provider}
             </h3>
             {plan && (
-              <Badge
-                variant={planVariants[plan?.toLowerCase()] || "default"}
-                size="xs"
+              <Tag
+                color={planVariants[plan?.toLowerCase()] || "default"}
               >
                 {plan}
-              </Badge>
+              </Tag>
             )}
           </div>
         </div>

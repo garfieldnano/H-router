@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
+import { Alert, Button, Card, Input, Pagination, Select, Table, Tag, Typography } from "antd";
 
 // Conversations (plan G7) — conversation log viewer built on the EXISTING
 // requestDetails + usageHistory stores. NOT basic-chat (that is only a
@@ -22,11 +23,11 @@ function fmtTime(ts) {
   }
 }
 
-const ROLE_CLASS = {
-  system: "border-warning/40 bg-warning/10",
-  user: "border-border-subtle bg-bg-subtle",
-  assistant: "border-success/40 bg-success/10",
-  tool: "border-border-subtle bg-surface text-text-muted",
+const ROLE_TAG_COLOR = {
+  system: "warning",
+  user: "default",
+  assistant: "success",
+  tool: "default",
 };
 
 export default function ConversationsPage() {
@@ -81,6 +82,22 @@ export default function ConversationsPage() {
     }
   };
 
+  const columns = [
+    { title: "Waktu", dataIndex: "timestamp", key: "time", render: (ts) => fmtTime(ts) },
+    { title: "Model", dataIndex: "model", key: "model", render: (v) => v || "—" },
+    { title: "Provider", dataIndex: "provider", key: "provider", render: (v) => v || "—" },
+    {
+      title: "Token", key: "tokens", align: "right",
+      render: (_v, d) => (((d.tokens?.prompt_tokens || 0) + (d.tokens?.completion_tokens || 0))).toLocaleString("id-ID"),
+    },
+    { title: "Latensi", key: "latency", align: "right", render: (_v, d) => (d.latency?.total ? `${d.latency.total} ms` : "—") },
+    {
+      title: "Status", dataIndex: "status", key: "status",
+      render: (s) => <Tag color={s === "success" ? "success" : "error"}>{s || "—"}</Tag>,
+    },
+    { title: "Live prompt", key: "live", render: (_v, d) => (d.live_injected ? "⭐ disuntikkan" : "—") },
+  ];
+
   return (
     <div className="flex flex-col gap-4 p-4">
       <div>
@@ -90,118 +107,88 @@ export default function ConversationsPage() {
         </p>
       </div>
 
-      {error && <div className="rounded-lg border border-error/40 bg-error/10 px-3 py-2 text-sm text-error">{error}</div>}
+      {error && <Alert type="error" message={error} showIcon />}
 
       <div className="flex flex-wrap items-center gap-2">
-        <input
+        <Input
           value={provider}
           onChange={(e) => setProvider(e.target.value)}
           placeholder="Provider (mis. kimi)"
-          className="rounded-lg border border-border-subtle bg-surface px-3 py-2 text-sm text-text-main"
+          style={{ width: 180 }}
         />
-        <input
+        <Input
           value={model}
           onChange={(e) => setModel(e.target.value)}
           placeholder="Model (mis. kimi-k3)"
-          className="rounded-lg border border-border-subtle bg-surface px-3 py-2 text-sm text-text-main"
+          style={{ width: 180 }}
         />
-        <select
+        <Select
           value={status}
-          onChange={(e) => setStatus(e.target.value)}
-          className="rounded-lg border border-border-subtle bg-surface px-3 py-2 text-sm text-text-main"
-        >
-          <option value="">Semua status</option>
-          <option value="success">Sukses</option>
-          <option value="error">Error</option>
-        </select>
-        <button
-          onClick={() => load(1)}
-          className="rounded-lg bg-primary px-4 py-2 text-sm font-medium text-white"
-        >
+          onChange={setStatus}
+          style={{ width: 160 }}
+          options={[
+            { value: "", label: "Semua status" },
+            { value: "success", label: "Sukses" },
+            { value: "error", label: "Error" },
+          ]}
+        />
+        <Button type="primary" onClick={() => load(1)}>
           Cari
-        </button>
+        </Button>
       </div>
 
       {loading ? (
         <p className="text-sm text-text-muted">Memuat…</p>
       ) : rows.length === 0 && !observabilityEnabled ? (
-        <div className="rounded-lg border border-warning/40 bg-warning/10 px-4 py-3 text-sm text-warning">
-          <p className="font-medium">Pencatatan percakapan sedang mati.</p>
-          <p>
-            Observability belum diaktifkan, jadi tidak ada percakapan yang tersimpan. Aktifkan di
-            Pengaturan → Observability (atau set environment <code>ENABLE_REQUEST_LOGS=true</code>)
-            lalu restart — percakapan baru akan muncul di sini.
-          </p>
-        </div>
+        <Alert
+          type="warning"
+          showIcon
+          message="Pencatatan percakapan sedang mati."
+          description={
+            <span>
+              Observability belum diaktifkan, jadi tidak ada percakapan yang tersimpan. Aktifkan di
+              Pengaturan → Observability (atau set environment <code>ENABLE_REQUEST_LOGS=true</code>)
+              lalu restart — percakapan baru akan muncul di sini.
+            </span>
+          }
+        />
       ) : rows.length === 0 ? (
         <p className="text-sm text-text-muted">Belum ada percakapan tercatat untuk filter ini.</p>
       ) : (
-        <div className="overflow-x-auto rounded-lg border border-border-subtle">
-          <table className="w-full text-sm">
-            <thead>
-              <tr className="border-b border-border-subtle bg-bg-subtle text-left text-text-muted">
-                <th className="px-3 py-2">Waktu</th>
-                <th className="px-3 py-2">Model</th>
-                <th className="px-3 py-2">Provider</th>
-                <th className="px-3 py-2 text-right">Token</th>
-                <th className="px-3 py-2 text-right">Latensi</th>
-                <th className="px-3 py-2">Status</th>
-                <th className="px-3 py-2">Live prompt</th>
-              </tr>
-            </thead>
-            <tbody>
-              {rows.map((d) => (
-                <tr
-                  key={d.id}
-                  onClick={() => openDetail(d.id)}
-                  className={`cursor-pointer border-b border-border-subtle last:border-0 hover:bg-bg-subtle ${selectedId === d.id ? "bg-bg-subtle" : ""}`}
-                >
-                  <td className="whitespace-nowrap px-3 py-2 text-text-muted">{fmtTime(d.timestamp)}</td>
-                  <td className="px-3 py-2 text-text-main">{d.model || "—"}</td>
-                  <td className="px-3 py-2 text-text-muted">{d.provider || "—"}</td>
-                  <td className="px-3 py-2 text-right text-text-main">
-                    {((d.tokens?.prompt_tokens || 0) + (d.tokens?.completion_tokens || 0)).toLocaleString("id-ID")}
-                  </td>
-                  <td className="px-3 py-2 text-right text-text-muted">{d.latency?.total ? `${d.latency.total} ms` : "—"}</td>
-                  <td className={d.status === "success" ? "px-3 py-2 text-success" : "px-3 py-2 text-error"}>{d.status || "—"}</td>
-                  <td className="px-3 py-2 text-text-muted">{d.live_injected ? "⭐ disuntikkan" : "—"}</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+        <Card styles={{ body: { padding: 0 } }}>
+          <Table
+            columns={columns}
+            dataSource={rows}
+            rowKey="id"
+            loading={loading}
+            pagination={false}
+            scroll={{ x: 800 }}
+            onRow={(d) => ({
+              onClick: () => openDetail(d.id),
+              style: { cursor: "pointer", background: selectedId === d.id ? "var(--ant-color-fill-tertiary)" : undefined },
+            })}
+          />
+        </Card>
       )}
 
       {pagination.totalPages > 1 && (
-        <div className="flex items-center gap-2 text-sm text-text-muted">
-          <button
-            onClick={() => load(pagination.page - 1)}
-            disabled={pagination.page <= 1}
-            className="rounded-lg border border-border-subtle px-3 py-1 disabled:opacity-50"
-          >
-            ← Sebelumnya
-          </button>
-          <span>Halaman {pagination.page} dari {pagination.totalPages} ({pagination.totalItems} percakapan)</span>
-          <button
-            onClick={() => load(pagination.page + 1)}
-            disabled={pagination.page >= pagination.totalPages}
-            className="rounded-lg border border-border-subtle px-3 py-1 disabled:opacity-50"
-          >
-            Berikutnya →
-          </button>
-        </div>
+        <Pagination
+          current={pagination.page}
+          total={pagination.totalItems}
+          pageSize={pagination.pageSize}
+          onChange={(page) => load(page)}
+          showTotal={(total) => `${total} percakapan`}
+        />
       )}
 
       {selectedId && (
-        <div className="rounded-lg border border-border-subtle bg-surface p-4">
-          <div className="mb-3 flex items-center justify-between gap-2">
-            <h2 className="text-sm font-semibold text-text-main">Detail percakapan</h2>
-            <button onClick={() => { setSelectedId(null); setDetail(null); }} className="text-sm text-text-muted hover:text-text-main">Tutup ✕</button>
-          </div>
-          {detailLoading ? (
-            <p className="text-sm text-text-muted">Memuat detail…</p>
-          ) : detail?.error ? (
-            <p className="text-sm text-error">{detail.error}</p>
+        <Card
+          title="Detail percakapan"
+          extra={<Button type="text" size="small" onClick={() => { setSelectedId(null); setDetail(null); }}>Tutup ✕</Button>}
+          loading={detailLoading}
+        >
+          {detail?.error ? (
+            <Typography.Text type="danger">{detail.error}</Typography.Text>
           ) : detail ? (
             <div className="flex flex-col gap-3">
               <p className="text-xs text-text-muted">
@@ -209,19 +196,21 @@ export default function ConversationsPage() {
                 {detail.detail.status} · {(detail.detail.tokens?.prompt_tokens || 0) + (detail.detail.tokens?.completion_tokens || 0)} token
                 {detail.detail.liveInjected ? " · ⭐ live prompt disuntikkan (isinya disembunyikan)" : ""}
               </p>
-              {detail.turns.length === 0 ? (
+              {(detail.turns || []).length === 0 ? (
                 <p className="text-sm text-text-muted">Isi percakapan tidak tersimpan untuk permintaan ini (mis. respons streaming yang tidak selesai).</p>
               ) : (
-                detail.turns.map((t, i) => (
-                  <div key={i} className={`rounded-lg border px-3 py-2 ${ROLE_CLASS[t.kind] || ROLE_CLASS.user}`}>
-                    <div className="mb-1 text-xs font-semibold uppercase tracking-wide text-text-muted">{t.role}{t.truncated ? " · dipotong" : ""}</div>
+                (detail.turns || []).map((t, i) => (
+                  <div key={i} className="rounded-lg border border-border-subtle bg-bg-subtle px-3 py-2">
+                    <div className="mb-1 flex items-center gap-2">
+                      <Tag color={ROLE_TAG_COLOR[t.kind] || "default"}>{t.role}{t.truncated ? " · dipotong" : ""}</Tag>
+                    </div>
                     <pre className="whitespace-pre-wrap break-words font-sans text-sm text-text-main">{t.content}</pre>
                   </div>
                 ))
               )}
             </div>
           ) : null}
-        </div>
+        </Card>
       )}
     </div>
   );

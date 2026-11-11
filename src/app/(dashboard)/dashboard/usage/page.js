@@ -2,7 +2,8 @@
 
 import { Suspense, useState } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
-import { RequestLogger, CardSkeleton, SegmentedControl } from "@/shared/components";
+import { Segmented } from "antd";
+import { RequestLogger, CardSkeleton } from "@/shared/components";
 import UsageStats from "@/shared/components/UsageStats";
 import RequestDetailsTab from "./components/RequestDetailsTab";
 import { useMemberRole } from "@/shared/hooks/useMemberRole";
@@ -47,7 +48,7 @@ function UsageContent() {
     <div className="flex min-w-0 flex-col gap-6 px-1 sm:px-0">
       {/* Tabs + period selector on same row */}
       <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
-        <SegmentedControl
+        <Segmented
           options={
             // Members have no per-request conversation details: those rows
             // carry no API key, so they cannot be attributed to a member
@@ -64,11 +65,11 @@ function UsageContent() {
           className="w-full sm:w-auto"
         />
         {activeTab === "overview" && (
-          <SegmentedControl
-            options={PERIODS}
+          <Segmented
+            options={PERIODS.map((p) => ({ value: p.value, label: p.label }))}
             value={period}
             onChange={setPeriod}
-            size="sm"
+            size="small"
             className="w-full sm:w-auto"
           />
         )}

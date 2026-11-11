@@ -3,7 +3,8 @@
 import { useParams, notFound, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { Card, Button, Input, Toggle, ModelSelectModal } from "@/shared/components";
+import { Button, Card, Input, Switch } from "antd";
+import { ModelSelectModal } from "@/shared/components";
 import ProviderIcon from "@/shared/components/ProviderIcon";
 import { AI_PROVIDERS, MEDIA_PROVIDER_KINDS } from "@/shared/constants/providers";
 
@@ -255,7 +256,7 @@ export default function ComboDetailPage() {
             <code className="text-lg font-semibold font-mono">{combo.name}</code>
           </div>
         </div>
-        <Button variant="outline" icon="delete" onClick={handleDelete} className="text-red-500 border-red-200 hover:bg-red-50">
+        <Button danger icon={<span className="material-symbols-outlined text-[18px]">delete</span>} onClick={handleDelete}>
           Delete
         </Button>
       </div>
@@ -265,7 +266,11 @@ export default function ComboDetailPage() {
         <h2 className="text-lg font-semibold mb-3">Settings</h2>
         <div className="flex flex-col gap-4">
           <div>
-            <Input label="Combo Name" value={name} onChange={(e) => { setName(e.target.value); validateName(e.target.value); }} onBlur={handleSaveName} error={nameError} />
+            <label className="flex flex-col gap-1 text-sm">
+              <span className="text-text-muted">Combo Name</span>
+              <Input value={name} onChange={(e) => { setName(e.target.value); validateName(e.target.value); }} onBlur={handleSaveName} status={nameError ? "error" : ""} />
+              {nameError && <span className="text-xs text-red-500">{nameError}</span>}
+            </label>
             <p className="text-[10px] text-text-muted mt-0.5">Only letters, numbers, -, _ and .</p>
           </div>
           <div className="flex items-center justify-between">
@@ -273,7 +278,7 @@ export default function ComboDetailPage() {
               <p className="text-sm font-medium">Round Robin</p>
               <p className="text-xs text-text-muted">Rotate providers across requests instead of strict fallback order.</p>
             </div>
-            <Toggle checked={roundRobin} onChange={handleToggleRoundRobin} />
+            <Switch checked={roundRobin} onChange={handleToggleRoundRobin} />
           </div>
         </div>
       </Card>
@@ -285,7 +290,7 @@ export default function ComboDetailPage() {
             <h2 className="text-lg font-semibold">Providers</h2>
             <p className="text-xs text-text-muted">Tried in order (top-down) or rotated when round-robin is on.</p>
           </div>
-          <Button size="sm" icon="add" onClick={() => setShowPicker(true)}>Add Provider</Button>
+          <Button size="small" type="primary" icon={<span className="material-symbols-outlined text-[18px]">add</span>} onClick={() => setShowPicker(true)}>Add Provider</Button>
         </div>
         {providers.length === 0 ? (
           <div className="text-center py-6 border border-dashed border-border rounded-lg text-text-muted text-sm">
@@ -334,7 +339,7 @@ export default function ComboDetailPage() {
         <Card>
           <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between mb-3">
             <h2 className="text-lg font-semibold">Test Example</h2>
-            <Button size="sm" icon="play_arrow" onClick={handleTest} disabled={testing || providers.length === 0}>
+            <Button size="small" type="primary" icon={<span className="material-symbols-outlined text-[18px]">play_arrow</span>} onClick={handleTest} disabled={testing || providers.length === 0}>
               {testing ? "Running..." : "Run"}
             </Button>
           </div>

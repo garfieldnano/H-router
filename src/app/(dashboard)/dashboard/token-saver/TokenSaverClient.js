@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, useCallback, useRef } from "react";
-import { Card, Button, Input, Modal, Toggle, ConfirmModal } from "@/shared/components";
+import { Button, Card, Input, Modal, Switch, Tag, Typography } from "antd";
 import { useCopyToClipboard } from "@/shared/hooks/useCopyToClipboard";
 import { getCurrentLocale, onLocaleChange } from "@/i18n/runtime";
 import { normalizeRtkModelOverrides, rtkModelKey } from "@/shared/utils/rtkModel.js";
@@ -532,10 +532,6 @@ export default function TokenSaverClient() {
           : pxpipeStatus.running
             ? "Running"
             : "Stopped";
-  const pxpipeChipClass =
-    pxpipeHealthy || pxpipeStatus.running
-      ? "bg-success/15 text-success"
-      : "bg-warning/15 text-warning";
 
   return (
     <div className="space-y-6 p-6">
@@ -565,7 +561,7 @@ export default function TokenSaverClient() {
               git/grep/ls/tree/logs → 60-90% fewer input tokens
             </p>
           </div>
-          <Toggle
+          <Switch
             checked={rtkEnabled}
             onChange={() => handleRtkEnabled(!rtkEnabled)}
           />
@@ -596,17 +592,18 @@ export default function TokenSaverClient() {
                         {enabled ? "On" : "Off"}
                         {enabled === rtkEnabled ? " (same as global)" : ""}
                       </span>
-                      <Toggle
+                      <Switch
                         checked={enabled}
                         onChange={() => handleRtkOverrideToggle(key)}
                       />
-                      <button
-                        type="button"
+                      <Button
+                        type="link"
+                        size="small"
+                        danger
                         onClick={() => handleRtkOverrideRemove(key)}
-                        className="text-xs text-red-500 underline hover:opacity-80"
                       >
                         Remove
-                      </button>
+                      </Button>
                     </div>
                   </div>
                 ))}
@@ -618,7 +615,7 @@ export default function TokenSaverClient() {
               value={rtkNewModel}
               onChange={(e) => setRtkNewModel(e.target.value)}
               placeholder="provider/model, e.g. kimi/k2"
-              className="flex-1 min-w-[220px]"
+              style={{ flex: 1, minWidth: 220 }}
             />
             <datalist id="rtk-model-list">
               {rtkModels.map((m) => (
@@ -626,22 +623,20 @@ export default function TokenSaverClient() {
               ))}
             </datalist>
             <Button
-              variant="secondary"
-              size="sm"
+              size="small"
               onClick={() => handleRtkOverrideAdd(true)}
             >
               Add: On
             </Button>
             <Button
-              variant="secondary"
-              size="sm"
+              size="small"
               onClick={() => handleRtkOverrideAdd(false)}
             >
               Add: Off
             </Button>
           </div>
           {rtkOverrideError && (
-            <p className="text-sm text-red-500 mt-2">{rtkOverrideError}</p>
+            <Typography.Text type="danger" className="mt-2 block text-sm">{rtkOverrideError}</Typography.Text>
           )}
         </div>
         <div className="flex items-center justify-between py-4 gap-4 flex-wrap">
@@ -658,24 +653,16 @@ export default function TokenSaverClient() {
                   (Headroom)
                 </a>
               </p>
-              <span
-                className={`text-xs px-2 py-0.5 rounded ${headroomRunning ? "bg-success/15 text-success" : "bg-warning/15 text-warning"}`}
-              >
-                {headroomStatusLabel}
-              </span>
-              <button
-                type="button"
-                onClick={() => setShowHeadroomInstallModal(true)}
-                className="text-xs text-primary underline hover:opacity-80"
-              >
+              <Tag color={headroomRunning ? "success" : "warning"}>{headroomStatusLabel}</Tag>
+              <Button type="link" size="small" onClick={() => setShowHeadroomInstallModal(true)}>
                 {headroomRunning ? "Manage" : "Setup"}
-              </button>
+              </Button>
             </div>
             <p className="text-sm text-text-muted mt-1">
               Compress prompts via /v1/compress before routing to the model
             </p>
           </div>
-          <Toggle
+          <Switch
             checked={headroomEnabled}
             onChange={() => handleHeadroomEnabled(!headroomEnabled)}
           />
@@ -703,22 +690,23 @@ export default function TokenSaverClient() {
                       className="flex items-center gap-1.5 text-xs px-2 py-1 rounded border border-success/40 bg-success/5 text-text"
                       title={extraTitle}
                     >
-                      <Toggle
-                        size="sm"
+                      <Switch
+                        size="small"
                         checked={active}
                         disabled={restartingProxy}
                         onChange={() => toggleExtraActive(extra, !active)}
                       />
                       <span className="font-medium">[{extra}]</span>
-                      <button
-                        type="button"
+                      <Button
+                        type="link"
+                        size="small"
+                        danger
                         onClick={() => handleRemoveExtra(extra)}
                         disabled={removingExtra === extra}
-                        className="ml-1 text-error underline hover:opacity-80 disabled:opacity-50"
                         title={`Uninstall [${extra}]`}
                       >
                         {removingExtra === extra ? "Uninstalling…" : "Uninstall"}
-                      </button>
+                      </Button>
                     </div>
                   );
                 }
@@ -745,15 +733,17 @@ export default function TokenSaverClient() {
                 );
               })}
               {pendingExtras.length > 0 && (
-                <button
+                <Button
+                  type="primary"
+                  size="small"
                   onClick={handleInstallExtras}
                   disabled={extrasActionLoading}
-                  className="text-xs px-2.5 py-1 rounded bg-primary text-white hover:opacity-90 disabled:opacity-50"
+                  loading={extrasActionLoading}
                 >
                   {extrasActionLoading
                     ? "Installing…"
                     : `Install [proxy,${pendingExtras.join(",")}]`}
-                </button>
+                </Button>
               )}
             </div>
             {extrasActionError && (
@@ -822,7 +812,7 @@ export default function TokenSaverClient() {
                 </p>
               </div>
             )}
-            <Toggle
+            <Switch
               checked={cavemanEnabled}
               onChange={() => handleCavemanEnabled(!cavemanEnabled)}
             />
@@ -873,7 +863,7 @@ export default function TokenSaverClient() {
                 </p>
               </div>
             )}
-            <Toggle
+            <Switch
               checked={ponytailEnabled}
               onChange={() => handlePonytailEnabled(!ponytailEnabled)}
             />
@@ -887,14 +877,14 @@ export default function TokenSaverClient() {
               the savers above
             </p>
           </div>
-          <Toggle
+          <Switch
             checked={customPromptEnabled}
             onChange={() => handleCustomPromptEnabled(!customPromptEnabled)}
           />
         </div>
         {customPromptEnabled && (
           <div className="pt-3">
-            <textarea
+            <Input.TextArea
               id="custom-prompt"
               aria-label="Custom system prompt"
               value={customPrompt}
@@ -902,7 +892,6 @@ export default function TokenSaverClient() {
               onBlur={handleCustomPromptBlur}
               rows={4}
               placeholder="e.g. Prefer editing existing files over creating new ones."
-              className="w-full rounded border border-border bg-transparent p-2 text-xs"
             />
             <p className="text-xs text-text-muted mt-1">
               Applied to every provider and model. Sent as-is to upstream; an
@@ -926,16 +915,10 @@ export default function TokenSaverClient() {
                   (PXPIPE)
                 </a>
               </p>
-              <span className={`text-xs px-2 py-0.5 rounded ${pxpipeChipClass}`}>
-                {pxpipeStatusLabel}
-              </span>
-              <button
-                type="button"
-                onClick={() => setShowPxpipeModal(true)}
-                className="text-xs text-primary underline hover:opacity-80"
-              >
+              <Tag color={pxpipeHealthy || pxpipeStatus.running ? "success" : "warning"}>{pxpipeStatusLabel}</Tag>
+              <Button type="link" size="small" onClick={() => setShowPxpipeModal(true)}>
                 {pxpipeStatus.installed ? "Manage" : "Setup"}
-              </button>
+              </Button>
               <a
                 href="/dashboard/pxpipe"
                 className="text-xs text-primary underline hover:opacity-80"
@@ -949,7 +932,7 @@ export default function TokenSaverClient() {
               conversations.
             </p>
           </div>
-          <Toggle
+          <Switch
             checked={pxpipeEnabled}
             disabled={!pxpipeStatus.installed}
             onChange={() => handlePxpipeEnabled(!pxpipeEnabled)}
@@ -959,10 +942,13 @@ export default function TokenSaverClient() {
       </Card>
 
       <Modal
-        isOpen={showHeadroomInstallModal}
+        open={showHeadroomInstallModal}
         title={headroomRunning ? "Headroom" : "Setup Headroom"}
-        onClose={() => setShowHeadroomInstallModal(false)}
+        onCancel={() => setShowHeadroomInstallModal(false)}
+        footer={null}
+        destroyOnClose
       >
+        {showHeadroomInstallModal ? (
         <div className="flex flex-col gap-4">
           <div className="flex items-center justify-between text-sm">
             <span>Status</span>
@@ -989,7 +975,7 @@ export default function TokenSaverClient() {
               onChange={(e) => setHeadroomUrl(e.target.value)}
               onBlur={handleHeadroomUrlBlur}
               placeholder="http://localhost:8787"
-              className="font-mono text-sm"
+              className="font-mono"
             />
             <p className="text-xs text-text-muted">
               Use a local proxy for Start/Stop, or an external Docker sidecar
@@ -1003,7 +989,7 @@ export default function TokenSaverClient() {
               onChange={(e) => setHeadroomTimeoutMs(e.target.value)}
               onBlur={handleHeadroomTimeoutBlur}
               placeholder="3000"
-              className="font-mono text-sm"
+              className="font-mono"
             />
             <p className="text-xs text-text-muted">
               Request timeout in milliseconds. Defaults to 3000 ms.
@@ -1012,9 +998,10 @@ export default function TokenSaverClient() {
           {headroomManaged ? (
             <Button
               onClick={handleHeadroomStop}
-              variant="ghost"
-              fullWidth
+              type="text"
+              block
               disabled={headroomActionLoading}
+              loading={headroomActionLoading}
             >
               {headroomActionLoading ? "Stopping…" : "Stop Headroom"}
             </Button>
@@ -1025,8 +1012,10 @@ export default function TokenSaverClient() {
           ) : headroomCanStart ? (
             <Button
               onClick={handleHeadroomStart}
-              fullWidth
+              type="primary"
+              block
               disabled={headroomActionLoading}
+              loading={headroomActionLoading}
             >
               {headroomActionLoading ? "Starting…" : "Start Headroom"}
             </Button>
@@ -1047,8 +1036,8 @@ export default function TokenSaverClient() {
                   {`pip install "headroom-ai[proxy]"`}
                 </pre>
                 <Button
-                  size="sm"
-                  variant="ghost"
+                  size="small"
+                  type="text"
                   onClick={() =>
                     copy(`pip install "headroom-ai[proxy]"`)
                   }
@@ -1064,26 +1053,31 @@ export default function TokenSaverClient() {
           <div className="flex gap-2">
             <Button
               onClick={() => refreshHeadroomStatus()}
-              variant="ghost"
-              fullWidth
+              type="text"
+              block
             >
               Recheck
             </Button>
             <Button
+              type="primary"
+              block
               onClick={() => setShowHeadroomInstallModal(false)}
-              fullWidth
             >
               Done
             </Button>
           </div>
         </div>
+        ) : null}
       </Modal>
 
       <Modal
-        isOpen={false}
+        open={false}
         title={pxpipeStatus.installed ? "PXPIPE" : "Setup PXPIPE"}
-        onClose={() => setShowPxpipeModal(false)}
+        onCancel={() => setShowPxpipeModal(false)}
+        footer={null}
+        destroyOnClose
       >
+        {showPxpipeModal ? (
         <div className="flex flex-col gap-4">
           <p className="text-sm text-text-muted">
             Compress prompts using multimodal encoding. Runs in-process — no
@@ -1118,9 +1112,11 @@ export default function TokenSaverClient() {
             <div className="flex flex-col gap-2">
               <p className="text-sm text-warning">PXPIPE is not installed.</p>
               <Button
+                type="primary"
+                block
                 onClick={() => pxpipeAction("install")}
-                fullWidth
                 disabled={pxpipeActionLoading || pxpipeStatus.installing}
+                loading={pxpipeActionLoading || pxpipeStatus.installing}
               >
                 {pxpipeActionLoading || pxpipeStatus.installing ? "Installing…" : "Install"}
               </Button>
@@ -1133,19 +1129,19 @@ export default function TokenSaverClient() {
             <div className="grid grid-cols-2 gap-2">
               {pxpipeStatus.running ? (
                 <>
-                  <Button onClick={() => pxpipeAction("restart")} variant="ghost" disabled={pxpipeActionLoading}>
+                  <Button type="text" onClick={() => pxpipeAction("restart")} disabled={pxpipeActionLoading}>
                     Restart
                   </Button>
-                  <Button onClick={() => pxpipeAction("stop")} variant="ghost" disabled={pxpipeActionLoading}>
+                  <Button type="text" onClick={() => pxpipeAction("stop")} disabled={pxpipeActionLoading}>
                     Stop
                   </Button>
                 </>
               ) : (
-                <Button onClick={() => pxpipeAction("start")} disabled={pxpipeActionLoading}>
+                <Button type="primary" onClick={() => pxpipeAction("start")} disabled={pxpipeActionLoading} loading={pxpipeActionLoading}>
                   {pxpipeActionLoading ? "Starting…" : "Start"}
                 </Button>
               )}
-              <Button onClick={() => pxpipeAction("install")} variant="ghost" disabled={pxpipeActionLoading}>
+              <Button type="text" onClick={() => pxpipeAction("install")} disabled={pxpipeActionLoading}>
                 Repair
               </Button>
               <a
@@ -1163,7 +1159,7 @@ export default function TokenSaverClient() {
               onChange={(e) => setPxpipeMinChars(e.target.value)}
               onBlur={handlePxpipeMinCharsBlur}
               placeholder="25000"
-              className="font-mono text-sm"
+              className="font-mono"
             />
             <p className="text-xs text-text-muted">
               Requests smaller than this bypass PXPIPE and are sent as-is.
@@ -1174,32 +1170,38 @@ export default function TokenSaverClient() {
           )}
           <div className="flex gap-2">
             <Button
+              type="text"
+              block
               onClick={() => refreshPxpipeStatus().then(runPxpipeHealth)}
-              variant="ghost"
-              fullWidth
             >
               Recheck
             </Button>
-            <Button onClick={() => setShowPxpipeModal(false)} fullWidth>
+            <Button type="primary" block onClick={() => setShowPxpipeModal(false)}>
               Done
             </Button>
           </div>
         </div>
+        ) : null}
       </Modal>
 
-      <ConfirmModal
-        isOpen={!!extrasConfirm}
-        onClose={() => setExtrasConfirm(null)}
-        onConfirm={() => {
+      {/* antd Modal evaluates title/children on every render even while
+          closed — the message is guarded by extrasConfirm (quota-crash
+          lesson, wave 2). */}
+      <Modal
+        open={!!extrasConfirm}
+        onCancel={() => setExtrasConfirm(null)}
+        onOk={() => {
           const fn = extrasConfirm?.onConfirm;
           setExtrasConfirm(null);
           fn?.();
         }}
-        title={extrasConfirm?.title}
-        message={extrasConfirm?.message}
-        confirmText={extrasConfirm?.confirmText}
-        variant={extrasConfirm?.variant}
-      />
+        title={extrasConfirm?.title || "Confirm"}
+        okText={extrasConfirm?.confirmText || "Confirm"}
+        okButtonProps={{ danger: extrasConfirm?.variant === "danger" }}
+        destroyOnClose
+      >
+        {extrasConfirm ? <p>{extrasConfirm.message}</p> : null}
+      </Modal>
     </div>
   );
 }

@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
+import { Alert, Button, Card, Modal, Select, Statistic, Table, Tag } from "antd";
 
 // Admin-only health scanner (plan #5): scans every active provider
 // connection with the existing per-connection probe (testSingleConnection)
@@ -24,12 +25,21 @@ const STATUS_LABEL = {
   unknown: "Tidak diketahui",
 };
 
-const STATUS_CLASS = {
-  healthy: "text-success",
-  limit: "text-warning",
-  dead: "text-error",
-  unknown: "text-text-muted",
+const STATUS_TAG_COLOR = {
+  healthy: "success",
+  limit: "warning",
+  dead: "error",
+  unknown: "default",
 };
+
+const FILTER_OPTIONS = [
+  { value: "all", label: "Semua status" },
+  { value: "healthy", label: "Sehat" },
+  { value: "limit", label: "Limit" },
+  { value: "dead", label: "Mati" },
+  { value: "unknown", label: "Tidak diketahui" },
+  { value: "unscanned", label: "Belum dipindai" },
+];
 
 export default function ScannerPage() {
   const [scan, setScan] = useState(null);
@@ -138,6 +148,52 @@ export default function ScannerPage() {
     ? connections
     : connections.filter((c) => (c.healthStatus || "unscanned") === filter);
 
+  const columns = [
+    {
+      title: "Koneksi",
+      dataIndex: "name",
+      key: "name",
+      render: (_v, c) => (
+        <span>
+          {c.name}
+          {!c.isActive && <Tag color="orange" className="ml-2">Nonaktif</Tag>}
+        </span>
+      ),
+    },
+    {
+      title: "Provider",
+      key: "provider",
+      render: (_v, c) => `${c.provider} · ${c.authType}`,
+    },
+    {
+      title: "Status",
+      dataIndex: "healthStatus",
+      key: "status",
+      render: (s) => s
+        ? <Tag color={STATUS_TAG_COLOR[s]}>{STATUS_LABEL[s]}</Tag>
+        : <span className="text-text-muted">Belum dipindai</span>,
+    },
+    {
+      title: "Latensi",
+      dataIndex: "healthLatencyMs",
+      key: "latency",
+      render: (ms) => (ms != null ? `${ms} ms` : "-"),
+    },
+    {
+      title: "Terakhir dicek",
+      dataIndex: "healthCheckedAt",
+      key: "checkedAt",
+      render: (ts) => (ts ? fmtTime(ts) : "-"),
+    },
+    {
+      title: "Keterangan",
+      dataIndex: "healthError",
+      key: "error",
+      ellipsis: true,
+      render: (e) => e || "-",
+    },
+  ];
+
   return (
     <div className="flex flex-col gap-4 p-4">
       <div className="flex flex-wrap items-center justify-between gap-3">
@@ -148,30 +204,30 @@ export default function ScannerPage() {
             Sehat / Limit / Mati / Tidak diketahui. Hanya koneksi Mati yang bisa dihapus massal.
           </p>
         </div>
-        <button
+        <Button
+          type="primary"
           onClick={startScan}
+          loading={starting || scan?.running}
           disabled={starting || scan?.running}
-          className="rounded-lg bg-primary px-4 py-2 text-sm font-medium text-white disabled:opacity-50"
         >
           {scan?.running ? "Memindai…" : starting ? "Memulai…" : "Jalankan Scan"}
-        </button>
+        </Button>
       </div>
 
-      {error && <div className="rounded-lg border border-error/40 bg-error/10 px-3 py-2 text-sm text-error">{error}</div>}
-      {notice && <div className="rounded-lg border border-success/40 bg-success/10 px-3 py-2 text-sm text-success">{notice}</div>}
+      {error && <Alert type="error" message={error} showIcon />}
+      {notice && <Alert type="success" message={notice} showIcon />}
 
       <div className="grid grid-cols-2 gap-3 md:grid-cols-5">
         {[
-          ["Sehat", counts.healthy, "text-success"],
-          ["Limit", counts.limit, "text-warning"],
-          ["Mati", counts.dead, "text-error"],
-          ["Tidak diketahui", counts.unknown, "text-text-muted"],
-          ["Belum dipindai", counts.unscanned, "text-text-muted"],
-        ].map(([label, n, cls]) => (
-          <div key={label} className="rounded-lg border border-border-subtle bg-surface p-3">
-            <div className={`text-2xl font-semibold ${cls}`}>{n}</div>
-            <div className="text-xs text-text-muted">{label}</div>
-          </div>
+          ["Sehat", counts.healthy],
+          ["Limit", counts.limit],
+          ["Mati", counts.dead],
+          ["Tidak diketahui", counts.unknown],
+          ["Belum dipindai", counts.unscanned],
+        ].map(([label, n]) => (
+          <Card key={label} styles={{ body: { padding: "12px 16px" } }}>
+            <Statistic title={label} value={n} />
+          </Card>
         ))}
       </div>
 
@@ -189,85 +245,47 @@ export default function ScannerPage() {
       )}
 
       <div className="flex flex-wrap items-center gap-2">
-        <select
+        <Select
           value={filter}
-          onChange={(e) => setFilter(e.target.value)}
-          className="rounded-lg border border-border-subtle bg-surface px-3 py-2 text-sm text-text-main"
-        >
-          <option value="all">Semua status</option>
-          <option value="healthy">Sehat</option>
-          <option value="limit">Limit</option>
-          <option value="dead">Mati</option>
-          <option value="unknown">Tidak diketahui</option>
-          <option value="unscanned">Belum dipindai</option>
-        </select>
-        {deadIds.length > 0 && !confirmDelete && (
-          <button
-            onClick={() => setConfirmDelete(true)}
-            className="rounded-lg border border-error/50 px-3 py-2 text-sm text-error hover:bg-error/10"
-          >
+          onChange={setFilter}
+          options={FILTER_OPTIONS}
+          style={{ width: 180 }}
+        />
+        {deadIds.length > 0 && (
+          <Button danger onClick={() => setConfirmDelete(true)}>
             Hapus yang mati ({deadIds.length})
-          </button>
-        )}
-        {confirmDelete && (
-          <span className="inline-flex items-center gap-2 rounded-lg border border-error/50 bg-error/10 px-3 py-2 text-sm">
-            <span className="text-error">Yakin hapus {deadIds.length} koneksi mati? Tindakan ini tidak bisa dibatalkan.</span>
-            <button
-              onClick={deleteDead}
-              disabled={deleting}
-              className="rounded bg-error px-2 py-1 text-xs font-medium text-white disabled:opacity-50"
-            >
-              {deleting ? "Menghapus…" : "Ya, hapus"}
-            </button>
-            <button
-              onClick={() => setConfirmDelete(false)}
-              className="rounded border border-border-subtle px-2 py-1 text-xs text-text-main"
-            >
-              Batal
-            </button>
-          </span>
+          </Button>
         )}
       </div>
 
-      {loading ? (
-        <p className="text-sm text-text-muted">Memuat…</p>
-      ) : filtered.length === 0 ? (
-        <p className="text-sm text-text-muted">Tidak ada koneksi untuk filter ini.</p>
-      ) : (
-        <div className="overflow-x-auto rounded-lg border border-border-subtle">
-          <table className="w-full text-sm">
-            <thead>
-              <tr className="border-b border-border-subtle bg-bg-subtle text-left text-text-muted">
-                <th className="px-3 py-2">Koneksi</th>
-                <th className="px-3 py-2">Provider</th>
-                <th className="px-3 py-2">Status</th>
-                <th className="px-3 py-2">Latensi</th>
-                <th className="px-3 py-2">Terakhir dicek</th>
-                <th className="px-3 py-2">Keterangan</th>
-              </tr>
-            </thead>
-            <tbody>
-              {filtered.map((c) => (
-                <tr key={c.id} className="border-b border-border-subtle last:border-0">
-                  <td className="px-3 py-2 text-text-main">
-                    {c.name}
-                    {!c.isActive && <span className="ml-2 text-xs text-orange-500">Nonaktif</span>}
-                  </td>
-                  <td className="px-3 py-2 text-text-muted">{c.provider} · {c.authType}</td>
-                  <td className={`px-3 py-2 font-medium ${c.healthStatus ? STATUS_CLASS[c.healthStatus] : "text-text-muted"}`}>
-                    {c.healthStatus ? STATUS_LABEL[c.healthStatus] : "Belum dipindai"}
-                  </td>
-                  <td className="px-3 py-2 text-text-muted">{c.healthLatencyMs != null ? `${c.healthLatencyMs} ms` : "-"}</td>
-                  <td className="px-3 py-2 text-text-muted">{c.healthCheckedAt ? fmtTime(c.healthCheckedAt) : "-"}</td>
-                  <td className="max-w-xs truncate px-3 py-2 text-text-muted" title={c.healthError || ""}>
-                    {c.healthError || "-"}
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      )}
+      <Card styles={{ body: { padding: 0 } }}>
+        <Table
+          columns={columns}
+          dataSource={filtered}
+          rowKey="id"
+          loading={loading}
+          pagination={false}
+          scroll={{ x: 800 }}
+          locale={{ emptyText: "Tidak ada koneksi untuk filter ini." }}
+        />
+      </Card>
+
+      {/* antd Modal evaluates title/children on every render even while
+          closed, so the body is guarded by confirmDelete (quota-crash
+          lesson, wave 2). */}
+      <Modal
+        open={confirmDelete}
+        onCancel={() => setConfirmDelete(false)}
+        onOk={deleteDead}
+        okText={deleting ? "Menghapus…" : "Ya, hapus"}
+        okButtonProps={{ danger: true, loading: deleting }}
+        title="Hapus koneksi mati?"
+        destroyOnClose
+      >
+        {confirmDelete ? (
+          <p>Yakin hapus {deadIds.length} koneksi mati? Tindakan ini tidak bisa dibatalkan.</p>
+        ) : null}
+      </Modal>
     </div>
   );
 }

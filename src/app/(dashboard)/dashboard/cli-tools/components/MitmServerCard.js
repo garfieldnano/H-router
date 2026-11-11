@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
-import { Card, Button, Badge, Input } from "@/shared/components";
+import { Button, Card, Input, Modal, Tag } from "antd";
 
 const DEFAULT_MITM_ROUTER_BASE = "http://localhost:20128";
 
@@ -141,9 +141,9 @@ export default function MitmServerCard({ apiKeys, cloudEnabled, onStatusChange }
               <span className="material-symbols-outlined text-primary text-[20px]">security</span>
               <span className="font-semibold text-sm text-text-main">MITM Server</span>
               {isRunning ? (
-                <Badge variant="success" size="sm">Running</Badge>
+                <Tag color="success">Running</Tag>
               ) : (
-                <Badge variant="default" size="sm">Stopped</Badge>
+                <Tag>Stopped</Tag>
               )}
             </div>
             <div className="flex flex-wrap items-center gap-1 text-xs text-text-muted" data-i18n-skip="true">
@@ -265,16 +265,18 @@ export default function MitmServerCard({ apiKeys, cloudEnabled, onStatusChange }
       </Card>
 
       {/* Password Modal */}
-      {showPasswordModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm">
-          <div className="mx-4 flex w-full max-w-sm flex-col gap-4 rounded-xl border border-border bg-surface p-5 shadow-xl sm:p-6">
-            <h3 className="font-semibold text-text-main">Sudo Password Required</h3>
+      <Modal
+        open={showPasswordModal}
+        onCancel={() => { setShowPasswordModal(false); setSudoPassword(""); setModalError(null); }}
+        title="Sudo Password Required"
+        width={400}
+        footer={null}
+      >
             <div className="flex items-start gap-3 p-3 bg-yellow-500/10 border border-yellow-500/30 rounded-lg">
               <span className="material-symbols-outlined text-yellow-500 text-[20px]">warning</span>
               <p className="text-xs text-text-muted">Required for SSL certificate and server startup</p>
             </div>
-            <Input
-              type="password"
+            <Input.Password
               placeholder="Enter sudo password"
               value={sudoPassword}
               onChange={(e) => setSudoPassword(e.target.value)}
@@ -287,22 +289,25 @@ export default function MitmServerCard({ apiKeys, cloudEnabled, onStatusChange }
               </div>
             )}
             <div className="flex items-center justify-end gap-2">
-              <Button variant="ghost" size="sm" onClick={() => { setShowPasswordModal(false); setSudoPassword(""); setModalError(null); }} disabled={loading}>
+              <Button type="text" size="small" onClick={() => { setShowPasswordModal(false); setSudoPassword(""); setModalError(null); }} disabled={loading}>
                 Cancel
               </Button>
-              <Button variant="primary" size="sm" onClick={handleConfirmPassword} loading={loading}>
+              <Button type="primary" size="small" onClick={handleConfirmPassword} loading={loading}>
                 Confirm
               </Button>
             </div>
-          </div>
-        </div>
-      )}
+      </Modal>
 
       {/* Port 443 Conflict Modal */}
-      {port443Conflict && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm">
-          <div className="mx-4 flex w-full max-w-md flex-col gap-4 rounded-xl border border-border bg-surface p-5 shadow-xl sm:p-6">
-            <h3 className="font-semibold text-text-main">Port 443 Already In Use</h3>
+      <Modal
+        open={!!port443Conflict}
+        onCancel={() => { setPort443Conflict(null); setLoading(false); }}
+        title="Port 443 Already In Use"
+        width={480}
+        footer={null}
+      >
+        {port443Conflict && (
+          <>
             <div className="flex items-start gap-3 p-3 bg-yellow-500/10 border border-yellow-500/30 rounded-lg">
               <span className="material-symbols-outlined text-yellow-500 text-[20px]">warning</span>
               <div className="flex flex-col gap-1 text-xs text-text-muted">
@@ -314,16 +319,16 @@ export default function MitmServerCard({ apiKeys, cloudEnabled, onStatusChange }
               </div>
             </div>
             <div className="flex items-center justify-end gap-2">
-              <Button variant="ghost" size="sm" onClick={() => { setPort443Conflict(null); setLoading(false); }} disabled={loading}>
+              <Button type="text" size="small" onClick={() => { setPort443Conflict(null); setLoading(false); }} disabled={loading}>
                 Cancel
               </Button>
-              <Button variant="primary" size="sm" onClick={handleKillAndStart} loading={loading}>
+              <Button type="primary" size="small" onClick={handleKillAndStart} loading={loading}>
                 Kill & Start
               </Button>
             </div>
-          </div>
-        </div>
-      )}
+          </>
+        )}
+      </Modal>
     </>
   );
 }

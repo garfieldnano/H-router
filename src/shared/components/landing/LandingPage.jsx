@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { Button, Card, Statistic, Tag, Typography } from "antd";
 import ThemeToggle from "@/shared/components/ThemeToggle";
 import { useTheme } from "@/shared/hooks/useTheme";
 import { LANDING_CONFIG, FALLBACK_MODELS } from "@/shared/constants/landing.js";
@@ -82,6 +83,11 @@ const STEPS = [
   },
 ];
 
+// antd primary buttons use white text on the brand green (#05f170),
+// which is low contrast — the landing CTAs keep the dark text the
+// original green buttons had (same override pattern as wave 2).
+const GREEN_CTA_CLASS = "!text-zinc-950";
+
 export default function LandingPage() {
   const { setTheme } = useTheme();
   const [catalog, setCatalog] = useState({ models: [], total: 0, source: "empty", loading: true });
@@ -139,28 +145,21 @@ export default function LandingPage() {
           </nav>
           <div className="flex items-center gap-2">
             <ThemeToggle />
-            <a
-              href="/login"
-              className="hidden rounded-lg px-3 py-2 text-sm font-semibold text-zinc-700 transition-colors hover:bg-zinc-100 sm:block dark:text-zinc-200 dark:hover:bg-zinc-800"
-            >
+            <Button type="text" href="/login" className="hidden sm:inline-flex">
               Masuk
-            </a>
-            <a
-              href={LANDING_CONFIG.docsUrl}
-              target="_blank"
-              rel="noreferrer"
-              className="hidden rounded-lg px-3 py-2 text-sm font-semibold text-zinc-700 transition-colors hover:bg-zinc-100 lg:block dark:text-zinc-200 dark:hover:bg-zinc-800"
-            >
+            </Button>
+            <Button type="text" href={LANDING_CONFIG.docsUrl} target="_blank" rel="noreferrer" className="hidden lg:inline-flex">
               Dokumentasi
-            </a>
-            <a
+            </Button>
+            <Button
+              type="primary"
               href={LANDING_CONFIG.telegramUrl}
               target="_blank"
               rel="noreferrer"
-              className="rounded-lg bg-zinc-900 px-4 py-2 text-sm font-bold text-white transition-colors hover:bg-zinc-700 dark:bg-white dark:text-zinc-900 dark:hover:bg-zinc-200"
+              className={GREEN_CTA_CLASS}
             >
               Ambil key
-            </a>
+            </Button>
           </div>
         </div>
       </header>
@@ -168,53 +167,51 @@ export default function LandingPage() {
       <main>
         {/* ---------------------------------------------------------- hero */}
         <section className="mx-auto w-full max-w-6xl px-6 pt-16 text-center md:pt-24">
-          <p className="mx-auto inline-flex items-center gap-2 rounded-full border border-zinc-200 bg-zinc-50 px-3 py-1 text-xs font-semibold text-zinc-600 dark:border-zinc-800 dark:bg-zinc-900 dark:text-zinc-300">
-            <span className="inline-block size-2 rounded-full bg-[#05f170]" />
+          <Tag
+            icon={<span className="inline-block size-2 rounded-full bg-[#05f170]" />}
+            className="!px-3 !py-1 !text-xs !font-semibold"
+          >
             h-router · Gateway LLM
-          </p>
-          <h1 className="mx-auto mt-6 max-w-3xl text-4xl font-extrabold leading-tight tracking-tight md:text-6xl">
+          </Tag>
+          <Typography.Title
+            level={1}
+            className="!mx-auto !mt-6 !max-w-3xl !text-4xl !font-extrabold !leading-tight !tracking-tight md:!text-6xl"
+          >
             Satu API key untuk semua model AI.
-          </h1>
-          <p className="mx-auto mt-5 max-w-2xl text-lg text-zinc-600 dark:text-zinc-400">
+          </Typography.Title>
+          <Typography.Paragraph type="secondary" className="!mx-auto !mt-5 !max-w-2xl !text-lg">
             h-router merutekan permintaanmu ke puluhan provider — hemat token dengan RTK, atur member dan kunci
             dari dashboard, dan beli kunci lewat bot Telegram. Tanpa kartu kredit, tanpa setup aneh.
-          </p>
+          </Typography.Paragraph>
           <div className="mt-8 flex flex-col items-center justify-center gap-3 sm:flex-row">
-            <a
+            <Button
+              type="primary"
+              size="large"
               href={LANDING_CONFIG.telegramUrl}
               target="_blank"
               rel="noreferrer"
-              className="w-full rounded-lg bg-[#05f170] px-6 py-3 text-base font-bold text-zinc-950 transition-colors hover:bg-[#04d964] sm:w-auto"
+              className={GREEN_CTA_CLASS}
             >
               Ambil key gratis
-            </a>
-            <a
-              href={LANDING_CONFIG.docsUrl}
-              target="_blank"
-              rel="noreferrer"
-              className="w-full rounded-lg border border-zinc-300 px-6 py-3 text-base font-semibold text-zinc-800 transition-colors hover:bg-zinc-100 sm:w-auto dark:border-zinc-700 dark:text-zinc-100 dark:hover:bg-zinc-800"
-            >
+            </Button>
+            <Button size="large" href={LANDING_CONFIG.docsUrl} target="_blank" rel="noreferrer">
               Baca dokumentasi
-            </a>
+            </Button>
           </div>
-          <dl className="mx-auto mt-12 grid max-w-4xl grid-cols-2 gap-4 text-left md:grid-cols-4">
-            <div className="rounded-xl border border-zinc-200 p-4 dark:border-zinc-800">
-              <dt className="text-xs font-semibold uppercase tracking-wide text-zinc-500 dark:text-zinc-400">Base URL</dt>
-              <dd className="mt-1 truncate font-mono text-sm font-bold">{host}</dd>
-            </div>
-            <div className="rounded-xl border border-zinc-200 p-4 dark:border-zinc-800">
-              <dt className="text-xs font-semibold uppercase tracking-wide text-zinc-500 dark:text-zinc-400">Format</dt>
-              <dd className="mt-1 text-sm font-bold">OpenAI &amp; Anthropic</dd>
-            </div>
-            <div className="rounded-xl border border-zinc-200 p-4 dark:border-zinc-800">
-              <dt className="text-xs font-semibold uppercase tracking-wide text-zinc-500 dark:text-zinc-400">Streaming</dt>
-              <dd className="mt-1 text-sm font-bold">SSE · tools · reasoning</dd>
-            </div>
-            <div className="rounded-xl border border-zinc-200 p-4 dark:border-zinc-800">
-              <dt className="text-xs font-semibold uppercase tracking-wide text-zinc-500 dark:text-zinc-400">Gratis</dt>
-              <dd className="mt-1 text-sm font-bold">Trial 1 hari · tanpa kartu kredit</dd>
-            </div>
-          </dl>
+          <div className="mx-auto mt-12 grid max-w-4xl grid-cols-2 gap-4 text-left md:grid-cols-4">
+            <Card size="small">
+              <Statistic title="Base URL" value={host} valueStyle={{ fontSize: 14, fontFamily: "monospace" }} />
+            </Card>
+            <Card size="small">
+              <Statistic title="Format" value="OpenAI & Anthropic" valueStyle={{ fontSize: 14 }} />
+            </Card>
+            <Card size="small">
+              <Statistic title="Streaming" value="SSE · tools · reasoning" valueStyle={{ fontSize: 14 }} />
+            </Card>
+            <Card size="small">
+              <Statistic title="Gratis" value="Trial 1 hari · tanpa kartu kredit" valueStyle={{ fontSize: 14 }} />
+            </Card>
+          </div>
 
           {/* Animated request flow: client -> h-router -> provider */}
           <FlowAnimation />
@@ -229,16 +226,24 @@ export default function LandingPage() {
         {/* ---------------------------------------------------------- cara kerja */}
         <section id="cara-pakai" aria-label="Cara pakai" className="mx-auto mt-20 w-full max-w-6xl scroll-mt-24 px-6">
           <p className="text-xs font-bold uppercase tracking-widest text-[#05a843] dark:text-[#05f170]">Cara kerja</p>
-          <h2 className="mt-2 text-3xl font-extrabold tracking-tight md:text-4xl">Empat langkah, langsung jalan.</h2>
-          <ol className="mt-8 grid gap-4 md:grid-cols-4">
+          <Typography.Title level={2} className="!mt-2 !text-3xl !font-extrabold !tracking-tight md:!text-4xl">
+            Empat langkah, langsung jalan.
+          </Typography.Title>
+          <div className="mt-8 grid gap-4 md:grid-cols-4">
             {STEPS.map((s) => (
-              <li key={s.n} className="rounded-xl border border-zinc-200 bg-white p-5 dark:border-zinc-800 dark:bg-zinc-900">
-                <p className="font-mono text-sm font-bold text-[#05a843] dark:text-[#05f170]">{s.n}</p>
-                <h3 className="mt-2 font-bold">{s.title}</h3>
-                <p className="mt-1 text-sm text-zinc-600 dark:text-zinc-400">{s.body}</p>
-              </li>
+              <Card key={s.n}>
+                <Typography.Text strong className="font-mono text-sm text-[#05a843] dark:text-[#05f170]">
+                  {s.n}
+                </Typography.Text>
+                <Typography.Title level={4} className="!mt-2 !mb-1">
+                  {s.title}
+                </Typography.Title>
+                <Typography.Paragraph type="secondary" className="!mb-0 !text-sm">
+                  {s.body}
+                </Typography.Paragraph>
+              </Card>
             ))}
-          </ol>
+          </div>
         </section>
 
         {/* ---------------------------------------------------------- katalog */}
@@ -250,56 +255,54 @@ export default function LandingPage() {
         {/* ---------------------------------------------------------- fitur */}
         <section id="fitur" aria-label="Fitur" className="mx-auto mt-20 w-full max-w-6xl scroll-mt-24 px-6">
           <p className="text-xs font-bold uppercase tracking-widest text-[#05a843] dark:text-[#05f170]">Fitur</p>
-          <h2 className="mt-2 text-3xl font-extrabold tracking-tight md:text-4xl">Satu gateway, lengkap dengan alat jualan.</h2>
-          <p className="mt-2 max-w-2xl text-zinc-600 dark:text-zinc-400">
+          <Typography.Title level={2} className="!mt-2 !text-3xl !font-extrabold !tracking-tight md:!text-4xl">
+            Satu gateway, lengkap dengan alat jualan.
+          </Typography.Title>
+          <Typography.Paragraph type="secondary" className="!mt-2 !max-w-2xl">
             Semua di bawah ini sudah termasuk — tidak ada add-on berbayar.
-          </p>
+          </Typography.Paragraph>
           <div className="mt-6 flex flex-wrap gap-2">
             {CORE_CHIPS.map((c) => (
-              <span
-                key={c}
-                className="rounded-full border border-zinc-200 bg-zinc-50 px-3 py-1 text-xs font-semibold text-zinc-600 dark:border-zinc-800 dark:bg-zinc-900 dark:text-zinc-300"
-              >
-                {c}
-              </span>
+              <Tag key={c}>{c}</Tag>
             ))}
           </div>
-          <ul className="mt-8 grid gap-4 md:grid-cols-2">
+          <div className="mt-8 grid gap-4 md:grid-cols-2">
             {FEATURES.map((f) => (
-              <li key={f.title} className="rounded-xl border border-zinc-200 bg-white p-5 dark:border-zinc-800 dark:bg-zinc-900">
-                <h3 className="font-bold">{f.title}</h3>
-                <p className="mt-1 text-sm text-zinc-600 dark:text-zinc-400">{f.body}</p>
-              </li>
+              <Card key={f.title} title={f.title}>
+                <Typography.Paragraph type="secondary" className="!mb-0 !text-sm">
+                  {f.body}
+                </Typography.Paragraph>
+              </Card>
             ))}
-          </ul>
+          </div>
         </section>
 
         {/* ---------------------------------------------------------- closing CTA */}
         <section className="mx-auto mt-20 w-full max-w-6xl px-6 pb-20">
           <div className="rounded-2xl bg-zinc-900 px-6 py-14 text-center dark:bg-white">
-            <h2 className="text-3xl font-extrabold tracking-tight text-white md:text-4xl dark:text-zinc-900">
+            <Typography.Title
+              level={2}
+              className="!text-3xl !font-extrabold !tracking-tight !text-white md:!text-4xl dark:!text-zinc-900"
+            >
               Mulai sekarang, gratis.
-            </h2>
-            <p className="mx-auto mt-3 max-w-xl text-zinc-300 dark:text-zinc-600">
+            </Typography.Title>
+            <Typography.Paragraph className="!mx-auto !mt-3 !max-w-xl !text-zinc-300 dark:!text-zinc-600">
               Buat key lewat bot, tempel base URL, kirim request pertama. Tanpa billing, tanpa kartu kredit.
-            </p>
+            </Typography.Paragraph>
             <div className="mt-8 flex flex-col items-center justify-center gap-3 sm:flex-row">
-              <a
+              <Button
+                type="primary"
+                size="large"
                 href={LANDING_CONFIG.telegramUrl}
                 target="_blank"
                 rel="noreferrer"
-                className="w-full rounded-lg bg-[#05f170] px-6 py-3 text-base font-bold text-zinc-950 transition-colors hover:bg-[#04d964] sm:w-auto"
+                className={GREEN_CTA_CLASS}
               >
                 Ambil key gratis
-              </a>
-              <a
-                href={LANDING_CONFIG.docsUrl}
-                target="_blank"
-                rel="noreferrer"
-                className="w-full rounded-lg border border-zinc-300 px-6 py-3 text-base font-semibold text-white transition-colors hover:bg-zinc-800 sm:w-auto dark:border-zinc-300 dark:text-zinc-900 dark:hover:bg-zinc-200"
-              >
+              </Button>
+              <Button size="large" href={LANDING_CONFIG.docsUrl} target="_blank" rel="noreferrer">
                 Dokumentasi API
-              </a>
+              </Button>
             </div>
           </div>
         </section>

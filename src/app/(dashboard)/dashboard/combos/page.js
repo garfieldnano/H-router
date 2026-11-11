@@ -5,7 +5,8 @@ import { DndContext, closestCenter, KeyboardSensor, PointerSensor, useSensor, us
 import { arrayMove, SortableContext, sortableKeyboardCoordinates, useSortable, verticalListSortingStrategy } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 import { restrictToVerticalAxis, restrictToParentElement } from "@dnd-kit/modifiers";
-import { Card, Button, Modal, Input, CardSkeleton, ModelSelectModal, ConfirmModal, CapacityBadges, Select, Toggle, Badge, SmartPolicyModal } from "@/shared/components";
+import { CardSkeleton, ModelSelectModal, CapacityBadges, SmartPolicyModal } from "@/shared/components";
+import { Button, Card, Checkbox, Input, Modal, Select, Switch, Table, Tag, Typography } from "antd";
 import { useCopyToClipboard } from "@/shared/hooks/useCopyToClipboard";
 import { useModelCaps } from "@/shared/hooks/useModelCaps";
 import { useMemberRole } from "@/shared/hooks/useMemberRole";
@@ -410,39 +411,23 @@ export default function CombosPage() {
           </p>
         </div>
         <div className="flex w-full flex-col gap-2 sm:w-auto sm:items-stretch">
-          <div className="relative w-full sm:w-64">
-            <span className="material-symbols-outlined pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-[18px] text-text-muted">
-              search
-            </span>
-            <input
-              type="text"
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder="Search combos…"
-              aria-label="Search combos"
-              className="w-full rounded-[10px] border border-transparent bg-surface-2 py-2 pl-10 pr-9 text-sm text-text-main transition-all duration-150 ease-out placeholder-text-muted/70 focus:border-brand-500/40 focus:outline-none focus:ring-2 focus:ring-brand-500/30"
-            />
-            {searchQuery && (
-              <button
-                type="button"
-                onClick={() => setSearchQuery("")}
-                aria-label="Clear search"
-                className="absolute right-2 top-1/2 -translate-y-1/2 rounded p-1 text-text-muted transition-colors hover:text-text-main"
-              >
-                <span className="material-symbols-outlined text-[16px]">close</span>
-              </button>
-            )}
-          </div>
+          <Input.Search
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            placeholder="Search combos…"
+            aria-label="Search combos"
+            allowClear
+            className="w-full sm:w-64"
+          />
           {!isMember && (
-            <Button icon="add" onClick={() => setShowCreateModal(true)} className="w-full sm:w-auto whitespace-nowrap">
+            <Button type="primary" icon={<span className="material-symbols-outlined">add</span>} onClick={() => setShowCreateModal(true)} className="w-full sm:w-auto whitespace-nowrap">
               Create Combo
             </Button>
           )}
           <div className="hidden">
             <Button
-              variant="secondary"
-              size="sm"
-              icon="edit_note"
+              size="small"
+              icon={<span className="material-symbols-outlined">edit_note</span>}
               loading={presetLoading === "cursor"}
               disabled={!!presetLoading}
               onClick={() => handleGeneratePresets("cursor")}
@@ -451,9 +436,8 @@ export default function CombosPage() {
               Cursor Default
             </Button>
             <Button
-              variant="secondary"
-              size="sm"
-              icon="smart_toy"
+              size="small"
+              icon={<span className="material-symbols-outlined">smart_toy</span>}
               loading={presetLoading === "claude"}
               disabled={!!presetLoading}
               onClick={() => handleGeneratePresets("claude")}
@@ -475,7 +459,7 @@ export default function CombosPage() {
             <p className="text-text-main font-medium mb-1">No combos yet</p>
             <p className="text-sm text-text-muted mb-4">Create model combos with fallback support</p>
             {!isMember && (
-              <Button icon="add" onClick={() => setShowCreateModal(true)} className="w-full sm:w-auto">
+              <Button type="primary" icon={<span className="material-symbols-outlined">add</span>} onClick={() => setShowCreateModal(true)} className="w-full sm:w-auto">
                 Create Combo
               </Button>
             )}
@@ -486,22 +470,15 @@ export default function CombosPage() {
           {/* Selection toolbar */}
           {!isMember && (
           <div className="flex min-w-0 flex-col gap-2 rounded-lg border border-black/5 bg-black/[0.015] px-3 py-2 dark:border-white/5 dark:bg-white/[0.02] sm:flex-row sm:items-center sm:justify-between">
-            <label className="flex cursor-pointer items-center gap-2 text-xs text-text-muted hover:text-primary select-none">
-              <input
-                type="checkbox"
-                checked={allSelected}
-                ref={(el) => {
-                  if (el) el.indeterminate = someSelected && !allSelected;
-                }}
-                onChange={toggleSelectAll}
-                className="h-3.5 w-3.5 rounded border-gray-300 text-primary focus:ring-primary"
-              />
-              <span>
-                {someSelected
-                  ? `${selectedIds.length} selected`
-                  : `Select all (${filteredCombos.length})`}
-              </span>
-            </label>
+            <Checkbox
+              indeterminate={someSelected && !allSelected}
+              checked={allSelected}
+              onChange={toggleSelectAll}
+            >
+              {someSelected
+                ? `${selectedIds.length} selected`
+                : `Select all (${filteredCombos.length})`}
+            </Checkbox>
 
             <div className="flex min-w-0 flex-wrap items-center gap-2">
               {normalizedQuery && (
@@ -514,20 +491,19 @@ export default function CombosPage() {
                   <div className="w-full min-w-[160px] sm:w-[200px]">
                     <Select
                       options={STRATEGY_OPTIONS}
-                      value=""
+                      value={undefined}
                       placeholder="Set strategy…"
                       disabled={bulkBusy}
-                      onChange={(e) => {
-                        const v = e.target.value;
-                        if (v) handleBulkSetStrategy(v);
-                      }}
-                      selectClassName="py-1.5 text-xs"
+                      onChange={(v) => { if (v) handleBulkSetStrategy(v); }}
+                      size="small"
+                      style={{ width: "100%" }}
                     />
                   </div>
                   <Button
-                    size="sm"
-                    variant="danger"
-                    icon="delete"
+                    size="small"
+                    type="primary"
+                    danger
+                    icon={<span className="material-symbols-outlined">delete</span>}
                     disabled={bulkBusy}
                     loading={bulkBusy}
                     onClick={handleBulkDelete}
@@ -536,8 +512,8 @@ export default function CombosPage() {
                     Delete ({selectedIds.length})
                   </Button>
                   <Button
-                    size="sm"
-                    variant="ghost"
+                    size="small"
+                    type="text"
                     onClick={clearSelection}
                     disabled={bulkBusy}
                   >
@@ -557,7 +533,7 @@ export default function CombosPage() {
                     <div className="text-center py-10">
                       <p className="text-text-main font-medium mb-1">No combos match “{searchQuery.trim()}”</p>
                       <p className="text-sm text-text-muted mb-4">Try a shorter query, or clear the search to see all {combos.length} combos.</p>
-                      <Button variant="secondary" onClick={() => setSearchQuery("")}>
+                      <Button onClick={() => setSearchQuery("")}>
                         Clear search
                       </Button>
                     </div>
@@ -619,16 +595,21 @@ export default function CombosPage() {
       )}
 
       {/* Confirm (delete / generate presets) */}
-      <ConfirmModal
-        isOpen={!!confirmState}
-        onClose={() => !confirmState?.loading && setConfirmState(null)}
-        onConfirm={confirmState?.onConfirm}
+      {/* antd Modal evaluates title/children on every render even while
+          closed — the message is guarded by confirmState (quota-crash
+          lesson, wave 2). */}
+      <Modal
+        open={!!confirmState}
+        onCancel={() => !confirmState?.loading && setConfirmState(null)}
+        onOk={confirmState?.onConfirm}
         title={confirmState?.title || "Confirm"}
-        message={confirmState?.message}
-        confirmText={confirmState?.confirmText || "Confirm"}
-        variant={confirmState?.variant || "danger"}
-        loading={!!confirmState?.loading}
-      />
+        okText={confirmState?.confirmText || "Confirm"}
+        okButtonProps={{ danger: confirmState?.variant !== "primary" }}
+        confirmLoading={!!confirmState?.loading}
+        destroyOnClose
+      >
+        {confirmState ? <p>{confirmState.message}</p> : null}
+      </Modal>
     </div>
   );
 }
@@ -679,20 +660,18 @@ function ComboCard({ combo, getCaps, comboByName = {}, activeProviders = [], cop
   const comboCaps = aggregateComboCapabilities(combo.models, comboByName, getCaps);
 
   return (
-    <Card padding="sm" className={`group ${selected ? "ring-1 ring-primary/40 bg-primary/[0.03]" : ""}`}>
+    <Card styles={{ body: { padding: 16 } }} className={`group ${selected ? "ring-1 ring-primary/40 bg-primary/[0.03]" : ""}`}>
       <div className="flex min-w-0 flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div className="flex min-w-0 flex-1 items-start gap-3 sm:items-center">
 {!isMember && (
-          <label className="flex shrink-0 items-center pt-1 sm:pt-0 cursor-pointer" title="Select combo">
-            <input
-              type="checkbox"
-              checked={selected}
-              onChange={onToggleSelect}
-              onClick={(e) => e.stopPropagation()}
-              className="h-4 w-4 rounded border-gray-300 text-primary focus:ring-primary"
-              aria-label={`Select ${combo.name}`}
-            />
-          </label>
+          <Checkbox
+            checked={selected}
+            onChange={onToggleSelect}
+            onClick={(e) => e.stopPropagation()}
+            aria-label={`Select ${combo.name}`}
+            title="Select combo"
+            className="shrink-0 pt-1 sm:pt-0"
+          />
           )}
           <div className="size-8 rounded-lg bg-primary/10 flex items-center justify-center shrink-0">
             <span className="material-symbols-outlined text-primary text-[18px]">layers</span>
@@ -766,10 +745,10 @@ function ComboCard({ combo, getCaps, comboByName = {}, activeProviders = [], cop
                     <span className="truncate">{routerModel || "Auto — oc/jev-1.13-free"}</span>
                   </button>
                   {routerStatus.ready ? (
-                    <Badge variant="success" size="sm" dot>{routerStatus.label}</Badge>
+                    <Tag color="success">{routerStatus.label}</Tag>
                   ) : (
                     <span className="inline-flex items-center gap-1">
-                      <Badge variant="error" size="sm" dot>{routerStatus.label}</Badge>
+                      <Tag color="error">{routerStatus.label}</Tag>
                       {!isMember && (
                         <Link
                           href={`/dashboard/media-providers/systemone/${routerStatus.providerId}`}
@@ -812,9 +791,10 @@ function ComboCard({ combo, getCaps, comboByName = {}, activeProviders = [], cop
             <Select
               options={STRATEGY_OPTIONS}
               value={current}
-              onChange={(e) => onSetStrategy({ fallbackStrategy: e.target.value })}
-              selectClassName="py-1.5 text-xs"
+              onChange={(v) => onSetStrategy({ fallbackStrategy: v })}
+              size="small"
               disabled={isMember}
+              style={{ width: "100%" }}
             />
           </div>
 
@@ -955,11 +935,11 @@ function CapacityAdapterCap({ cap, entry, onChange, activeProviders, getCaps, re
   };
 
   return (
-    <Card padding="sm" className={`group ${!enabled ? "opacity-50" : ""}`}>
+    <Card styles={{ body: { padding: 16 } }} className={`group ${!enabled ? "opacity-50" : ""}`}>
       <div className="flex min-w-0 flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         {/* Master toggle + icon + label */}
         <div className="flex min-w-0 flex-1 items-start gap-2.5 sm:items-center">
-          <Toggle
+          <Switch
             checked={enabled}
             onChange={(v) => patch({ enabled: v })}
             disabled={readOnly}
@@ -979,7 +959,7 @@ function CapacityAdapterCap({ cap, entry, onChange, activeProviders, getCaps, re
         {/* Actions: Round-robin toggle + Add Model */}
         <div className="flex w-full flex-col gap-2 sm:w-auto sm:flex-row sm:items-center sm:gap-3 sm:shrink-0">
           <label className="flex items-center gap-1.5 text-xs text-text-muted cursor-pointer select-none">
-            <Toggle
+            <Switch
               checked={roundRobin}
               onChange={(v) => patch({ roundRobin: v })}
               disabled={readOnly || !enabled}
@@ -989,9 +969,9 @@ function CapacityAdapterCap({ cap, entry, onChange, activeProviders, getCaps, re
           </label>
 {!readOnly && (
           <Button
-            icon="add"
-            variant="ghost"
-            size="sm"
+            type="text"
+            size="small"
+            icon={<span className="material-symbols-outlined">add</span>}
             onClick={() => setShowModelSelect(true)}
             disabled={!enabled}
             title={`Add ${cap.label} model`}
@@ -1008,82 +988,78 @@ function CapacityAdapterCap({ cap, entry, onChange, activeProviders, getCaps, re
           No models in pool (will fallback to {DEFAULT_FALLBACK_MODEL})
         </div>
       ) : (
-        <div className="mt-3 overflow-hidden rounded-lg border border-border/50">
-          <table className="w-full text-left text-xs">
-            <thead>
-              <tr className="border-b border-border/40 bg-black/[0.02] text-text-muted dark:bg-white/[0.02]">
-                <th className="w-12 px-3 py-1.5 font-medium text-center">#</th>
-                <th className="px-3 py-1.5 font-medium">Model</th>
-                <th className="w-24 px-3 py-1.5 font-medium text-center">Order</th>
-                <th className="w-12 px-3 py-1.5 font-medium text-right"></th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-border/30 font-mono">
-              {models.map((model, index) => (
-                <tr key={`${model}-${index}`} className="hover:bg-black/[0.02] dark:hover:bg-white/[0.02] transition-colors">
-                  <td className="px-3 py-2 text-center text-text-muted text-[11px] font-sans">
-                    #{index + 1}
-                  </td>
-                  <td className="px-3 py-2 text-text-main">
-                    <div className="flex items-center gap-1.5 flex-wrap">
-                      <span className="truncate">{model}</span>
-                      <CapacityBadges caps={getCaps?.(model)} />
-                      {model === DEFAULT_FALLBACK_MODEL && (
-                        <span className="rounded bg-emerald-500/10 px-1.5 py-0.5 font-sans text-[10px] font-medium text-emerald-600 dark:text-emerald-400">
-                          free default
-                        </span>
-                      )}
-                    </div>
-                  </td>
-                  <td className="px-3 py-2 text-center">
-                    <div className="inline-flex items-center gap-1">
-                      <button
-                        type="button"
-                        onClick={() => handleMove(index, -1)}
-                        disabled={readOnly || !enabled || index === 0}
-                        className={`p-1 rounded transition-colors ${
-                          readOnly || !enabled || index === 0
-                            ? "text-text-muted/20 cursor-not-allowed"
-                            : "text-text-muted hover:text-primary hover:bg-black/5 dark:hover:bg-white/5"
-                        }`}
-                        title="Move up"
-                      >
-                        <span className="material-symbols-outlined text-[16px] leading-none">arrow_upward</span>
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => handleMove(index, 1)}
-                        disabled={readOnly || !enabled || index === models.length - 1}
-                        className={`p-1 rounded transition-colors ${
-                          readOnly || !enabled || index === models.length - 1
-                            ? "text-text-muted/20 cursor-not-allowed"
-                            : "text-text-muted hover:text-primary hover:bg-black/5 dark:hover:bg-white/5"
-                        }`}
-                        title="Move down"
-                      >
-                        <span className="material-symbols-outlined text-[16px] leading-none">arrow_downward</span>
-                      </button>
-                    </div>
-                  </td>
-                  <td className="px-3 py-2 text-right">
-                    <button
-                      type="button"
-                      onClick={() => handleRemove(index)}
-                      disabled={readOnly || !enabled}
-                      className={`p-1 rounded transition-colors ${
-                        readOnly || !enabled
-                          ? "text-text-muted/20 cursor-not-allowed"
-                          : "text-text-muted hover:text-red-500 hover:bg-red-500/10"
-                      }`}
-                      title="Remove model"
-                    >
-                      <span className="material-symbols-outlined text-[16px] leading-none">close</span>
-                    </button>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
+        <div className="mt-3">
+          <Table
+            columns={[
+              {
+                title: "#",
+                key: "idx",
+                align: "center",
+                width: 48,
+                render: (_v, _r, index) => `#${index + 1}`,
+              },
+              {
+                title: "Model",
+                key: "model",
+                render: (_v, model) => (
+                  <span className="font-mono text-xs">
+                    <span className="truncate">{model}</span>{" "}
+                    <CapacityBadges caps={getCaps?.(model)} />
+                    {model === DEFAULT_FALLBACK_MODEL && (
+                      <Tag color="green" className="ml-1">free default</Tag>
+                    )}
+                  </span>
+                ),
+              },
+              {
+                title: "Order",
+                key: "order",
+                align: "center",
+                width: 96,
+                render: (_v, _model, index) => (
+                  <span className="inline-flex items-center gap-1">
+                    <Button
+                      type="text"
+                      size="small"
+                      icon={<span className="material-symbols-outlined text-[16px] leading-none">arrow_upward</span>}
+                      onClick={() => handleMove(index, -1)}
+                      disabled={readOnly || !enabled || index === 0}
+                      title="Move up"
+                    />
+                    <Button
+                      type="text"
+                      size="small"
+                      icon={<span className="material-symbols-outlined text-[16px] leading-none">arrow_downward</span>}
+                      onClick={() => handleMove(index, 1)}
+                      disabled={readOnly || !enabled || index === models.length - 1}
+                      title="Move down"
+                    />
+                  </span>
+                ),
+              },
+              {
+                title: "",
+                key: "remove",
+                align: "right",
+                width: 48,
+                render: (_v, _model, index) => (
+                  <Button
+                    type="text"
+                    size="small"
+                    danger
+                    icon={<span className="material-symbols-outlined text-[16px] leading-none">close</span>}
+                    onClick={() => handleRemove(index)}
+                    disabled={readOnly || !enabled}
+                    title="Remove model"
+                  />
+                ),
+              },
+            ]}
+            dataSource={models}
+            rowKey={(model, index) => `${model}-${index}`}
+            pagination={false}
+            size="small"
+          />
         </div>
       )}
 
@@ -1305,20 +1281,27 @@ function ComboFormModal({ isOpen, combo, onClose, onSave, activeProviders, kindF
   return (
     <>
       <Modal
-        isOpen={isOpen}
-        onClose={onClose}
+        open={isOpen}
+        onCancel={onClose}
         title={isEdit ? "Edit Combo" : "Create Combo"}
+        footer={null}
+        destroyOnClose
       >
+        {isOpen ? (
         <div className="flex flex-col gap-3">
           {/* Name */}
           <div>
-            <Input
-              label="Combo Name"
-              value={name}
-              onChange={handleNameChange}
-              placeholder="my-combo"
-              error={nameError}
-            />
+            <div>
+              <Typography.Text strong>Combo Name</Typography.Text>
+              <Input
+                value={name}
+                onChange={handleNameChange}
+                placeholder="my-combo"
+                status={nameError ? "error" : ""}
+                style={{ marginTop: 4 }}
+              />
+              {nameError && <Typography.Text type="danger" className="text-xs">{nameError}</Typography.Text>}
+            </div>
             <p className="text-[10px] text-text-muted mt-0.5">
               Only letters, numbers, -, _ and . allowed
             </p>
@@ -1361,30 +1344,33 @@ function ComboFormModal({ isOpen, combo, onClose, onSave, activeProviders, kindF
             )}
 
             {/* Add Model button */}
-            <button
+            <Button
+              type="dashed"
+              block
+              icon={<span className="material-symbols-outlined">add</span>}
               onClick={() => setShowModelSelect(true)}
-              className="w-full mt-2 py-2 border border-dashed border-black/10 dark:border-white/10 rounded-lg text-xs text-primary font-medium hover:text-primary hover:border-primary/50 transition-colors flex items-center justify-center gap-1"
+              style={{ marginTop: 8 }}
             >
-              <span className="material-symbols-outlined text-[16px]">add</span>
               Add Model
-            </button>
+            </Button>
           </div>
 
           {/* Actions */}
           <div className="flex flex-col gap-2 pt-1 sm:flex-row">
-            <Button onClick={onClose} variant="ghost" fullWidth size="sm">
-              Cancel
-            </Button>
+            <Button type="text" size="small" block onClick={onClose}>Cancel</Button>
             <Button
+              type="primary"
+              size="small"
+              block
               onClick={handleSave}
-              fullWidth
-              size="sm"
+              loading={saving}
               disabled={!name.trim() || !!nameError || saving}
             >
               {saving ? "Saving..." : isEdit ? "Save" : "Create"}
             </Button>
           </div>
         </div>
+        ) : null}
       </Modal>
 
       {/* Model Select Modal */}

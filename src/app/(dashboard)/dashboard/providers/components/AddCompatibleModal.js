@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import PropTypes from "prop-types";
-import { Badge, Button, Input, Modal, Select } from "@/shared/components";
+import { Button, Form, Input, Modal, Select, Tag } from "antd";
 
 const VARIANT_CONFIG = {
   openai: {
@@ -118,7 +118,7 @@ function AddCompatibleModal({ variant, isOpen, onClose, onCreated }) {
     if (valid) {
       return (
         <>
-          <Badge variant="success">Valid</Badge>
+          <Tag color="success">Valid</Tag>
           {method === "chat" && (
             <span className="text-sm text-text-muted">(via inference test)</span>
           )}
@@ -127,84 +127,94 @@ function AddCompatibleModal({ variant, isOpen, onClose, onCreated }) {
     }
     return (
       <div className="flex flex-col gap-1">
-        <Badge variant="error">Invalid</Badge>
+        <Tag color="error">Invalid</Tag>
         {error && <span className="text-sm text-red-500">{error}</span>}
       </div>
     );
   };
 
+  const submitDisabled =
+    !formData.name.trim() ||
+    !formData.prefix.trim() ||
+    !formData.baseUrl.trim() ||
+    submitting;
+
   return (
-    <Modal isOpen={isOpen} title={config.title} onClose={onClose}>
+    <Modal
+      open={isOpen}
+      title={config.title}
+      onCancel={onClose}
+      onOk={handleSubmit}
+      okText={submitting ? "Creating..." : "Create"}
+      okButtonProps={{ disabled: submitDisabled, loading: submitting }}
+      cancelText="Cancel"
+    >
       <div className="flex flex-col gap-4">
-        <Input
+        <Form.Item
           label="Name"
-          value={formData.name}
-          onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-          placeholder={config.namePlaceholder}
-          hint="Required. A friendly label for this node."
-        />
-        <Input
-          label="Prefix"
-          value={formData.prefix}
-          onChange={(e) => setFormData({ ...formData, prefix: e.target.value })}
-          placeholder={config.prefixPlaceholder}
-          hint="Required. Used as the provider prefix for model IDs."
-        />
-        {config.hasApiType && (
-          <Select
-            label="API Type"
-            options={API_TYPE_OPTIONS}
-            value={formData.apiType}
-            onChange={(e) => setFormData({ ...formData, apiType: e.target.value })}
+          help="Required. A friendly label for this node."
+          style={{ marginBottom: 0 }}
+        >
+          <Input
+            value={formData.name}
+            onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+            placeholder={config.namePlaceholder}
           />
+        </Form.Item>
+        <Form.Item
+          label="Prefix"
+          help="Required. Used as the provider prefix for model IDs."
+          style={{ marginBottom: 0 }}
+        >
+          <Input
+            value={formData.prefix}
+            onChange={(e) => setFormData({ ...formData, prefix: e.target.value })}
+            placeholder={config.prefixPlaceholder}
+          />
+        </Form.Item>
+        {config.hasApiType && (
+          <Form.Item label="API Type" style={{ marginBottom: 0 }}>
+            <Select
+              options={API_TYPE_OPTIONS}
+              value={formData.apiType}
+              onChange={(v) => setFormData({ ...formData, apiType: v })}
+            />
+          </Form.Item>
         )}
-        <Input
-          label="Base URL"
-          value={formData.baseUrl}
-          onChange={(e) => setFormData({ ...formData, baseUrl: e.target.value })}
-          placeholder={config.defaultBaseUrl}
-          hint={config.baseUrlHint}
-        />
-        <Input
-          label="API Key (for Check)"
-          type="password"
-          value={checkKey}
-          onChange={(e) => setCheckKey(e.target.value)}
-        />
-        <Input
+        <Form.Item label="Base URL" help={config.baseUrlHint} style={{ marginBottom: 0 }}>
+          <Input
+            value={formData.baseUrl}
+            onChange={(e) => setFormData({ ...formData, baseUrl: e.target.value })}
+            placeholder={config.defaultBaseUrl}
+          />
+        </Form.Item>
+        <Form.Item label="API Key (for Check)" style={{ marginBottom: 0 }}>
+          <Input.Password
+            value={checkKey}
+            onChange={(e) => setCheckKey(e.target.value)}
+          />
+        </Form.Item>
+        <Form.Item
           label="Model ID (optional)"
-          value={checkModelId}
-          onChange={(e) => setCheckModelId(e.target.value)}
-          placeholder={config.modelIdPlaceholder}
-          hint="If provider lacks /models endpoint, enter a model ID to validate via chat/completions instead."
-        />
+          help="If provider lacks /models endpoint, enter a model ID to validate via chat/completions instead."
+          style={{ marginBottom: 0 }}
+        >
+          <Input
+            value={checkModelId}
+            onChange={(e) => setCheckModelId(e.target.value)}
+            placeholder={config.modelIdPlaceholder}
+          />
+        </Form.Item>
         <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
           <Button
             onClick={handleValidate}
             disabled={!checkKey || validating || !formData.baseUrl.trim()}
-            variant="secondary"
+            loading={validating}
             className="w-full sm:w-auto"
           >
             {validating ? "Checking..." : "Check"}
           </Button>
           {renderValidationResult()}
-        </div>
-        <div className="flex flex-col gap-2 sm:flex-row">
-          <Button
-            onClick={handleSubmit}
-            fullWidth
-            disabled={
-              !formData.name.trim() ||
-              !formData.prefix.trim() ||
-              !formData.baseUrl.trim() ||
-              submitting
-            }
-          >
-            {submitting ? "Creating..." : "Create"}
-          </Button>
-          <Button onClick={onClose} variant="ghost" fullWidth>
-            Cancel
-          </Button>
         </div>
       </div>
     </Modal>

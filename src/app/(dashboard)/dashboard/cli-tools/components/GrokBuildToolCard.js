@@ -1,7 +1,8 @@
 "use client";
 
 import { useState, useEffect, useRef, useCallback } from "react";
-import { Card, Button, ModelSelectModal, ManualConfigModal } from "@/shared/components";
+import { ModelSelectModal, ManualConfigModal } from "@/shared/components";
+import { Button, Card } from "antd";
 import { useModelCaps } from "@/shared/hooks/useModelCaps";
 import Image from "next/image";
 import BaseUrlSelect from "./BaseUrlSelect";
@@ -253,7 +254,7 @@ export default function GrokBuildToolCard({
   };
 
   return (
-    <Card padding="xs" className="overflow-hidden">
+    <Card styles={{ body: { padding: 12 } }} className="overflow-hidden">
       <div className="flex items-start justify-between gap-3 hover:cursor-pointer sm:items-center" onClick={onToggle}>
         <div className="flex min-w-0 items-center gap-3">
           <div className="size-8 flex items-center justify-center shrink-0">
@@ -295,7 +296,7 @@ export default function GrokBuildToolCard({
                   <code className="block mt-2 p-2 bg-black/20 rounded text-xs font-mono">curl -fsSL https://x.ai/cli/install.sh | bash</code>
                 </div>
               </div>
-              <Button variant="secondary" size="sm" onClick={() => setShowManualConfigModal(true)} className="w-full sm:w-auto"><span className="material-symbols-outlined text-[18px] mr-1">content_copy</span>Manual Config</Button>
+              <Button size="small" onClick={() => setShowManualConfigModal(true)} className="w-full sm:w-auto"><span className="material-symbols-outlined text-[18px] mr-1">content_copy</span>Manual Config</Button>
             </div>
           )}
 
@@ -362,12 +363,12 @@ export default function GrokBuildToolCard({
 
               <div className="flex flex-col sm:flex-row sm:items-center gap-2">
                 {!readOnly && (
-<Button variant="primary" size="sm" onClick={handleApply} disabled={!selectedModel} loading={applying} className="w-full sm:w-auto"><span className="material-symbols-outlined text-[14px] mr-1">save</span>Apply</Button>
+<Button type="primary" size="small" onClick={handleApply} disabled={!selectedModel} loading={applying} className="w-full sm:w-auto"><span className="material-symbols-outlined text-[14px] mr-1">save</span>Apply</Button>
                 )}
                 {!readOnly && (
-<Button variant="outline" size="sm" onClick={handleReset} disabled={!grokStatus?.has9Router} loading={restoring} className="w-full sm:w-auto"><span className="material-symbols-outlined text-[14px] mr-1">restore</span>Reset</Button>
+<Button size="small" onClick={handleReset} disabled={!grokStatus?.has9Router} loading={restoring} className="w-full sm:w-auto"><span className="material-symbols-outlined text-[14px] mr-1">restore</span>Reset</Button>
                 )}
-                <Button variant="ghost" size="sm" onClick={() => setShowManualConfigModal(true)} className="w-full sm:w-auto"><span className="material-symbols-outlined text-[14px] mr-1">content_copy</span>Manual Config</Button>
+                <Button type="text" size="small" onClick={() => setShowManualConfigModal(true)} className="w-full sm:w-auto"><span className="material-symbols-outlined text-[14px] mr-1">content_copy</span>Manual Config</Button>
               </div>
             </>
           )}
