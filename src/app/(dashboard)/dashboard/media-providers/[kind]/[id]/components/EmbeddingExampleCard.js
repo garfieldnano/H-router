@@ -104,7 +104,7 @@ export function EmbeddingExampleCard({ providerId, customAlias }) {
   const resultJson = result ? JSON.stringify(result.data, null, 2) : "";
 
   return (
-    <Card>
+    <Card className="hcard">
       <h2 className="text-lg font-semibold mb-4">Example</h2>
 
       <div className="flex flex-col gap-2.5">
@@ -136,7 +136,7 @@ export function EmbeddingExampleCard({ providerId, customAlias }) {
             <input
               value={endpoint}
               onChange={(e) => useTunnel ? setTunnelEndpoint(e.target.value) : setLocalEndpoint(e.target.value)}
-              className="w-full min-w-0 flex-1 px-3 py-1.5 text-sm border border-border rounded-md bg-background focus:outline-none focus:border-primary font-mono"
+              className="hcard-mono w-full min-w-0 flex-1 px-3 py-1.5 text-sm border border-border rounded-md bg-background focus:outline-none focus:border-primary font-mono"
               placeholder="http://localhost:3000"
             />
             {/* Tunnel toggle — only show if tunnel URL is available */}
@@ -222,7 +222,7 @@ export function EmbeddingExampleCard({ providerId, customAlias }) {
               </button>
             </div>
           </div>
-          <pre className="bg-sidebar rounded-md px-3 py-2.5 text-xs font-mono text-text-main overflow-x-auto whitespace-pre-wrap break-all">{curlSnippet}</pre>
+          <pre className="hcard-mono bg-sidebar rounded-md px-3 py-2.5 text-xs font-mono text-text-main overflow-x-auto whitespace-pre-wrap break-all">{curlSnippet}</pre>
         </div>
 
         {/* Error */}
@@ -244,7 +244,7 @@ export function EmbeddingExampleCard({ providerId, customAlias }) {
               </button>
             )}
           </div>
-          <pre className="bg-sidebar rounded-md px-3 py-2.5 text-xs font-mono text-text-main overflow-x-auto whitespace-pre-wrap break-all opacity-70">
+          <pre className="hcard-mono bg-sidebar rounded-md px-3 py-2.5 text-xs font-mono text-text-main overflow-x-auto whitespace-pre-wrap break-all opacity-70">
             {formatResultJson(result?.data)}
           </pre>
         </div>

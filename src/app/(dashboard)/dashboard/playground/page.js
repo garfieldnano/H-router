@@ -115,7 +115,7 @@ export default function PlaygroundPage() {
       {error && <Alert type="error" message={error} showIcon />}
 
       <div className="grid gap-4 md:grid-cols-[1fr_1fr]">
-        <Card>
+        <Card className="hcard-panel">
           <div className="flex flex-col gap-3">
             <div>
               <Typography.Text strong>Model</Typography.Text>
@@ -213,7 +213,7 @@ export default function PlaygroundPage() {
           </div>
         </Card>
 
-        <Card title="Jawaban">
+        <Card title="Jawaban" className="hcard-panel">
           {!result ? (
             <p className="text-sm text-text-muted">Jawaban model akan muncul di sini.</p>
           ) : (
@@ -232,7 +232,7 @@ export default function PlaygroundPage() {
                 ))}
               </div>
               <p className="text-xs text-text-muted">
-                Model: {result.model} · Key: {result.apiKeyName || "—"} · Tercatat di Usage &amp; Trafik Langsung.
+                Model: <span className="hcard-mono">{result.model}</span> · Key: <span className="hcard-mono">{result.apiKeyName || "—"}</span> · Tercatat di Usage &amp; Trafik Langsung.
               </p>
             </div>
           )}

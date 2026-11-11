@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useState } from "react";
 import { Alert, Button, Card, Input, Select, Spin, Tag, Typography } from "antd";
+import { StatCard } from "@/shared/components/dashboard-cards";
 
 // Admin-only member management (v1): list/create members, activate/deactivate,
 // assign/unassign API keys. Members have no password — they log in with an
@@ -85,8 +86,13 @@ export default function MembersPage() {
 
       {error && <Alert type="error" message={error} showIcon />}
 
+      <div className="grid grid-cols-2 gap-4">
+        <StatCard label="Total Member" value={members.length} sub={members.filter((m) => m.isActive).length + " aktif"} />
+        <StatCard label="Kunci tak terikat" value={unassignedKeys.length} sub="siap ditetapkan ke member" />
+      </div>
+
       {/* Create member */}
-      <Card title="Buat member baru">
+      <Card title="Buat member baru" className="hcard">
         <form onSubmit={createMember} className="flex flex-wrap gap-3">
           <Input
             value={name}
@@ -118,7 +124,7 @@ export default function MembersPage() {
         <Typography.Text type="secondary">Belum ada member.</Typography.Text>
       ) : (
         members.map((m) => (
-          <Card key={m.id}>
+          <Card key={m.id} className="hcard">
             <div className="flex flex-wrap items-center justify-between gap-3">
               <div>
                 <div className="font-semibold text-text-main">{m.name || m.email}</div>
@@ -138,7 +144,7 @@ export default function MembersPage() {
               {(m.keys || []).map((k) => (
                 <div key={k.id} className="flex flex-wrap items-center justify-between gap-2 rounded-md border border-border-subtle bg-bg-subtle px-3 py-2 text-sm">
                   <span className="text-text-main">
-                    {k.name || "Unnamed key"} · <span className="font-mono text-xs text-text-muted">{k.keyMasked}</span>{" "}
+                    {k.name || "Unnamed key"} · <span className="hcard-mono font-mono text-xs text-text-muted">{k.keyMasked}</span>{" "}
                     <Tag color={k.isActive ? "success" : "error"}>{k.isActive ? "Aktif" : "Nonaktif"}</Tag>
                   </span>
                   <Button size="small" onClick={() => patchMember(m.id, { unassignKeyId: k.id })}>

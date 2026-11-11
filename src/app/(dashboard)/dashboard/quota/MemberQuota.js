@@ -1,7 +1,12 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Card, Statistic, Table, Typography } from "antd";
+import { Card, Table, Typography } from "antd";
+import {
+  LatencyBar,
+  Panel,
+  StatCard,
+} from "@/shared/components/dashboard-cards";
 
 // Member Quota Tracker (read-only): the member's OWN quota only — per-key
 // RPM limit + current-minute usage and IP cap + active IPs, plus 30-day
@@ -21,7 +26,7 @@ const columns = [
     render: (_v, k) => (
       <div>
         <div className="font-medium">{k.name || "-"}</div>
-        <div className="font-mono text-xs opacity-60">{maskKey(k.key)}</div>
+        <div className="font-mono hcard-mono text-xs opacity-60">{maskKey(k.key)}</div>
       </div>
     ),
   },
@@ -83,6 +88,14 @@ export default function MemberQuota() {
   if (error) return <Typography.Text type="danger">{error}</Typography.Text>;
   if (keys === null) return <Typography.Text type="secondary">Memuat kuota…</Typography.Text>;
 
+  // Quota bars in the latency-bar language, from the same real per-key
+  // rate/ip values the table shows. Only keys with a known limit render a
+  // bar (limit unknown → no bar, never a guessed value).
+  const rpmBars = (keys || []).filter((k) => k.rate?.limit != null);
+  const maxRpm = rpmBars.reduce((m, k) => Math.max(m, k.rate?.limit || 0), 0);
+  const ipBars = (keys || []).filter((k) => k.ip?.cap != null);
+  const maxIp = ipBars.reduce((m, k) => Math.max(m, k.ip?.cap || 0), 0);
+
   return (
     <div className="flex min-w-0 flex-col gap-4 px-1 sm:px-0">
       <div>
@@ -94,27 +107,47 @@ export default function MemberQuota() {
         </Typography.Text>
       </div>
       <div className="grid grid-cols-2 gap-3 sm:gap-4">
-        <Card>
-          <Statistic
-            title="Request (30 hari)"
-            value={(stats?.totalRequests ?? 0).toLocaleString("id-ID")}
-          />
-        </Card>
-        <Card>
-          <Statistic
-            title="Biaya (30 hari)"
-            value={(stats?.totalCost ?? 0).toFixed(4)}
-            prefix="$"
-          />
-        </Card>
+        <StatCard
+          label="Request (30 hari)"
+          value={(stats?.totalRequests ?? 0).toLocaleString("id-ID")}
+        />
+        <StatCard
+          label="Biaya (30 hari)"
+          value={`$${(stats?.totalCost ?? 0).toFixed(4)}`}
+        />
       </div>
+
+      {(rpmBars.length > 0 || ipBars.length > 0) && (
+        <Panel title="Pemakaian kuota" right="per kunci">
+          {rpmBars.map((k) => (
+            <LatencyBar
+              key={`rpm-${k.id}`}
+              name={k.name || "Unnamed key"}
+              badge={(k.name || "?").slice(0, 2).toUpperCase()}
+              latencyMs={k.rate?.used ?? 0}
+              maxMs={maxRpm}
+              display={`${k.rate?.used ?? 0}/${k.rate?.limit ?? "-"} rpm`}
+            />
+          ))}
+          {ipBars.map((k) => (
+            <LatencyBar
+              key={`ip-${k.id}`}
+              name={`${k.name || "Unnamed key"} — IP`}
+              badge="IP"
+              latencyMs={k.ip?.activeCount ?? 0}
+              maxMs={maxIp}
+              display={`${k.ip?.activeCount ?? 0}/${k.ip?.cap ?? "-"} IP`}
+            />
+          ))}
+        </Panel>
+      )}
 
       {keys.length === 0 ? (
         <Typography.Text type="secondary">
           Belum ada kunci API. Minta admin untuk menetapkan kunci ke akun Anda.
         </Typography.Text>
       ) : (
-        <Card styles={{ body: { padding: 0 } }}>
+        <Card styles={{ body: { padding: 0 } }} className="hcard-panel">
           <Table
             columns={columns}
             dataSource={keys}

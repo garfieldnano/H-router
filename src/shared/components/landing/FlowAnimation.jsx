@@ -67,12 +67,12 @@ export default function FlowAnimation() {
             <div
               key={p.id}
               title={p.name}
-              className={`flex h-9 w-[150px] items-center gap-2 rounded-lg border border-zinc-200 bg-white px-3 py-2 text-sm font-bold text-zinc-900 shadow-sm transition-all hover:scale-105 ${
+              className={`flex h-9 w-[170px] items-center gap-2 whitespace-nowrap rounded-lg border border-zinc-200 bg-white px-3 py-2 text-sm font-bold text-zinc-900 shadow-sm transition-all hover:scale-105 ${
                 activeFlow === idx ? "scale-105 ring-2 ring-[#05f170]" : ""
               }`}
             >
               <img src={p.logo} alt="" aria-hidden="true" width={20} height={20} loading="lazy" className="h-5 w-5 shrink-0" />
-              {p.name}
+              <span className="whitespace-nowrap">{p.name}</span>
             </div>
           ))}
         </div>

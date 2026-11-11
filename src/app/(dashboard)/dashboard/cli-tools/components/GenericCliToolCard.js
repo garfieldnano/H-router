@@ -432,7 +432,7 @@ export default function GenericCliToolCard({
   };
 
   return (
-    <Card styles={{ body: { padding: 12 } }} className="overflow-hidden">
+    <Card styles={{ body: { padding: 12 } }} className="hcard overflow-hidden">
       {/* Header clickable */}
       <div className="flex items-start justify-between gap-3 hover:cursor-pointer sm:items-center" onClick={onToggle}>
         <div className="flex min-w-0 items-center gap-3">

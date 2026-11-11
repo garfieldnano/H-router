@@ -17,7 +17,7 @@ export default function ToolSummaryCard({ toolId, tool, status }) {
   const s = getStatus(status, tool);
   return (
     <Link href={`/dashboard/cli-tools/${toolId}`} className="block">
-      <Card styles={{ body: { padding: 16 } }} className="h-full overflow-hidden hover:border-success/50 transition-colors cursor-pointer">
+      <Card styles={{ body: { padding: 16 } }} className="hcard h-full overflow-hidden hover:border-success/50 transition-colors cursor-pointer">
         <div className="flex h-full flex-col gap-2">
           <div className="flex items-center gap-3">
             <div className="size-8 flex items-center justify-center shrink-0">

@@ -253,7 +253,7 @@ export default function ComboDetailPage() {
           </div>
           <div className="min-w-0">
             <p className="text-xs text-text-muted">{kindLabel} Combo</p>
-            <code className="text-lg font-semibold font-mono">{combo.name}</code>
+            <code className="hcard-mono text-lg font-semibold font-mono">{combo.name}</code>
           </div>
         </div>
         <Button danger icon={<span className="material-symbols-outlined text-[18px]">delete</span>} onClick={handleDelete}>
@@ -262,7 +262,7 @@ export default function ComboDetailPage() {
       </div>
 
       {/* Settings Card */}
-      <Card>
+      <Card className="hcard">
         <h2 className="text-lg font-semibold mb-3">Settings</h2>
         <div className="flex flex-col gap-4">
           <div>
@@ -284,7 +284,7 @@ export default function ComboDetailPage() {
       </Card>
 
       {/* Providers Card */}
-      <Card>
+      <Card className="hcard">
         <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between mb-3">
           <div>
             <h2 className="text-lg font-semibold">Providers</h2>
@@ -314,7 +314,7 @@ export default function ComboDetailPage() {
                   />
                   <div className="min-w-0 flex-1">
                     <div className="text-sm font-medium truncate">{p?.name || providerId}</div>
-                    {model && <code className="text-[10px] text-text-muted font-mono truncate block">{model}</code>}
+                    {model && <code className="hcard-mono text-[10px] text-text-muted font-mono truncate block">{model}</code>}
                   </div>
                   <div className="flex items-center gap-0.5">
                     <button onClick={() => handleMove(idx, -1)} disabled={idx === 0} className={`p-1 rounded ${idx === 0 ? "text-text-muted/20" : "text-text-muted hover:text-primary hover:bg-black/5"}`} title="Move up">
@@ -336,14 +336,14 @@ export default function ComboDetailPage() {
 
       {/* Test Example Card */}
       {combo.kind && examplePath && (
-        <Card>
+        <Card className="hcard">
           <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between mb-3">
             <h2 className="text-lg font-semibold">Test Example</h2>
             <Button size="small" type="primary" icon={<span className="material-symbols-outlined text-[18px]">play_arrow</span>} onClick={handleTest} disabled={testing || providers.length === 0}>
               {testing ? "Running..." : "Run"}
             </Button>
           </div>
-          <pre className="text-xs font-mono bg-black/[0.03] dark:bg-white/[0.03] p-3 rounded-md overflow-x-auto whitespace-pre-wrap break-all">
+          <pre className="hcard-mono text-xs font-mono bg-black/[0.03] dark:bg-white/[0.03] p-3 rounded-md overflow-x-auto whitespace-pre-wrap break-all">
             {curlExample}
           </pre>
           {testError && (
@@ -352,7 +352,7 @@ export default function ComboDetailPage() {
           {testResult && (
             <div className="mt-3 flex flex-col gap-3">
               {testResult.latencyMs != null && (
-                <span className="text-[11px] text-text-muted">⚡ {testResult.latencyMs}ms</span>
+                <span className="hcard-mono text-[11px] text-text-muted">{testResult.latencyMs}ms</span>
               )}
               {testResult.imageUrl && (
                 <div>
@@ -387,12 +387,12 @@ export default function ComboDetailPage() {
       )}
 
       {/* Usage Logs Card */}
-      <Card>
+      <Card className="hcard">
         <h2 className="text-lg font-semibold mb-3">Usage Logs</h2>
         {logs.length === 0 ? (
           <p className="text-xs text-text-muted italic">No usage yet.</p>
         ) : (
-          <pre className="text-[11px] font-mono bg-black/[0.03] dark:bg-white/[0.03] p-3 rounded-md overflow-auto max-h-[400px] whitespace-pre-wrap">
+          <pre className="hcard-mono text-[11px] font-mono bg-black/[0.03] dark:bg-white/[0.03] p-3 rounded-md overflow-auto max-h-[400px] whitespace-pre-wrap">
             {logs.join("\n")}
           </pre>
         )}

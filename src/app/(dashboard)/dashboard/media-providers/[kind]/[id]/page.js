@@ -161,7 +161,7 @@ export default function MediaProviderDetailPage() {
       {!isCustom && provider.noAuth ? (
         <NoAuthProxyCard providerId={id} />
       ) : kind === "stt" && OAUTH_PROVIDERS[id] ? (
-        <Card>
+        <Card className="hcard">
           <p className="text-sm text-text-muted mb-3">This service shares your existing OAuth connections.</p>
           <Link href={`/dashboard/providers/${id}`} className="text-primary hover:underline">Manage OAuth connections →</Link>
         </Card>

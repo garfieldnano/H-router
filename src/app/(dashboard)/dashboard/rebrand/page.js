@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useState } from "react";
 import { Alert, Button, Card, Checkbox, Input, Segmented, Select, Table, Tag, Typography } from "antd";
+import { StatCard } from "@/shared/components/dashboard-cards";
 
 // Admin-only rebranding + live system prompts (plan #2).
 // Brands: client-facing model id (e.g. "h-router/ultra-pro") → upstream
@@ -29,8 +30,8 @@ const BRAND_COLUMNS = (toggleBrand, deleteBrand) => [
     key: "brand",
     render: (_v, b) => (
       <div>
-        <div className="font-medium">{b.brandModelId}</div>
-        <div className="text-xs text-text-muted">
+        <div className="hcard-mono font-medium">{b.brandModelId}</div>
+        <div className="hcard-mono text-xs text-text-muted">
           → {b.upstreamProvider}/{b.upstreamModel}
         </div>
       </div>
@@ -325,9 +326,16 @@ export default function RebrandPage() {
 
       {error && <Alert type="error" message={error} showIcon />}
 
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+        <StatCard label="Total Brand" value={brands.length} sub={brands.filter((b) => b.isActive).length + " aktif"} />
+        <StatCard label="Live Prompt" value={prompts.length} sub={prompts.filter((p) => p.isActive).length + " aktif"} />
+        <StatCard label="Model Vision" value={visionModels.length} sub="dari model upstream yang terdaftar" />
+        <StatCard label="Vision Override" value={Object.keys(visionOverrides).length} sub="menang atas tabel kapabilitas" />
+      </div>
+
       {tab === "brands" && (
         <>
-          <Card title="Buat brand baru">
+          <Card title="Buat brand baru" className="hcard">
             <form onSubmit={createBrand} className="flex flex-wrap items-end gap-3">
               <label className="flex flex-col gap-1 text-sm">
                 <span className="text-text-muted">Brand model id</span>
@@ -358,7 +366,7 @@ export default function RebrandPage() {
             </Typography.Text>
           </Card>
 
-          <Card title="Daftar brand">
+          <Card title="Daftar brand" className="hcard">
             <Table
               columns={BRAND_COLUMNS(toggleBrand, deleteBrand)}
               dataSource={brands}
@@ -374,7 +382,7 @@ export default function RebrandPage() {
 
       {tab === "prompts" && (
         <>
-          <Card title="Buat live prompt">
+          <Card title="Buat live prompt" className="hcard">
             <form onSubmit={createPrompt} className="flex flex-col gap-3">
               <div className="flex flex-wrap items-end gap-3">
                 <label className="flex flex-col gap-1 text-sm">
@@ -453,7 +461,7 @@ export default function RebrandPage() {
             </Typography.Text>
           </Card>
 
-          <Card title="Daftar live prompt">
+          <Card title="Daftar live prompt" className="hcard">
             {loading ? (
               <Typography.Text type="secondary">Memuat…</Typography.Text>
             ) : prompts.length === 0 ? (
@@ -464,7 +472,7 @@ export default function RebrandPage() {
                   <div key={p.id} className="flex flex-col gap-2 rounded-md border border-border-subtle bg-bg-subtle p-3">
                     <div className="flex flex-wrap items-center justify-between gap-3">
                       <div>
-                        <div className="font-medium text-text-main">
+                        <div className="hcard-mono font-medium text-text-main">
                           {targetLabel(p)}{" "}
                           <span className="text-xs text-text-muted">· mode {p.mode}</span>
                         </div>
@@ -516,7 +524,7 @@ export default function RebrandPage() {
       )}
       {tab === "vision" && (
         <>
-          <Card title="Vision Adapter (G10)">
+          <Card title="Vision Adapter (G10)" className="hcard">
             <p className="mb-3 text-sm text-text-muted">
               Request berisi gambar hanya dikirim ke model yang bisa baca gambar. Model non-vision ditolak
               dengan error 400 yang menyebut modelnya + alternatif vision-capable — kecuali admin mengaktifkan
@@ -535,7 +543,7 @@ export default function RebrandPage() {
                   return (
                     <div key={b.id} className="flex flex-wrap items-center justify-between gap-3 rounded-md border border-border-subtle bg-bg-subtle p-3">
                       <div>
-                        <div className="font-medium text-text-main">
+                        <div className="hcard-mono font-medium text-text-main">
                           {b.brandModelId}{" "}
                           <span className="text-xs text-text-muted">→ {b.upstreamProvider}/{b.upstreamModel}</span>
                         </div>
@@ -565,7 +573,7 @@ export default function RebrandPage() {
             </p>
           </Card>
 
-          <Card title="Override kemampuan vision">
+          <Card title="Override kemampuan vision" className="hcard">
             <form onSubmit={saveVisionOverride} className="flex flex-wrap items-end gap-3">
               <label className="flex flex-col gap-1 text-sm">
                 <span className="text-text-muted">Provider/model atau id brand</span>
@@ -596,7 +604,7 @@ export default function RebrandPage() {
               ) : (
                 Object.entries(visionOverrides).map(([key, value]) => (
                   <div key={key} className="flex flex-wrap items-center justify-between gap-3 rounded-md border border-border-subtle bg-bg-subtle p-3">
-                    <div className="font-medium text-text-main">
+                    <div className="hcard-mono font-medium text-text-main">
                       {key} <span className="text-sm text-text-muted">→ {value ? "vision" : "teks saja"}</span>
                     </div>
                     <Button size="small" danger onClick={() => deleteVisionOverride(key)}>Hapus</Button>

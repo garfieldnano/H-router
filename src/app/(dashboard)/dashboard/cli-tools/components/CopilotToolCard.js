@@ -185,7 +185,7 @@ export default function CopilotToolCard({ tool, isExpanded, onToggle, baseUrl, a
   };
 
   return (
-    <Card styles={{ body: { padding: 12 } }} className="overflow-hidden">
+    <Card styles={{ body: { padding: 12 } }} className="hcard overflow-hidden">
       <div className="flex items-start justify-between gap-3 hover:cursor-pointer sm:items-center" onClick={onToggle}>
         <div className="flex min-w-0 items-center gap-3">
           <div className="size-8 flex items-center justify-center shrink-0">
@@ -218,7 +218,7 @@ export default function CopilotToolCard({ tool, isExpanded, onToggle, baseUrl, a
               <div className="flex items-start gap-3 p-3 bg-blue-500/10 border border-blue-500/30 rounded-md">
                 <span className="material-symbols-outlined text-blue-500 text-lg">info</span>
                 <div className="text-xs text-blue-700 dark:text-blue-300">
-                  <p className="font-medium">Writes to <code className="px-1 bg-black/5 dark:bg-white/10 rounded">chatLanguageModels.json</code></p>
+                  <p className="font-medium">Writes to <code className="hcard-mono px-1 bg-black/5 dark:bg-white/10 rounded">chatLanguageModels.json</code></p>
                   <p className="mt-0.5 opacity-80">Reload VS Code after applying for changes to take effect.</p>
                 </div>
               </div>

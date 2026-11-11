@@ -223,7 +223,7 @@ export default function OpenCodeToolCard({ tool, isExpanded, onToggle, baseUrl, 
   };
 
   return (
-    <Card styles={{ body: { padding: 12 } }} className="overflow-hidden">
+    <Card styles={{ body: { padding: 12 } }} className="hcard overflow-hidden">
       <div className="flex items-start justify-between gap-3 hover:cursor-pointer sm:items-center" onClick={onToggle}>
         <div className="flex min-w-0 items-center gap-3">
           <div className="size-8 flex items-center justify-center shrink-0">
@@ -280,7 +280,7 @@ export default function OpenCodeToolCard({ tool, isExpanded, onToggle, baseUrl, 
                       <p className="text-text-muted mb-1">macOS / Linux:</p>
                       <code className="block px-3 py-2 bg-black/5 dark:bg-white/5 rounded font-mono text-xs">npm install -g opencode-ai</code>
                     </div>
-                    <p className="text-text-muted">After installation, run <code className="px-1 bg-black/5 dark:bg-white/5 rounded">opencode</code> to verify.</p>
+                    <p className="text-text-muted">After installation, run <code className="hcard-mono px-1 bg-black/5 dark:bg-white/5 rounded">opencode</code> to verify.</p>
                   </div>
                 </div>
               )}

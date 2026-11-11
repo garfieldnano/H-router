@@ -84,13 +84,13 @@ export default function ConversationsPage() {
 
   const columns = [
     { title: "Waktu", dataIndex: "timestamp", key: "time", render: (ts) => fmtTime(ts) },
-    { title: "Model", dataIndex: "model", key: "model", render: (v) => v || "—" },
+    { title: "Model", dataIndex: "model", key: "model", render: (v) => <span className="hcard-mono">{v || "—"}</span> },
     { title: "Provider", dataIndex: "provider", key: "provider", render: (v) => v || "—" },
     {
       title: "Token", key: "tokens", align: "right",
       render: (_v, d) => (((d.tokens?.prompt_tokens || 0) + (d.tokens?.completion_tokens || 0))).toLocaleString("id-ID"),
     },
-    { title: "Latensi", key: "latency", align: "right", render: (_v, d) => (d.latency?.total ? `${d.latency.total} ms` : "—") },
+    { title: "Latensi", key: "latency", align: "right", render: (_v, d) => (d.latency?.total ? <span className="hcard-mono">{d.latency.total} ms</span> : "—") },
     {
       title: "Status", dataIndex: "status", key: "status",
       render: (s) => <Tag color={s === "success" ? "success" : "error"}>{s || "—"}</Tag>,
@@ -157,7 +157,7 @@ export default function ConversationsPage() {
           Belum ada percakapan tercatat untuk filter ini.
         </div>
       ) : (
-        <Card styles={{ body: { padding: 0 } }}>
+        <Card className="hcard-panel" styles={{ body: { padding: 0 } }}>
           <Table
             columns={columns}
             dataSource={rows}
@@ -186,6 +186,7 @@ export default function ConversationsPage() {
       {selectedId && (
         <Card
           title="Detail percakapan"
+          className="hcard-panel"
           extra={<Button type="text" size="small" onClick={() => { setSelectedId(null); setDetail(null); }}>Tutup ✕</Button>}
           loading={detailLoading}
         >
@@ -194,7 +195,7 @@ export default function ConversationsPage() {
           ) : detail ? (
             <div className="flex flex-col gap-3">
               <p className="text-xs text-text-muted">
-                {detail.detail.model} · {detail.detail.provider} · {fmtTime(detail.detail.timestamp)} ·{" "}
+                <span className="hcard-mono">{detail.detail.model}</span> · {detail.detail.provider} · {fmtTime(detail.detail.timestamp)} ·{" "}
                 {detail.detail.status} · {(detail.detail.tokens?.prompt_tokens || 0) + (detail.detail.tokens?.completion_tokens || 0)} token
                 {detail.detail.liveInjected ? " · ⭐ live prompt disuntikkan (isinya disembunyikan)" : ""}
               </p>

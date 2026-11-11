@@ -242,7 +242,7 @@ export default function TranslatorPage() {
         const content = contents[step.id] || "";
 
         return (
-          <Card key={step.id}>
+          <Card key={step.id} className="hcard">
             <div className="space-y-3">
               {/* Step header */}
               <div className="flex items-center justify-between">
@@ -252,7 +252,7 @@ export default function TranslatorPage() {
                   </span>
                   <span className="text-xs font-mono text-text-muted/60 w-4">{step.id}</span>
                   <h3 className="text-sm font-semibold text-text-main">{step.label}</h3>
-                  <span className="text-xs text-text-muted/60 font-mono">{step.file}</span>
+                  <span className="hcard-mono text-xs text-text-muted/60 font-mono">{step.file}</span>
                   {content && <span className="text-xs text-green-500">({content.length} chars)</span>}
                 </button>
                 {!isExpanded && (
@@ -297,7 +297,7 @@ export default function TranslatorPage() {
 
 function MetaBadge({ label, value, color }) {
   return (
-    <Tag color={color} className="font-mono">
+    <Tag color={color} className="hcard-mono font-mono">
       <span className="text-[10px] opacity-70">{label}:</span> {value}
     </Tag>
   );

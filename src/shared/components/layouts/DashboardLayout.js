@@ -5,6 +5,10 @@ import { usePathname } from "next/navigation";
 import { useNotificationStore } from "@/store/notificationStore";
 import Sidebar from "../Sidebar";
 import Header from "../Header";
+// Dashboard "reference card" design system (Wave 1). Scoped under
+// `.hrouter-dash` (root div below) — landing/login never render this
+// layout, so the styles cannot leak outside the dashboard.
+import "../dashboard-cards.css";
 
 function getToastStyle(type) {
   if (type === "success") {
@@ -56,7 +60,7 @@ export default function DashboardLayout({ children }) {
   }, []);
 
   return (
-    <div className="flex h-screen w-full overflow-hidden bg-bg">
+    <div className="hrouter-dash flex h-screen w-full overflow-hidden bg-bg">
       <div className="fixed top-4 right-4 z-[80] flex w-[min(92vw,380px)] flex-col gap-2">
         {notifications.map((n) => {
           const style = getToastStyle(n.type);

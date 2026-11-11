@@ -53,7 +53,10 @@ export default function CodeSamples({ sampleModelId }) {
           </div>
         }
       >
-        <pre className="overflow-x-auto p-4 font-mono text-[13px] leading-relaxed text-zinc-800 dark:text-zinc-200">
+        {/* key={tab} remounts the block per tab, so the panel height is
+            always computed from the active snippet alone — a shorter
+            snippet (cURL) never inherits the taller tab's height. */}
+        <pre key={tab} className="overflow-x-auto p-4 font-mono text-[13px] leading-relaxed text-zinc-800 dark:text-zinc-200">
           <code>{samples[tab]}</code>
         </pre>
         <Typography.Text type="secondary" className="block border-t border-zinc-200 px-4 py-2 font-mono text-xs dark:border-zinc-800">

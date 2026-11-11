@@ -792,7 +792,7 @@ export default function APIPageClient({ machineId }) {
   return (
     <div className="flex flex-col gap-6">
       {/* Endpoint Card */}
-      <Card>
+      <Card className="hcard hcard-hero">
         <h2 className="text-lg font-semibold mb-4 flex items-center gap-2">
           <span className="material-symbols-outlined text-success">api</span>
           API Endpoint
@@ -990,7 +990,7 @@ export default function APIPageClient({ machineId }) {
 
       {/* API Keys */}
       <div id="require-api-key">
-      <Card>
+      <Card className="hcard">
         <div className="flex items-center justify-between mb-4">
           <h2 className="text-lg font-semibold flex items-center gap-2">
             <span className="material-symbols-outlined text-success">vpn_key</span>
@@ -1051,7 +1051,7 @@ export default function APIPageClient({ machineId }) {
                 <div className="flex-1 min-w-0">
                   <p className="text-sm font-medium">{key.name}</p>
                   <div className="flex items-center gap-2 mt-1 min-w-0 flex-wrap">
-                    <code className="text-xs text-text-muted font-mono break-all min-w-0">
+                    <code className="text-xs text-text-muted font-mono hcard-mono break-all min-w-0">
                       {visibleKeys.has(key.id) ? key.key : maskKey(key.key)}
                     </code>
                     <div className="flex items-center gap-1 shrink-0">

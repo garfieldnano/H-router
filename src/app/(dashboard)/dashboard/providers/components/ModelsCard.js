@@ -217,7 +217,7 @@ export default function ModelsCard({ providerId, kindFilter, providerAliasOverri
 
   return (
     <>
-      <Card>
+      <Card className="hcard">
         <div className="flex items-center justify-between mb-4">
           <h2 className="text-lg font-semibold">Models{kindFilter ? ` — ${kindFilter.toUpperCase()}` : ""}</h2>
         </div>

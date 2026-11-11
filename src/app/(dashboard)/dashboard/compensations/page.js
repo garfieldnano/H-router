@@ -1,7 +1,8 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
-import { Alert, Button, Card, Select, Table, Typography } from "antd";
+import { Alert, Button, Card, Select, Table, Tag, Typography } from "antd";
+import { StatCard } from "@/shared/components/dashboard-cards";
 
 // Admin-only downtime compensation (§0d): incidents recorded by the
 // gateway-uptime prober + manual time-extension grants. The system never
@@ -47,7 +48,7 @@ const INCIDENT_COLUMNS = [
 const COMPENSATION_COLUMNS = [
   { title: "Diberikan", dataIndex: "grantedAt", key: "grantedAt", render: (v) => fmtTime(v) },
   { title: "Tambahan", dataIndex: "amount", key: "amount", render: (v) => `+${v} jam` },
-  { title: "Kunci", dataIndex: "keyId", key: "keyId", render: (v) => <span className="font-mono text-xs">{(v || "").slice(0, 8)}</span> },
+  { title: "Kunci", dataIndex: "keyId", key: "keyId", render: (v) => <span className="hcard-mono font-mono text-xs">{(v || "").slice(0, 8)}</span> },
   {
     title: "Insiden",
     key: "incident",
@@ -153,8 +154,14 @@ export default function CompensationsPage() {
       {error && <Alert type="error" message={error} showIcon />}
       {notice && <Alert type="success" message={notice} showIcon />}
 
+      <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
+        <StatCard label="Insiden Berlangsung" value={incidents.filter((i) => i.status === "open").length} sub={"dari " + incidents.length + " insiden tercatat"} />
+        <StatCard label="Kompensasi Diberikan" value={compensations.length} sub={incidents.reduce((n, i) => n + (i.compensationsGranted || 0), 0) + " kunci diberi perpanjangan"} />
+        <StatCard label="Total Jam Tambahan" value={compensations.reduce((n, c) => n + (c.amount || 0), 0)} unit="jam" sub="akumulasi perpanjangan masa aktif" />
+      </div>
+
       {/* Grant form */}
-      <Card title="Beri Kompensasi">
+      <Card title="Beri Kompensasi" className="hcard">
         <form onSubmit={grant} className="flex flex-col gap-3">
           <label className="flex flex-col gap-1 text-sm">
             <span className="text-text-muted">Insiden</span>
@@ -232,7 +239,7 @@ export default function CompensationsPage() {
       </Card>
 
       {/* Incidents */}
-      <Card title="Insiden">
+      <Card title="Insiden" className="hcard">
         <Table
           columns={INCIDENT_COLUMNS}
           dataSource={incidents}
@@ -245,7 +252,7 @@ export default function CompensationsPage() {
       </Card>
 
       {/* Granted compensations */}
-      <Card title="Kompensasi yang Diberikan">
+      <Card title="Kompensasi yang Diberikan" className="hcard">
         <Table
           columns={COMPENSATION_COLUMNS}
           dataSource={compensations}

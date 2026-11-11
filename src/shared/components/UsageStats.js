@@ -11,6 +11,7 @@ function isLLMProvider(id) {
   return p.serviceKinds.includes("llm");
 }
 import Badge from "./Badge";
+import { WindowChrome } from "./dashboard-cards";
 import { Card as AntdCard, Segmented, Select, Table as AntdTable } from "antd";
 import OverviewCards from "@/app/(dashboard)/dashboard/usage/components/OverviewCards";
 import UsageTable, { fmt, fmtTime } from "@/app/(dashboard)/dashboard/usage/components/UsageTable";
@@ -97,7 +98,7 @@ function RecentRequests({ requests = [] }) {
     <AntdCard
       title="Recent Requests"
       styles={{ body: { padding: 0 } }}
-      className="overflow-hidden"
+      className="hcard-panel overflow-hidden"
       style={{ height: 480 }}
     >
       <AntdTable
@@ -228,6 +229,9 @@ const TABLE_OPTIONS = [
 // (model / account / key / endpoint, depending on the view). `plainModel`
 // keeps the model cell unstyled (apiKey/endpoint views, as before).
 function makeRenderCell(labelField, plainModel = false) {
+  // Group labels that are identifiers (model / key / endpoint) render mono;
+  // account names stay proportional.
+  const monoLabel = ["rawModel", "keyName", "endpoint"].includes(labelField);
   return (record, field) => {
     const pending = record.isGroup
       ? record.summary.pending > 0
@@ -235,7 +239,7 @@ function makeRenderCell(labelField, plainModel = false) {
     if (record.isGroup) {
       if (field === labelField) {
         return (
-          <span className={`font-medium ${pending ? "text-success" : ""}`}>
+          <span className={`font-medium ${monoLabel ? "hcard-mono" : ""} ${pending ? "text-success" : ""}`}>
             {record.groupKey}
           </span>
         );
@@ -267,13 +271,13 @@ function makeRenderCell(labelField, plainModel = false) {
     }
     if (field === "keyName") {
       return (
-        <span className="font-mono text-xs">
+        <span className="font-mono hcard-mono text-xs">
           {record.apiKeyMasked || record.keyName}
         </span>
       );
     }
     if (field === "endpoint") {
-      return <span className="font-mono text-sm">{record.endpoint}</span>;
+      return <span className="font-mono hcard-mono text-sm">{record.endpoint}</span>;
     }
     if (field === "accountName") {
       return (
@@ -286,7 +290,7 @@ function makeRenderCell(labelField, plainModel = false) {
       return plainModel ? (
         record.rawModel
       ) : (
-        <span className={`font-medium ${pending ? "text-success" : ""}`}>
+        <span className={`font-medium hcard-mono ${pending ? "text-success" : ""}`}>
           {record.rawModel}
         </span>
       );
@@ -318,6 +322,11 @@ export default function UsageStats({ period: periodProp, setPeriod: setPeriodPro
   const [viewMode, setViewMode] = useState("costs");
   const [providers, setProviders] = useState([]);
   const [periodLocal, setPeriodLocal] = useState("today");
+  // Origin for the topology window-chrome URL (client-only; SSR-safe default).
+  const [origin, setOrigin] = useState("");
+  useEffect(() => {
+    if (typeof window !== "undefined") setOrigin(window.location.origin);
+  }, []);
   const isInitialLoad = useRef(true);
   const hasLoadedStats = useRef(false);
   const period = periodProp ?? periodLocal;
@@ -507,12 +516,14 @@ export default function UsageStats({ period: periodProp, setPeriod: setPeriodPro
       {/* Provider topology + Recent Requests */}
       {loading ? spinner : (
         <div className="grid min-w-0 grid-cols-1 items-stretch gap-2 lg:grid-cols-[minmax(0,2fr)_minmax(280px,1fr)]">
-          <ProviderTopology
-            providers={providers}
-            activeRequests={stats.activeRequests || []}
-            lastProvider={stats.recentRequests?.[0]?.provider || ""}
-            errorProvider={stats.errorProvider || ""}
-          />
+          <WindowChrome url={`${origin || ""}/v1`} live liveLabel="live">
+            <ProviderTopology
+              providers={providers}
+              activeRequests={stats.activeRequests || []}
+              lastProvider={stats.recentRequests?.[0]?.provider || ""}
+              errorProvider={stats.errorProvider || ""}
+            />
+          </WindowChrome>
           <RecentRequests requests={stats.recentRequests || []} />
         </div>
       )}

@@ -852,7 +852,7 @@ export default function ProviderLimits() {
 
   if (!connectionsLoading && !hasEligibleConnections) {
     return (
-      <Card styles={{ body: { padding: 32 } }}>
+      <Card styles={{ body: { padding: 32 } }} className="hcard">
         <div className="text-center py-12">
           <span className="material-symbols-outlined text-[64px] text-text-muted opacity-20">
             cloud_off
@@ -871,7 +871,7 @@ export default function ProviderLimits() {
 
   if (!connectionsLoading && !hasVisibleConnections) {
     return (
-      <Card styles={{ body: { padding: 32 } }}>
+      <Card styles={{ body: { padding: 32 } }} className="hcard">
         <div className="text-center py-12">
           <span className="material-symbols-outlined text-[64px] text-text-muted opacity-20">
             {emptyState.icon}
@@ -1135,7 +1135,7 @@ export default function ProviderLimits() {
             <Card
               key={conn.id}
               styles={{ body: { padding: 0 } }}
-              className={`min-w-0 ${isInactive ? "opacity-60" : ""}`}
+              className={`hcard-panel min-w-0 ${isInactive ? "opacity-60" : ""}`}
             >
               <div className="px-3 py-2 border-b border-black/10 dark:border-white/10">
                 <div className="flex items-center justify-between gap-2">

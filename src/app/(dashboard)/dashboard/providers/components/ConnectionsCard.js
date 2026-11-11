@@ -307,12 +307,19 @@ export default function ConnectionsCard({ providerId, isOAuth, loginProviderId =
   const [providerStickyLimit, setProviderStickyLimit] = useState("1");
   const [confirmState, setConfirmState] = useState(null);
 
+  // 10s timeout per request: without it, one hung API leaves the card
+  // stuck on its loading skeleton forever (seen live when the preview
+  // server died mid-check — the fetch never resolved and the page showed
+  // a large empty bordered box). On abort the catch below clears loading
+  // and the card falls back to the "No connections yet" empty state.
+  const fetchTimeout = () => AbortSignal.timeout(10000);
+
   const fetch_ = useCallback(async () => {
     try {
       const [connRes, proxyRes, settingsRes] = await Promise.all([
-        fetch("/api/providers", { cache: "no-store" }),
-        fetch("/api/proxy-pools?isActive=true", { cache: "no-store" }),
-        fetch("/api/settings", { cache: "no-store" }),
+        fetch("/api/providers", { cache: "no-store", signal: fetchTimeout() }),
+        fetch("/api/proxy-pools?isActive=true", { cache: "no-store", signal: fetchTimeout() }),
+        fetch("/api/settings", { cache: "no-store", signal: fetchTimeout() }),
       ]);
       const connData = await connRes.json();
       const proxyData = await proxyRes.json();
@@ -397,11 +404,27 @@ export default function ConnectionsCard({ providerId, isOAuth, loginProviderId =
     } catch (e) { console.log("update connection error:", e); }
   };
 
-  if (loading) return <Card><div className="h-20 animate-pulse bg-black/5 rounded-lg" /></Card>;
+  // Visible loading state: the old skeleton was a single h-20 bar in
+  // bg-black/5 — effectively invisible on the dark Daytona panel, so
+  // while loading the card looked like a large empty bordered box.
+  // Render the card header plus clearly visible placeholder rows
+  // (theme-aware: light grey in light mode, light grey on dark in
+  // dark mode) so loading is unmistakably loading in both modes.
+  if (loading) return (
+    <Card className="hcard">
+      <div className="flex items-center justify-between mb-4">
+        <h2 className="text-lg font-semibold">Connections</h2>
+      </div>
+      <div className="flex flex-col gap-3" aria-hidden="true">
+        <div className="h-12 animate-pulse rounded-lg bg-black/[0.07] dark:bg-white/[0.08]" />
+        <div className="h-12 animate-pulse rounded-lg bg-black/[0.07] dark:bg-white/[0.08]" />
+      </div>
+    </Card>
+  );
 
   return (
     <>
-      <Card>
+      <Card className="hcard">
         <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between mb-4">
           <h2 className="text-lg font-semibold">Connections</h2>
           <div className="flex flex-wrap items-center gap-2">

@@ -1,7 +1,8 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
-import { Alert, Button, Card, Statistic, Table, Tag } from "antd";
+import { Alert, Button, Card, Statistic, Tag } from "antd";
+import { RequestFlowPanel, WindowChrome } from "@/shared/components/dashboard-cards";
 
 // Live Traffic (plan G7) — real-time gateway traffic monitor.
 //
@@ -29,13 +30,6 @@ function fmtNum(n) {
 
 function fmtCost(c) {
   return `$${(c ?? 0).toFixed(4)}`;
-}
-
-function statusTagColor(status) {
-  const s = String(status || "").toLowerCase();
-  if (s === "ok" || s === "success" || s.startsWith("200")) return "success";
-  if (s.startsWith("4") || s.includes("fail") || s.includes("error")) return "error";
-  return "default";
 }
 
 export default function TrafficPage() {
@@ -118,15 +112,25 @@ export default function TrafficPage() {
   const feedFail = feed.length - feedOk;
   const secondsAgo = lastUpdate ? Math.max(0, Math.round((Date.now() - lastUpdate) / 1000)) : null;
 
-  const columns = [
-    { title: "Waktu", dataIndex: "timestamp", key: "time", render: (ts) => fmtTime(ts) },
-    { title: "Kunci", dataIndex: "apiKey", key: "key", render: (v) => <span className="font-mono text-xs">{v || "—"}</span> },
-    { title: "Model", dataIndex: "model", key: "model" },
-    { title: "Provider", dataIndex: "provider", key: "provider", render: (v) => v || "—" },
-    { title: "Token", key: "tokens", align: "right", render: (_v, r) => fmtNum((r.promptTokens || 0) + (r.completionTokens || 0)) },
-    { title: "Biaya", dataIndex: "cost", key: "cost", align: "right", render: (c) => fmtCost(c) },
-    { title: "Status", dataIndex: "status", key: "status", render: (s) => <Tag color={statusTagColor(s)}>{s || "ok"}</Tag> },
-  ];
+  // Reference-style live stream: one flow entry per request. The feed
+  // carries string statuses ("ok" / "error") and no per-request latency
+  // or HTTP code, so: ok/success renders as green "200"; any other
+  // status renders as its raw upper-cased string; the right-hand mono
+  // column shows the request time (the feed has no latencyMs field).
+  // The sub-line carries provider · masked key · tokens · cost.
+  const flowEntries = feed.slice(0, 20).map((r, i) => {
+    const s = String(r.status || "ok").toLowerCase();
+    const isOk = s === "ok" || s === "success" || s.startsWith("200");
+    const tokens = (r.promptTokens || 0) + (r.completionTokens || 0);
+    return {
+      key: `${r.timestamp}-${r.model}-${i}`,
+      status: isOk ? "200" : s.toUpperCase(),
+      endpoint: r.model || "—",
+      latency: fmtTime(r.timestamp),
+      model: `${r.provider || "—"} · ${r.apiKey || "—"} · ${fmtNum(tokens)} token · ${fmtCost(r.cost)}`,
+      ok: isOk,
+    };
+  });
 
   return (
     <div className="flex min-w-0 flex-col gap-6 px-1 sm:px-0">
@@ -156,6 +160,7 @@ export default function TrafficPage() {
       <p className="text-xs text-text-muted">
         {secondsAgo === null ? "Menunggu data pertama…" : `Terakhir diperbarui ${secondsAgo} dtk lalu`}
         {paused && pendingCount > 0 ? ` · ${pendingCount} permintaan baru menunggu` : ""}
+        {` · ${feed.length} terbaru · ${feedOk} OK · ${feedFail} gagal`}
       </p>
 
       <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
@@ -165,18 +170,18 @@ export default function TrafficPage() {
           ["Total token hari ini", fmtNum(totalTokens)],
           ["Biaya hari ini", fmtCost(stats?.totalCost)],
         ].map(([label, value]) => (
-          <Card key={label} styles={{ body: { padding: "12px 16px" } }}>
+          <Card key={label} className="hcard-stat" styles={{ body: { padding: "12px 16px" } }}>
             <Statistic title={label} value={value} />
           </Card>
         ))}
       </div>
 
       {active.length > 0 ? (
-        <Card title={`Sedang Berjalan (${inFlight})`} styles={{ body: { padding: "12px 16px" } }}>
+        <Card title={`Sedang Berjalan (${inFlight})`} className="hcard-panel" styles={{ body: { padding: "12px 16px" } }}>
           <div className="flex flex-col gap-1">
             {active.map((a, i) => (
               <div key={`${a.model}-${a.account}-${i}`} className="flex flex-wrap items-center justify-between gap-2 text-sm">
-                <span className="text-text-main">{a.model} <span className="text-text-muted">({a.provider} · {a.account})</span></span>
+                <span className="text-text-main"><span className="hcard-mono">{a.model}</span> <span className="text-text-muted">({a.provider} · {a.account})</span></span>
                 <span className="font-medium text-warning">×{a.count}</span>
               </div>
             ))}
@@ -186,20 +191,20 @@ export default function TrafficPage() {
         <p className="text-sm text-text-muted">Menganggur. Belum ada permintaan yang sedang berjalan.</p>
       )}
 
-      <Card
-        title="Feed Permintaan"
-        extra={<span className="text-xs text-text-muted">{feed.length} terbaru · {feedOk} OK · {feedFail} gagal</span>}
-        styles={{ body: { padding: 0 } }}
+      <WindowChrome
+        url="/api/usage/stream?period=today"
+        live={transport === "sse"}
+        liveLabel={transport === "sse" ? "live · stream" : "polling · 5s"}
       >
-        <Table
-          columns={columns}
-          dataSource={feed}
-          rowKey={(r, i) => `${r.timestamp}-${r.model}-${i}`}
-          pagination={false}
-          scroll={{ x: 800 }}
-          locale={{ emptyText: "Belum ada permintaan hari ini." }}
+        <RequestFlowPanel
+          title="ALIRAN PERMINTAAN"
+          entries={flowEntries}
+          input={{ method: "POST", path: "/v1/chat/completions" }}
         />
-      </Card>
+        {feed.length === 0 && (
+          <p className="hcard-muted mt-3 text-sm">Belum ada permintaan hari ini.</p>
+        )}
+      </WindowChrome>
     </div>
   );
 }

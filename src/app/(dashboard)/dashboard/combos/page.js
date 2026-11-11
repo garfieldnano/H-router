@@ -469,7 +469,7 @@ export default function CombosPage() {
 
       {/* Combos List */}
       {combos.length === 0 ? (
-        <Card>
+        <Card className="hcard">
           <div className="text-center py-12">
             <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-[var(--daytona-selected-bg)] text-[var(--daytona-link)] mb-4">
               <span className="material-symbols-outlined text-[32px]">layers</span>
@@ -547,7 +547,7 @@ export default function CombosPage() {
               const comboByName = Object.fromEntries(combos.map((c) => [c.name, c.models]));
               if (filteredCombos.length === 0) {
                 return (
-                  <Card>
+                  <Card className="hcard">
                     <div className="text-center py-10">
                       <p className="text-text-main font-medium mb-1">No combos match “{searchQuery.trim()}”</p>
                       <p className="text-sm text-text-muted mb-4">Try a shorter query, or clear the search to see all {combos.length} combos.</p>
@@ -678,7 +678,7 @@ function ComboCard({ combo, getCaps, comboByName = {}, activeProviders = [], cop
   const comboCaps = aggregateComboCapabilities(combo.models, comboByName, getCaps);
 
   return (
-    <Card styles={{ body: { padding: 16 } }} className={`group ${selected ? "ring-1 ring-[#05f170]/40 bg-[var(--daytona-selected-bg)]" : ""}`}>
+    <Card styles={{ body: { padding: 16 } }} className={`hcard-panel group ${selected ? "ring-1 ring-[#05f170]/40 bg-[var(--daytona-selected-bg)]" : ""}`}>
       <div className="flex min-w-0 flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div className="flex min-w-0 flex-1 items-start gap-3 sm:items-center">
 {!isMember && (
@@ -695,13 +695,13 @@ function ComboCard({ combo, getCaps, comboByName = {}, activeProviders = [], cop
             <span className="material-symbols-outlined text-[var(--daytona-link)] text-[18px]">layers</span>
           </div>
           <div className="min-w-0 flex-1">
-            <code className="block truncate font-mono text-sm font-medium">{combo.name}</code>
+            <code className="hcard-mono block truncate font-mono text-sm font-medium">{combo.name}</code>
             <div className="mt-1 flex min-w-0 flex-wrap items-center gap-1">
               {combo.models.length === 0 ? (
                 <span className="text-xs text-text-muted italic">No models</span>
               ) : (
                 combo.models.slice(0, 3).map((model, index) => (
-                  <code key={index} className="inline-flex items-center gap-1 rounded bg-black/5 px-1.5 py-0.5 font-mono text-xs text-text-muted dark:bg-white/5">
+                  <code key={index} className="hcard-mono inline-flex items-center gap-1 rounded bg-black/5 px-1.5 py-0.5 font-mono text-xs text-text-muted dark:bg-white/5">
                     <span>{model}</span>
                     <CapacityBadges caps={
                       comboByName[model]
@@ -953,7 +953,7 @@ function CapacityAdapterCap({ cap, entry, onChange, activeProviders, getCaps, re
   };
 
   return (
-    <Card styles={{ body: { padding: 16 } }} className={`group ${!enabled ? "opacity-50" : ""}`}>
+    <Card styles={{ body: { padding: 16 } }} className={`hcard-panel group ${!enabled ? "opacity-50" : ""}`}>
       <div className="flex min-w-0 flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         {/* Master toggle + icon + label */}
         <div className="flex min-w-0 flex-1 items-start gap-2.5 sm:items-center">
@@ -968,7 +968,7 @@ function CapacityAdapterCap({ cap, entry, onChange, activeProviders, getCaps, re
           </div>
           <div className="min-w-0 flex-1">
             <div className="flex items-center gap-1.5">
-              <code className="font-mono text-sm font-medium">{cap.label}</code>
+              <code className="hcard-mono font-mono text-sm font-medium">{cap.label}</code>
               <span className="text-[10px] text-text-muted">— {cap.desc}</span>
             </div>
           </div>
@@ -1020,7 +1020,7 @@ function CapacityAdapterCap({ cap, entry, onChange, activeProviders, getCaps, re
                 title: "Model",
                 key: "model",
                 render: (_v, model) => (
-                  <span className="font-mono text-xs">
+                  <span className="hcard-mono font-mono text-xs">
                     <span className="truncate">{model}</span>{" "}
                     <CapacityBadges caps={getCaps?.(model)} />
                     {model === DEFAULT_FALLBACK_MODEL && (
@@ -1152,11 +1152,11 @@ function ModelItem({ id, index, model, isFirst, isLast, onEdit, onMoveUp, onMove
           onChange={(e) => setDraft(e.target.value)}
           onBlur={commit}
           onKeyDown={handleKeyDown}
-          className="min-w-0 flex-1 rounded border border-[#05f170]/40 bg-white px-1.5 py-0.5 font-mono text-xs text-text-main outline-none dark:bg-black/20"
+          className="min-w-0 flex-1 rounded border border-[#05f170]/40 bg-white px-1.5 py-0.5 hcard-mono font-mono text-xs text-text-main outline-none dark:bg-black/20"
         />
       ) : (
         <div
-          className="min-w-0 flex-1 cursor-text truncate rounded px-1.5 py-0.5 font-mono text-xs text-text-main hover:bg-black/5 dark:hover:bg-white/5"
+          className="min-w-0 flex-1 cursor-text truncate rounded px-1.5 py-0.5 hcard-mono font-mono text-xs text-text-main hover:bg-black/5 dark:hover:bg-white/5"
           onClick={() => setEditing(true)}
           title="Click to edit"
         >

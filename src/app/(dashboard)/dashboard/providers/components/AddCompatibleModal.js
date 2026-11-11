@@ -35,7 +35,9 @@ const API_TYPE_OPTIONS = [
 ];
 
 function AddCompatibleModal({ variant, isOpen, onClose, onCreated }) {
-  const config = VARIANT_CONFIG[variant];
+  // Guard: an unknown variant must not crash the Modal title (antd
+  // evaluates title on every render even while closed).
+  const config = VARIANT_CONFIG[variant] || VARIANT_CONFIG.openai;
   const initialFormData = () => ({
     name: "",
     prefix: "",
@@ -161,15 +163,12 @@ function AddCompatibleModal({ variant, isOpen, onClose, onCreated }) {
             placeholder={config.namePlaceholder}
           />
         </Form.Item>
-        <Form.Item
-          label="Prefix"
-          help="Required. Used as the provider prefix for model IDs."
-          style={{ marginBottom: 0 }}
-        >
+        <Form.Item label="Prefix" help="Required. Used as the provider prefix for model IDs." style={{ marginBottom: 0 }}>
           <Input
             value={formData.prefix}
             onChange={(e) => setFormData({ ...formData, prefix: e.target.value })}
             placeholder={config.prefixPlaceholder}
+            className="hcard-mono"
           />
         </Form.Item>
         {config.hasApiType && (
@@ -186,6 +185,7 @@ function AddCompatibleModal({ variant, isOpen, onClose, onCreated }) {
             value={formData.baseUrl}
             onChange={(e) => setFormData({ ...formData, baseUrl: e.target.value })}
             placeholder={config.defaultBaseUrl}
+            className="hcard-mono"
           />
         </Form.Item>
         <Form.Item label="API Key (for Check)" style={{ marginBottom: 0 }}>
@@ -203,6 +203,7 @@ function AddCompatibleModal({ variant, isOpen, onClose, onCreated }) {
             value={checkModelId}
             onChange={(e) => setCheckModelId(e.target.value)}
             placeholder={config.modelIdPlaceholder}
+            className="hcard-mono"
           />
         </Form.Item>
         <div className="flex flex-col gap-3 sm:flex-row sm:items-center">

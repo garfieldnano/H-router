@@ -57,7 +57,7 @@ const CORE_CHIPS = [
   "Streaming SSE",
   "Failover combo",
   "Reasoning effort",
-  "Kuota transparan",
+  "Tanpa kartu kredit",
 ];
 
 const STEPS = [
@@ -83,10 +83,16 @@ const STEPS = [
   },
 ];
 
-// antd primary buttons use white text on the brand green (#05f170),
-// which is low contrast — the landing CTAs keep the dark text the
-// original green buttons had (same override pattern as wave 2).
-const GREEN_CTA_CLASS = "!text-zinc-950";
+// Landing CTAs use the plain Daytona primary button — no text-color
+// override. The antd token + the Daytona CSS layer give it white text
+// on the black pill (light mode) and black text on the white pill (dark
+// mode). The old override forced dark text with !important in BOTH
+// modes, which made the light-mode CTAs unreadable (black on black).
+// (Kept out of this comment on purpose: the literal class name would
+// make Tailwind generate the unused utility again.) The closing-CTA
+// button is the exception: its card inverts (dark in light mode, white
+// in dark mode), so it uses `.landing-cta-inverted` (globals.css) —
+// white pill on the dark card, black pill on the white card.
 
 export default function LandingPage() {
   const { setTheme } = useTheme();
@@ -156,7 +162,6 @@ export default function LandingPage() {
               href={LANDING_CONFIG.telegramUrl}
               target="_blank"
               rel="noreferrer"
-              className={GREEN_CTA_CLASS}
             >
               Ambil key
             </Button>
@@ -190,7 +195,6 @@ export default function LandingPage() {
               href={LANDING_CONFIG.telegramUrl}
               target="_blank"
               rel="noreferrer"
-              className={GREEN_CTA_CLASS}
             >
               Ambil key gratis
             </Button>
@@ -296,7 +300,7 @@ export default function LandingPage() {
                 href={LANDING_CONFIG.telegramUrl}
                 target="_blank"
                 rel="noreferrer"
-                className={GREEN_CTA_CLASS}
+                className="landing-cta-inverted"
               >
                 Ambil key gratis
               </Button>

@@ -693,7 +693,7 @@ function ProviderCard({ providerId, provider, stats, authType, onToggle, isMembe
   const inner = (
       <Card
         styles={{ body: { padding: 12 } }}
-        className={`h-full hover:bg-black/[0.01] dark:hover:bg-white/[0.01] transition-colors cursor-pointer ${allDisabled ? "opacity-50" : ""}`}
+        className={`hcard-panel h-full hover:bg-black/[0.01] dark:hover:bg-white/[0.01] transition-colors cursor-pointer ${allDisabled ? "opacity-50" : ""}`}
       >
         <div className="flex min-w-0 items-center justify-between gap-3">
           <div className="flex min-w-0 items-center gap-3">
@@ -716,6 +716,7 @@ function ProviderCard({ providerId, provider, stats, authType, onToggle, isMembe
             </div>
             <div className="min-w-0">
               <h3 className="truncate font-semibold">{provider.name}</h3>
+              <span className="hcard-mono block truncate text-xs hcard-muted">{providerId}</span>
               <div className="flex min-w-0 items-center gap-1.5 text-xs flex-wrap">
                 {allDisabled ? (
                   <Tag>
@@ -824,7 +825,7 @@ function ApiKeyProviderCard({
   const inner = (
       <Card
         styles={{ body: { padding: 12 } }}
-        className={`h-full hover:bg-black/[0.01] dark:hover:bg-white/[0.01] transition-colors cursor-pointer ${allDisabled ? "opacity-50" : ""}`}
+        className={`hcard-panel h-full hover:bg-black/[0.01] dark:hover:bg-white/[0.01] transition-colors cursor-pointer ${allDisabled ? "opacity-50" : ""}`}
       >
         <div className="flex min-w-0 items-center justify-between gap-3">
           <div className="flex min-w-0 items-center gap-3">
@@ -847,6 +848,7 @@ function ApiKeyProviderCard({
             </div>
             <div className="min-w-0">
               <h3 className="truncate font-semibold">{provider.name}</h3>
+              <span className="hcard-mono block truncate text-xs hcard-muted">{providerId}</span>
               <div className="flex min-w-0 items-center gap-1.5 text-xs flex-wrap">
                 {allDisabled ? (
                   <Tag>
@@ -980,12 +982,12 @@ function ProviderTestResultsView({ results }) {
             <span className="block truncate font-medium sm:inline">
               {r.connectionName}
             </span>
-            <span className="block truncate text-text-muted sm:ml-1.5 sm:inline">
+            <span className="hcard-mono block truncate text-text-muted sm:ml-1.5 sm:inline">
               ({r.provider})
             </span>
           </div>
           {r.latencyMs !== undefined && (
-            <span className="shrink-0 text-text-muted font-mono tabular-nums">
+            <span className="hcard-mono shrink-0 text-text-muted tabular-nums">
               {r.latencyMs}ms
             </span>
           )}

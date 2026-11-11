@@ -163,7 +163,12 @@ export default function ScannerPage() {
     {
       title: "Provider",
       key: "provider",
-      render: (_v, c) => `${c.provider} · ${c.authType}`,
+      render: (_v, c) => (
+        <span>
+          <span className="hcard-mono">{c.provider}</span>
+          <span className="text-text-muted"> · {c.authType}</span>
+        </span>
+      ),
     },
     {
       title: "Status",
@@ -177,7 +182,7 @@ export default function ScannerPage() {
       title: "Latensi",
       dataIndex: "healthLatencyMs",
       key: "latency",
-      render: (ms) => (ms != null ? `${ms} ms` : "-"),
+      render: (ms) => (ms != null ? <span className="hcard-mono">{ms} ms</span> : "-"),
     },
     {
       title: "Terakhir dicek",
@@ -225,7 +230,7 @@ export default function ScannerPage() {
           ["Tidak diketahui", counts.unknown],
           ["Belum dipindai", counts.unscanned],
         ].map(([label, n]) => (
-          <Card key={label} styles={{ body: { padding: "12px 16px" } }}>
+          <Card key={label} className="hcard-stat" styles={{ body: { padding: "12px 16px" } }}>
             <Statistic title={label} value={n} />
           </Card>
         ))}
@@ -258,7 +263,7 @@ export default function ScannerPage() {
         )}
       </div>
 
-      <Card styles={{ body: { padding: 0 } }}>
+      <Card className="hcard-panel" styles={{ body: { padding: 0 } }}>
         <Table
           columns={columns}
           dataSource={filtered}

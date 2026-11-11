@@ -10,7 +10,7 @@ import Image from "next/image";
 export default function MitmLinkCard({ tool }) {
   return (
     <Link href="/dashboard/mitm" className="block">
-      <Card styles={{ body: { padding: 16 } }} className="overflow-hidden hover:border-success/50 transition-colors cursor-pointer">
+      <Card styles={{ body: { padding: 16 } }} className="hcard overflow-hidden hover:border-success/50 transition-colors cursor-pointer">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
             <div className="size-8 flex items-center justify-center shrink-0">

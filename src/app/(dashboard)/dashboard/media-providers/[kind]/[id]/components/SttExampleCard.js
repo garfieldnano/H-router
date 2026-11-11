@@ -123,7 +123,7 @@ export function SttExampleCard({ providerId }) {
   const resultStr = typeof result === "string" ? result : (result ? JSON.stringify(result, null, 2) : `{\n  "text": "Hello world..."\n}`);
 
   return (
-    <Card>
+    <Card className="hcard">
       <h2 className="text-lg font-semibold mb-4">Example</h2>
       <div className="flex flex-col gap-2.5">
         {/* Model */}
@@ -153,7 +153,7 @@ export function SttExampleCard({ providerId }) {
         {/* Endpoint */}
         <Row label="Endpoint">
           <div className="flex w-full flex-col gap-2 sm:w-auto sm:flex-row sm:items-center">
-            <span className="w-full min-w-0 flex-1 px-3 py-1.5 text-sm font-mono text-text-main bg-sidebar rounded-md truncate">
+            <span className="hcard-mono w-full min-w-0 flex-1 px-3 py-1.5 text-sm font-mono text-text-main bg-sidebar rounded-md truncate">
               {endpoint}/v1/audio/transcriptions
             </span>
             {tunnelEndpoint && (
@@ -173,7 +173,7 @@ export function SttExampleCard({ providerId }) {
 
         {/* API Key */}
         <Row label="API Key">
-          <span className="px-3 py-1.5 text-sm font-mono text-text-main bg-sidebar rounded-md truncate block">
+          <span className="hcard-mono px-3 py-1.5 text-sm font-mono text-text-main bg-sidebar rounded-md truncate block">
             {apiKey ? `${apiKey.slice(0, 8)}${"\u2022".repeat(Math.min(20, Math.max(0, apiKey.length - 8)))}` : <span className="text-text-muted italic">No key configured</span>}
           </span>
         </Row>
@@ -332,7 +332,7 @@ export function SttExampleCard({ providerId }) {
               </button>
             </div>
           </div>
-          <pre className="bg-sidebar rounded-md px-3 py-2.5 text-xs font-mono text-text-main overflow-x-auto whitespace-pre-wrap break-all">{curlSnippet}</pre>
+          <pre className="hcard-mono bg-sidebar rounded-md px-3 py-2.5 text-xs font-mono text-text-main overflow-x-auto whitespace-pre-wrap break-all">{curlSnippet}</pre>
         </div>
 
         {error && <p className="text-xs text-red-500 break-words">{error}</p>}
@@ -353,7 +353,7 @@ export function SttExampleCard({ providerId }) {
               </button>
             )}
           </div>
-          <pre className="bg-sidebar rounded-md px-3 py-2.5 text-xs font-mono text-text-main overflow-x-auto whitespace-pre-wrap break-all opacity-70">
+          <pre className="hcard-mono bg-sidebar rounded-md px-3 py-2.5 text-xs font-mono text-text-main overflow-x-auto whitespace-pre-wrap break-all opacity-70">
             {resultStr}
           </pre>
         </div>

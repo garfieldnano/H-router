@@ -1,0 +1,660 @@
+/* ============================================================
+   h-router dashboard "reference card" design system — WAVE 1
+   ------------------------------------------------------------
+   The card language from the dashboard preview reference
+   (~/workspace/user/media_library/image/image-11.png):
+   big-radius outer frames, thin borders, soft shadow, white
+   cards on off-white, near-black text, muted-grey secondary
+   text, brand-green (#05f170) accents, monospace for URLs /
+   endpoints / model IDs / latencies / status codes.
+
+   SCOPE — everything in this file is scoped under `.hrouter-dash`.
+   The class is added to the root element of DashboardLayout only,
+   so NOTHING here can leak into the landing page, the login page,
+   or any non-dashboard route. Do not use these classes outside
+   the dashboard.
+
+   WIRING — imported once, from
+   src/shared/components/layouts/DashboardLayout.js.
+   Do NOT import it from globals.css, the root layout, or any page.
+
+   LAYER — `@layer components` slots this after `@layer antd`
+   (declared in globals.css) and before `@layer utilities`, so
+   these rules beat the Daytona antd overrides at equal
+   specificity, while Tailwind utilities still win.
+
+   DARK MODE — colors come from the existing `--daytona-*` vars
+   (globals.css), which flip under `html.dark`. Only the few
+   values Daytona has no token for live here, as `--hcard-*`
+   vars on `.hrouter-dash`, with their dark values under
+   `.dark .hrouter-dash`. Same radius / typography in both modes;
+   dark mode is flat (shadow var -> none), per Daytona.
+
+   TOKENS (dashboard scope only):
+     --hcard-radius-outer  18px  outer/hero cards + window frame
+     --hcard-radius        12px  inner panels + stat cards
+     --hcard-radius-sm      8px  badges, mini-nav pills
+     --hcard-accent        #05f170  bars, dots, cursor, live pill
+     --hcard-accent-ink    #00853f light / #05f170 dark — green
+                           TEXT on a panel (status "200", "ok").
+                           #05f170 on white is too faint to read.
+     --hcard-shadow        soft shadow, light only (none in dark)
+
+   ============================================================
+   USAGE — class API (all selectors live under `.hrouter-dash`)
+   ------------------------------------------------------------
+   OUTER / PANELS
+     .hcard            Outer card: 18px radius, thin border,
+                       panel bg, 20px padding. The default
+                       dashboard card.
+     .hcard-hero       .hcard + soft shadow (light mode only;
+                       flat in dark). Use for the top/hero card
+                       of a page, e.g. a window-chrome frame.
+     .hcard-panel      Inner panel: 12px radius, thin border,
+                       16px 20px padding. Use for sub-sections
+                       inside a card (latency panel, flow panel).
+     .hcard-title-row  Flex row: title left, meta right.
+     .hcard-title      Small grey panel title (13px, muted).
+     .hcard-title-right  Small grey right-aligned meta, e.g.
+                       "health check".
+
+   STAT CARDS
+     .hcard-stat       Stat card (12px radius panel, 20px pad).
+                       Put on a plain <div> or as className on
+                       antd <Card> (see ANTD INTEROP below).
+     .hcard-stat-label Small UPPERCASE letter-spaced grey label.
+     .hcard-stat-value VERY LARGE number (40px, 700, near-black).
+     .hcard-stat-unit  Small grey unit UNDER the value, e.g. "ms".
+     .hcard-stat-sub   Small muted sub-line under the value/unit.
+
+   MONO + TEXT UTILITIES
+     .hcard-mono       ui-monospace stack. Use for URLs,
+                       endpoints, model IDs, latencies, status
+                       codes, keys. (Tailwind `font-mono` is the
+                       same stack; this class exists so the
+                       reference-card look does not depend on
+                       remembering the utility.)
+     .hcard-muted      Secondary grey text (daytona-text-muted).
+
+   LATENCY-PER-MODEL (inside .hcard-panel)
+     .hcard-lat-row    One row: badge + name | bar | value.
+     .hcard-lat-badge  22px square badge for the model logo /
+                       initials (panel-3 bg, 11px 700).
+     .hcard-lat-name   Monospace model id, truncated with
+                       ellipsis (min-width: 0, overflow hidden).
+     .hcard-lat-track  Light-grey track (flex-1, 6px high,
+                       full radius).
+     .hcard-lat-fill   GREEN fill inside the track. Width is set
+                       inline (style={{ width: "62%" }}) from
+                       latency / maxLatency — never hard-code a
+                       width in CSS.
+     .hcard-lat-value  Monospace latency, right-aligned,
+                       muted, min-width so rows line up.
+
+   REQUEST FLOW (inside .hcard-panel)
+     .hcard-flow-heading  Uppercase letter-spaced grey heading
+                       ("ALIRAN PERMINTAAN").
+     .hcard-flow-entry Main line: status + endpoint + latency.
+     .hcard-flow-status  Bold GREEN status code ("200").
+                       Add .hcard-flow-status--err for red
+                       (4xx/5xx).
+     .hcard-flow-endpoint  Monospace endpoint, truncated.
+     .hcard-flow-lat   Monospace latency, right-aligned.
+     .hcard-flow-sub   Sub-line: dot + model + "ok" right.
+     .hcard-flow-dot   Small grey dot separator.
+     .hcard-flow-model Monospace model id, truncated.
+     .hcard-flow-ok    Small muted "ok" marker, right-aligned.
+     .hcard-flow-input Bottom input line (top border): method
+                       + path in mono, then the block cursor.
+     .hcard-flow-method  Bold method ("POST").
+     .hcard-flow-cursor  Solid green block cursor (blinks;
+                       stops under prefers-reduced-motion).
+
+   WINDOW CHROME (browser-frame card)
+     .hcard-window     Outer frame: 18px radius, border, soft
+                       shadow, overflow hidden. Contains a bar
+                       + a body; use instead of .hcard when the
+                       card should look like a browser window.
+     .hcard-window-bar Title bar: dots left, mono URL center/
+                       left, live pill right. 12px 16px padding,
+                       bottom border, panel-2 bg.
+     .hcard-window-dots  Flex row, 8px gap.
+     .hcard-window-dot   12px circle. Modifiers:
+                       .hcard-window-dot--red / --yellow / --green.
+     .hcard-window-url Mono URL, muted, truncated.
+     .hcard-live-pill  Pale-green pill, green text, 11px 600.
+     .hcard-live-dot   6px green dot inside the pill (pulses;
+                       stops under prefers-reduced-motion).
+     .hcard-window-body  16px 20px padding, panel bg.
+
+   MINI-NAV (left nav inside a window-chrome frame)
+     .hcard-mininav    Column of nav items (panel bg).
+     .hcard-mininav-item  Row: square bullet + label. Muted.
+                       Button-like; hover darkens text.
+     .hcard-mininav-item--active  Active item: near-black text
+                       on light-grey rounded pill.
+     .hcard-mininav-bullet  6px square bullet (currentColor).
+     .hcard-mininav-divider  Thin vertical divider (1px,
+                       daytona-border). Place between the nav
+                       and the content, or use border-right on
+                       the nav column.
+
+   ANTD INTEROP — applying the look to existing antd primitives
+   without swapping components (for Waves 2–4 migration):
+     <Card className="hcard-panel">  -> 12px radius panel look.
+     <Card className="hcard-stat">   -> stat-card look; the
+                       nested <Statistic> title/value are
+                       re-sized by the rules below (title keeps
+                       the Daytona 11px uppercase style; value
+                       becomes 40px/700).
+     <Card className="hcard">        -> 18px outer-card look.
+   Do NOT put .hcard-* classes on antd Modal / Drawer / Table —
+   those keep the Daytona 6px flat language from globals.css.
+
+   COMPONENT API — src/shared/components/dashboard-cards.jsx
+   (same class names; props carry data only, no mock data):
+     <Panel title right>           -> .hcard-panel + title row
+     <StatCard label value unit sub />
+     <LatencyPanel title right>    -> .hcard-panel + LatencyBar rows
+     <LatencyBar name badge latencyMs maxMs display />
+     <RequestFlowPanel title entries input />
+       entries: [{ status, endpoint, latency, model, ok }]
+       input:   { method, path } | string
+     <WindowChrome url live liveLabel> -> .hcard-window frame
+     <LivePill label />            -> .hcard-live-pill
+     <MiniNav items activeId onSelect />
+       items: [{ id, label }]
+   ============================================================ */
+@layer components {
+  /* ---------- Dashboard scope + tokens ---------- */
+  .hrouter-dash {
+    --hcard-radius-outer: 18px;
+    --hcard-radius: 12px;
+    --hcard-radius-sm: 8px;
+    --hcard-accent: #05f170;
+    --hcard-accent-ink: #00853f;
+    --hcard-shadow:
+      0 1px 2px rgba(15, 23, 42, 0.05),
+      0 12px 32px -12px rgba(15, 23, 42, 0.12);
+    --hcard-live-bg: rgba(5, 241, 112, 0.12);
+    --hcard-live-text: #00853f;
+    --hcard-live-border: rgba(5, 241, 112, 0.35);
+  }
+
+  .dark .hrouter-dash {
+    --hcard-accent-ink: #05f170;
+    --hcard-shadow: none;
+    --hcard-live-bg: rgba(5, 241, 112, 0.14);
+    --hcard-live-text: #05f170;
+    --hcard-live-border: rgba(5, 241, 112, 0.3);
+  }
+
+  /* ---------- Outer / panels ---------- */
+  .hrouter-dash .hcard {
+    background: var(--daytona-panel);
+    border: 1px solid var(--daytona-border);
+    border-radius: var(--hcard-radius-outer);
+    padding: 20px;
+  }
+
+  .hrouter-dash .hcard-hero {
+    box-shadow: var(--hcard-shadow);
+  }
+
+  .hrouter-dash .hcard-panel {
+    background: var(--daytona-panel);
+    border: 1px solid var(--daytona-border);
+    border-radius: var(--hcard-radius);
+    padding: 16px 20px;
+  }
+
+  .hrouter-dash .hcard-title-row {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 12px;
+    margin-bottom: 12px;
+  }
+
+  .hrouter-dash .hcard-title {
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--daytona-text-muted);
+  }
+
+  .hrouter-dash .hcard-title-right {
+    font-size: 12px;
+    color: var(--daytona-text-subtle);
+    white-space: nowrap;
+  }
+
+  /* ---------- Stat cards ---------- */
+  .hrouter-dash .hcard-stat {
+    background: var(--daytona-panel);
+    border: 1px solid var(--daytona-border);
+    border-radius: var(--hcard-radius);
+    padding: 20px;
+  }
+
+  .hrouter-dash .hcard-stat-label {
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--daytona-text-muted);
+    margin-bottom: 8px;
+  }
+
+  .hrouter-dash .hcard-stat-value {
+    font-size: 40px;
+    line-height: 1.1;
+    font-weight: 700;
+    letter-spacing: -0.02em;
+    color: var(--daytona-text);
+    font-variant-numeric: tabular-nums;
+  }
+
+  .hrouter-dash .hcard-stat-unit {
+    margin-top: 2px;
+    font-size: 13px;
+    color: var(--daytona-text-muted);
+  }
+
+  .hrouter-dash .hcard-stat-sub {
+    margin-top: 8px;
+    font-size: 12px;
+    line-height: 1.5;
+    color: var(--daytona-text-muted);
+  }
+
+  /* ---------- Mono + text utilities ---------- */
+  .hrouter-dash .hcard-mono {
+    font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas,
+      "Liberation Mono", "Courier New", monospace;
+    font-size: 0.95em;
+    letter-spacing: 0;
+  }
+
+  .hrouter-dash .hcard-muted {
+    color: var(--daytona-text-muted);
+  }
+
+  /* ---------- Latency per model ---------- */
+  .hrouter-dash .hcard-lat-row {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 8px 0;
+  }
+
+  .hrouter-dash .hcard-lat-row + .hcard-lat-row {
+    border-top: 1px solid var(--daytona-border-subtle);
+  }
+
+  .hrouter-dash .hcard-lat-badge {
+    flex: none;
+    width: 22px;
+    height: 22px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 6px;
+    background: var(--daytona-panel-3);
+    color: var(--daytona-text-muted);
+    font-size: 11px;
+    font-weight: 700;
+    line-height: 1;
+    overflow: hidden;
+  }
+
+  .hrouter-dash .hcard-lat-badge img,
+  .hrouter-dash .hcard-lat-badge svg {
+    width: 16px;
+    height: 16px;
+    object-fit: contain;
+  }
+
+  .hrouter-dash .hcard-lat-name {
+    flex: none;
+    width: 34%;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas,
+      "Liberation Mono", "Courier New", monospace;
+    font-size: 13px;
+    color: var(--daytona-text);
+  }
+
+  .hrouter-dash .hcard-lat-track {
+    flex: 1;
+    min-width: 40px;
+    height: 6px;
+    border-radius: 9999px;
+    background: var(--daytona-panel-3);
+    overflow: hidden;
+  }
+
+  .hrouter-dash .hcard-lat-fill {
+    height: 100%;
+    border-radius: 9999px;
+    background: var(--hcard-accent);
+    /* Width comes from inline style (latency / maxLatency). */
+    transition: width 0.3s ease;
+  }
+
+  .hrouter-dash .hcard-lat-value {
+    flex: none;
+    min-width: 52px;
+    text-align: right;
+    font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas,
+      "Liberation Mono", "Courier New", monospace;
+    font-size: 13px;
+    color: var(--daytona-text-muted);
+    font-variant-numeric: tabular-nums;
+  }
+
+  /* ---------- Request flow ---------- */
+  .hrouter-dash .hcard-flow-heading {
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--daytona-text-muted);
+    margin-bottom: 12px;
+  }
+
+  .hrouter-dash .hcard-flow-entry {
+    display: flex;
+    align-items: baseline;
+    gap: 8px;
+    font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas,
+      "Liberation Mono", "Courier New", monospace;
+    font-size: 13px;
+    line-height: 1.6;
+  }
+
+  .hrouter-dash .hcard-flow-status {
+    flex: none;
+    font-weight: 700;
+    color: var(--hcard-accent-ink);
+  }
+
+  .hrouter-dash .hcard-flow-status--err {
+    color: var(--color-danger);
+  }
+
+  .hrouter-dash .hcard-flow-endpoint {
+    flex: 1;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    color: var(--daytona-text);
+  }
+
+  .hrouter-dash .hcard-flow-lat {
+    flex: none;
+    color: var(--daytona-text-muted);
+    font-variant-numeric: tabular-nums;
+  }
+
+  .hrouter-dash .hcard-flow-sub {
+    display: flex;
+    align-items: baseline;
+    gap: 6px;
+    padding-left: 2px;
+    font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas,
+      "Liberation Mono", "Courier New", monospace;
+    font-size: 12px;
+    line-height: 1.6;
+    color: var(--daytona-text-muted);
+  }
+
+  .hrouter-dash .hcard-flow-dot {
+    flex: none;
+    width: 3px;
+    height: 3px;
+    border-radius: 50%;
+    background: var(--daytona-text-subtle);
+    align-self: center;
+  }
+
+  .hrouter-dash .hcard-flow-model {
+    flex: 1;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .hrouter-dash .hcard-flow-ok {
+    flex: none;
+    color: var(--daytona-text-muted);
+  }
+
+  .hrouter-dash .hcard-flow-input {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-top: 12px;
+    padding-top: 12px;
+    border-top: 1px solid var(--daytona-border);
+    font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas,
+      "Liberation Mono", "Courier New", monospace;
+    font-size: 13px;
+    color: var(--daytona-text);
+  }
+
+  .hrouter-dash .hcard-flow-method {
+    flex: none;
+    font-weight: 700;
+  }
+
+  .hrouter-dash .hcard-flow-input-path {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .hrouter-dash .hcard-flow-cursor {
+    flex: none;
+    width: 8px;
+    height: 16px;
+    background: var(--hcard-accent);
+    animation: hcard-cursor-blink 1s steps(2, start) infinite;
+  }
+
+  @keyframes hcard-cursor-blink {
+    50% {
+      opacity: 0;
+    }
+  }
+
+  /* ---------- Window chrome ---------- */
+  .hrouter-dash .hcard-window {
+    background: var(--daytona-panel);
+    border: 1px solid var(--daytona-border);
+    border-radius: var(--hcard-radius-outer);
+    box-shadow: var(--hcard-shadow);
+    overflow: hidden;
+  }
+
+  .hrouter-dash .hcard-window-bar {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 12px 16px;
+    background: var(--daytona-panel-2);
+    border-bottom: 1px solid var(--daytona-border);
+  }
+
+  .hrouter-dash .hcard-window-dots {
+    flex: none;
+    display: flex;
+    gap: 8px;
+  }
+
+  .hrouter-dash .hcard-window-dot {
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+  }
+
+  .hrouter-dash .hcard-window-dot--red {
+    background: #ff5f56;
+  }
+
+  .hrouter-dash .hcard-window-dot--yellow {
+    background: #ffbd2e;
+  }
+
+  .hrouter-dash .hcard-window-dot--green {
+    background: #27c93f;
+  }
+
+  .hrouter-dash .hcard-window-url {
+    flex: 1;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas,
+      "Liberation Mono", "Courier New", monospace;
+    font-size: 13px;
+    color: var(--daytona-text-muted);
+  }
+
+  .hrouter-dash .hcard-live-pill {
+    flex: none;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 3px 10px;
+    border: 1px solid var(--hcard-live-border);
+    border-radius: 9999px;
+    background: var(--hcard-live-bg);
+    color: var(--hcard-live-text);
+    font-size: 11px;
+    font-weight: 600;
+    line-height: 1.4;
+    white-space: nowrap;
+  }
+
+  .hrouter-dash .hcard-live-dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: var(--hcard-accent);
+    animation: hcard-live-pulse 2s ease-in-out infinite;
+  }
+
+  @keyframes hcard-live-pulse {
+    0%,
+    100% {
+      opacity: 1;
+    }
+    50% {
+      opacity: 0.35;
+    }
+  }
+
+  .hrouter-dash .hcard-window-body {
+    padding: 16px 20px;
+    background: var(--daytona-panel);
+  }
+
+  /* ---------- Mini-nav ---------- */
+  .hrouter-dash .hcard-mininav {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    padding: 4px 0;
+  }
+
+  .hrouter-dash .hcard-mininav-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 12px;
+    border: 0;
+    border-radius: var(--hcard-radius-sm);
+    background: transparent;
+    color: var(--daytona-text-muted);
+    font-size: 13px;
+    line-height: 1.4;
+    text-align: left;
+    cursor: pointer;
+  }
+
+  .hrouter-dash .hcard-mininav-item:hover {
+    color: var(--daytona-text);
+  }
+
+  .hrouter-dash .hcard-mininav-item--active {
+    background: var(--daytona-panel-3);
+    color: var(--daytona-text);
+    font-weight: 500;
+  }
+
+  .hrouter-dash .hcard-mininav-bullet {
+    flex: none;
+    width: 6px;
+    height: 6px;
+    background: currentColor;
+    border-radius: 1px;
+    opacity: 0.7;
+  }
+
+  .hrouter-dash .hcard-mininav-divider {
+    flex: none;
+    width: 1px;
+    align-self: stretch;
+    background: var(--daytona-border);
+  }
+
+  /* ---------- antd interop ----------
+     Apply the reference-card look to existing antd primitives by
+     className only — no component swap needed in Waves 2–4.
+     Higher specificity than the Daytona `.ant-card` rule in
+     globals.css (same @layer components, so specificity decides). */
+  .hrouter-dash .ant-card.hcard {
+    border-radius: var(--hcard-radius-outer);
+    padding: 0;
+  }
+
+  .hrouter-dash .ant-card.hcard-panel {
+    border-radius: var(--hcard-radius);
+    padding: 0;
+  }
+
+  .hrouter-dash .ant-card.hcard-stat {
+    border-radius: var(--hcard-radius);
+  }
+
+  .hrouter-dash .ant-card.hcard-stat .ant-statistic-content-value {
+    font-size: 40px;
+    line-height: 1.1;
+    font-weight: 700;
+    letter-spacing: -0.02em;
+  }
+
+  .hrouter-dash .ant-card.hcard-stat .ant-statistic-content-suffix {
+    font-size: 13px;
+    font-weight: 400;
+    color: var(--daytona-text-muted);
+  }
+
+  /* ---------- Reduced motion ---------- */
+  @media (prefers-reduced-motion: reduce) {
+    .hrouter-dash .hcard-flow-cursor,
+    .hrouter-dash .hcard-live-dot {
+      animation: none;
+    }
+
+    .hrouter-dash .hcard-lat-fill {
+      transition: none;
+    }
+  }
+}

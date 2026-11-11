@@ -346,7 +346,7 @@ export default function RequestDetailsTab() {
 
   return (
     <div className="flex min-w-0 flex-col gap-6">
-      <Card>
+      <Card className="hcard">
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
           <div className="flex min-w-0 flex-col gap-2">
             <label htmlFor="provider-filter" className="text-sm font-medium text-text-main">Provider</label>
@@ -409,7 +409,7 @@ export default function RequestDetailsTab() {
         </div>
       </Card>
 
-      <Card styles={{ body: { padding: 0 } }}>
+      <Card styles={{ body: { padding: 0 } }} className="hcard-panel">
         <Table
           columns={columns}
           dataSource={details}

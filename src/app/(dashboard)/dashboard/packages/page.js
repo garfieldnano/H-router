@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useState } from "react";
 import { Alert, Button, Card, Checkbox, Input, Select, Spin, Tag, Typography } from "antd";
+import { StatCard } from "@/shared/components/dashboard-cards";
 
 // Admin-only packages management (v1): create/edit/deactivate packages sold
 // via the Telegram bot. Prices are INTEGER rupiah, admin-editable here and
@@ -128,7 +129,13 @@ export default function PackagesPage() {
 
       {error && <Alert type="error" message={error} showIcon />}
 
-      <Card title="Buat paket baru">
+      <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
+        <StatCard label="Total Paket" value={packages.length} sub={packages.filter((p) => p.isActive).length + " aktif"} />
+        <StatCard label="Paket Trial" value={packages.filter((p) => p.type === "trial").length} sub="gratis 1 hari, sekali per pengguna" />
+        <StatCard label="RPM Global" value={globalRpm} sub="dipakai paket tanpa RPM sendiri" />
+      </div>
+
+      <Card title="Buat paket baru" className="hcard">
         <form onSubmit={createPackage} className="flex flex-wrap items-end gap-3">
           <label className="flex flex-col gap-1 text-sm">
             <span className="text-text-muted">Nama</span>
@@ -168,7 +175,7 @@ export default function PackagesPage() {
         </form>
       </Card>
 
-      <Card title="Daftar paket">
+      <Card title="Daftar paket" className="hcard">
         {loading ? (
           <Spin tip="Memuat…" />
         ) : packages.length === 0 ? (
@@ -204,7 +211,7 @@ export default function PackagesPage() {
                       </span>
                     ) : (
                       <span>
-                        {fmtIdr(p.price)} ·{" "}
+                        <span className="hcard-mono">{fmtIdr(p.price)}</span> ·{" "}
                         <Tag color={p.isActive ? "success" : "error"}>{p.isActive ? "Aktif" : "Nonaktif"}</Tag>
                         {p.access?.note ? ` · ${p.access.note}` : ""}
                         {` · RPM: ${p.rpmLimit != null ? p.rpmLimit : p.type === "trial" ? "20 (default trial)" : `ikut global (${globalRpm})`}`}

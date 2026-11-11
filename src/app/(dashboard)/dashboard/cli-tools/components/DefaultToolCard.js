@@ -250,7 +250,7 @@ export default function DefaultToolCard({ toolId, tool, isExpanded, onToggle, ba
   };
 
   return (
-    <Card styles={{ body: { padding: 12 } }} className="overflow-hidden overflow-x-hidden">
+    <Card styles={{ body: { padding: 12 } }} className="hcard overflow-hidden overflow-x-hidden">
       <div className="flex items-center justify-between hover:cursor-pointer" onClick={onToggle}>
         <div className="flex items-center gap-3">
           <div className="size-8 rounded-md flex items-center justify-center shrink-0">

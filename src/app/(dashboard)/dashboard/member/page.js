@@ -2,8 +2,15 @@
 
 import { useCallback, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { Alert, Button, Card, List, Segmented, Statistic, Table, Tag, Typography } from "antd";
+import { Alert, Button, Card, List, Segmented, Tag, Typography } from "antd";
 import { useCopyToClipboard } from "@/shared/hooks/useCopyToClipboard";
+import {
+  LatencyBar,
+  LatencyPanel,
+  Panel,
+  RequestFlowPanel,
+  StatCard,
+} from "@/shared/components/dashboard-cards";
 
 // Member dashboard (v1, read-only): own usage + own API keys.
 // Usage auto-refreshes by polling the scoped /api/usage/history every 5s
@@ -43,34 +50,6 @@ function fmtTime(ts) {
     return ts || "-";
   }
 }
-
-const byModelColumns = [
-  { title: "Model", dataIndex: "model", key: "model" },
-  { title: "Requests", dataIndex: "requests", key: "requests", render: (v) => fmtNum(v) },
-  { title: "Prompt", dataIndex: "promptTokens", key: "promptTokens", render: (v) => fmtNum(v) },
-  { title: "Completion", dataIndex: "completionTokens", key: "completionTokens", render: (v) => fmtNum(v) },
-  { title: "Biaya", dataIndex: "cost", key: "cost", render: (v) => fmtCost(v) },
-];
-
-const recentColumns = [
-  { title: "Waktu", dataIndex: "timestamp", key: "timestamp", render: (v) => fmtTime(v) },
-  { title: "Model", dataIndex: "model", key: "model", render: (v) => v || "-" },
-  { title: "Provider", dataIndex: "provider", key: "provider", render: (v) => v || "-" },
-  {
-    title: "Tokens",
-    dataIndex: "tokens",
-    key: "tokens",
-    render: (v) => fmtNum(v),
-  },
-  {
-    title: "Status",
-    dataIndex: "status",
-    key: "status",
-    render: (v) => (
-      <Tag color={v === "ok" ? "success" : "error"}>{v === "ok" ? "OK" : v || "-"}</Tag>
-    ),
-  },
-];
 
 export default function MemberDashboardPage() {
   const router = useRouter();
@@ -210,6 +189,23 @@ export default function MemberDashboardPage() {
       }))
     : [];
 
+  // Reference overview: no per-model latency exists in this data (the API
+  // returns requests/tokens/cost only), so the bar panel below shows real
+  // per-model REQUEST counts in the same row/bar language — never latency.
+  const maxModelRequests = byModel.reduce((m, b) => Math.max(m, b.requests || 0), 0);
+  // Request-flow entries from the same real recent-request rows. The API
+  // carries no latency and no endpoint per request, so the right-hand slot
+  // shows the real token count and the sub-line the real provider + time —
+  // no latency or endpoint is invented.
+  const flowEntries = recent.slice(0, 8).map((r) => ({
+    key: r.key,
+    status: r.status === "ok" ? "200" : r.status || "ERR",
+    endpoint: r.model || "-",
+    latency: `${fmtNum(r.tokens)} tok`,
+    model: `${r.provider || "-"} · ${fmtTime(r.timestamp)}`,
+    ok: r.status === "ok",
+  }));
+
   return (
     <div className="flex flex-col gap-4">
       <div className="flex flex-wrap items-center justify-between gap-3">
@@ -246,44 +242,42 @@ export default function MemberDashboardPage() {
 
       {/* Stat cards */}
       <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
-        <Card>
-          <Statistic title="Requests" value={loading ? "…" : fmtNum(stats?.totalRequests)} />
-        </Card>
-        <Card>
-          <Statistic title="Prompt tokens" value={loading ? "…" : fmtNum(stats?.totalPromptTokens)} />
-        </Card>
-        <Card>
-          <Statistic title="Completion tokens" value={loading ? "…" : fmtNum(stats?.totalCompletionTokens)} />
-        </Card>
-        <Card>
-          <Statistic title="Biaya" value={loading ? "…" : fmtCost(stats?.totalCost)} />
-        </Card>
+        <StatCard label="Requests" value={loading ? "…" : fmtNum(stats?.totalRequests)} />
+        <StatCard label="Prompt tokens" value={loading ? "…" : fmtNum(stats?.totalPromptTokens)} />
+        <StatCard label="Completion tokens" value={loading ? "…" : fmtNum(stats?.totalCompletionTokens)} />
+        <StatCard label="Biaya" value={loading ? "…" : fmtCost(stats?.totalCost)} />
       </div>
 
-      {/* Per-model breakdown */}
-      <Card title="Penggunaan per model">
-        <Table
-          columns={byModelColumns}
-          dataSource={byModel}
-          pagination={false}
-          scroll={{ x: 600 }}
-          locale={{ emptyText: "Belum ada request pada periode ini." }}
-        />
-      </Card>
+      {/* Per-model breakdown — request counts in the latency-bar language
+          (no per-model latency exists in this data; see note above). */}
+      <LatencyPanel title="Penggunaan per model" right={`${byModel.length} model`}>
+        {byModel.length === 0 ? (
+          <Typography.Text type="secondary">Belum ada request pada periode ini.</Typography.Text>
+        ) : (
+          byModel.slice(0, 8).map((b) => (
+            <LatencyBar
+              key={b.key}
+              name={b.model}
+              badge={(b.model || "?").slice(0, 2).toUpperCase()}
+              latencyMs={b.requests || 0}
+              maxMs={maxModelRequests}
+              display={`${fmtNum(b.requests)} req`}
+            />
+          ))
+        )}
+      </LatencyPanel>
 
-      {/* Recent requests */}
-      <Card title="Request terbaru">
-        <Table
-          columns={recentColumns}
-          dataSource={recent}
-          pagination={false}
-          scroll={{ x: 600 }}
-          locale={{ emptyText: "Belum ada request pada periode ini." }}
-        />
-      </Card>
+      {/* Recent requests — flow panel (token count + provider/time; no latency stored). */}
+      {flowEntries.length === 0 ? (
+        <Panel title="Request terbaru">
+          <Typography.Text type="secondary">Belum ada request pada periode ini.</Typography.Text>
+        </Panel>
+      ) : (
+        <RequestFlowPanel title="Request terbaru" entries={flowEntries} />
+      )}
 
       {/* Own API keys (read-only) */}
-      <Card title="Kunci API saya">
+      <Card title="Kunci API saya" className="hcard">
         {keysError && <Alert type="error" message={keysError} showIcon className="mb-3" />}
         {keys.length === 0 && !keysError ? (
           <Typography.Text type="secondary">
@@ -304,7 +298,7 @@ export default function MemberDashboardPage() {
                   title={k.name || "Unnamed key"}
                   description={
                     <div className="flex flex-col gap-0.5">
-                      <span className="font-mono text-xs">{maskKey(k.key)}</span>
+                      <span className="font-mono hcard-mono text-xs">{maskKey(k.key)}</span>
                       <span>
                         Dibuat {k.createdAt ? fmtTime(k.createdAt) : "-"} ·{" "}
                         <Tag color={k.isActive ? "success" : "error"}>
@@ -329,7 +323,7 @@ export default function MemberDashboardPage() {
       </Card>
 
       {/* Riwayat Kompensasi (§0d, read-only) */}
-      <Card title="Riwayat Kompensasi">
+      <Card title="Riwayat Kompensasi" className="hcard">
         {compensationsError && (
           <Alert type="error" message={compensationsError} showIcon className="mb-3" />
         )}
@@ -353,7 +347,7 @@ export default function MemberDashboardPage() {
       </Card>
 
       {/* Hubungkan Telegram */}
-      <Card title="Hubungkan Telegram">
+      <Card title="Hubungkan Telegram" className="hcard">
         <Typography.Paragraph type="secondary">
           Hubungkan akun Telegram kamu untuk cek penggunaan, kunci, beli paket, dan klaim trial langsung dari bot.
         </Typography.Paragraph>
@@ -362,7 +356,7 @@ export default function MemberDashboardPage() {
           <div className="flex flex-col gap-2">
             <div>
               Kode kamu:{" "}
-              <Typography.Text strong copyable={false} className="font-mono text-lg tracking-widest">
+              <Typography.Text strong copyable={false} className="font-mono hcard-mono text-lg tracking-widest">
                 {linkCode}
               </Typography.Text>{" "}
               <Typography.Text type="secondary">
@@ -376,7 +370,7 @@ export default function MemberDashboardPage() {
                   href={`https://t.me/${linkBotUsername}?start=${linkCode}`}
                   target="_blank"
                   rel="noreferrer"
-                  className="font-mono"
+                  className="font-mono hcard-mono"
                 >
                   t.me/{linkBotUsername}?start={linkCode}
                 </Typography.Link>

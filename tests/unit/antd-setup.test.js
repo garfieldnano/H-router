@@ -52,13 +52,17 @@ describe("Usage page uses antd", () => {
       "../../src/app/(dashboard)/dashboard/usage/page.js",
       "../../src/shared/components/UsageStats.js",
       "../../src/app/(dashboard)/dashboard/usage/components/UsageTable.js",
-      "../../src/app/(dashboard)/dashboard/usage/components/OverviewCards.js",
       "../../src/shared/components/RequestLogger.js",
       "../../src/app/(dashboard)/dashboard/usage/components/RequestDetailsTab.js",
     ];
     for (const f of files) {
       expect(read(f)).toContain('from "antd"');
     }
+    // OverviewCards renders the shared reference-card primitives
+    // (StatCard from dashboard-cards) instead of antd Card/Statistic.
+    expect(
+      read("../../src/app/(dashboard)/dashboard/usage/components/OverviewCards.js")
+    ).toContain("dashboard-cards");
   });
 
   it("keeps the member restrictions in the Usage page", () => {

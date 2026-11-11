@@ -75,7 +75,7 @@ export default function KeyUsagePage() {
       render: (_v, r) => (
         <div>
           <div className="font-medium">{r.keyName}</div>
-          <div className="font-mono text-xs opacity-60">{r.maskedKey || "—"}</div>
+          <div className="hcard-mono font-mono text-xs opacity-60">{r.maskedKey || "—"}</div>
           {r.isActive === false && <Typography.Text type="danger" className="text-xs">nonaktif</Typography.Text>}
         </div>
       ),
@@ -110,7 +110,7 @@ export default function KeyUsagePage() {
           ["Token output", (totals.completionTokens ?? 0).toLocaleString("id-ID")],
           ["Total biaya", `$${(totals.cost || 0).toFixed(4)}`],
         ].map(([label, value]) => (
-          <Card key={label} styles={{ body: { padding: "12px 16px" } }}>
+          <Card key={label} className="hcard-stat" styles={{ body: { padding: "12px 16px" } }}>
             <Statistic title={label} value={value} />
           </Card>
         ))}
@@ -124,7 +124,7 @@ export default function KeyUsagePage() {
         style={{ maxWidth: 384 }}
       />
 
-      <Card styles={{ body: { padding: 0 } }}>
+      <Card className="hcard-panel" styles={{ body: { padding: 0 } }}>
         <Table
           columns={columns}
           dataSource={filtered}
@@ -145,14 +145,14 @@ export default function KeyUsagePage() {
                   <ul className="mt-1 flex flex-col gap-1 text-sm">
                     {(r.models || []).map((m) => (
                       <li key={`${m.model}-${m.provider}`} className="flex justify-between gap-2">
-                        <span>{m.model} <span className="opacity-60">({m.provider})</span></span>
-                        <span className="opacity-60">{(m.requests ?? 0).toLocaleString("id-ID")} request</span>
+                        <span><span className="hcard-mono">{m.model}</span> <span className="opacity-60">({m.provider})</span></span>
+                        <span className="hcard-mono opacity-60">{(m.requests ?? 0).toLocaleString("id-ID")} request</span>
                       </li>
                     ))}
                   </ul>
                 )}
                 <p className="mt-2 text-xs opacity-60">
-                  RPM: {r.rpmLimit ?? "default"} · Batas IP: {r.maxIps ?? "default (3)"}
+                  RPM: <span className="hcard-mono">{r.rpmLimit ?? "default"}</span> · Batas IP: <span className="hcard-mono">{r.maxIps ?? "default (3)"}</span>
                 </p>
               </div>
             ),

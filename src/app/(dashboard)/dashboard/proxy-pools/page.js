@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useMemo, useState, useRef } from "react";
 import { Button, Card, Checkbox, Input, Modal, Switch, Tag } from "antd";
 import { useNotificationStore } from "@/store/notificationStore";
+import { StatCard } from "@/shared/components/dashboard-cards";
 
 // Small label+hint wrapper (replaces the shared Input's built-in label/hint).
 function Field({ label, hint, children }) {
@@ -711,8 +712,8 @@ export default function ProxyPoolsPage() {
   if (loading) {
     return (
       <div className="mx-auto flex w-full max-w-5xl flex-col gap-4 px-1 sm:gap-6 sm:px-0">
-        <Card loading />
-        <Card loading />
+        <Card loading className="hcard" />
+        <Card loading className="hcard" />
       </div>
     );
   }
@@ -790,7 +791,13 @@ export default function ProxyPoolsPage() {
         </div>
       </div>
 
-      <Card>
+      <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
+        <StatCard label="Total Pool" value={proxyPools.length} sub={activeCount + " aktif"} />
+        <StatCard label="Pool Aktif" value={activeCount} sub={proxyPools.length - activeCount + " nonaktif"} />
+        <StatCard label="Provider Auto-Rotate" value={autoRotateProviders.length} sub="provider dengan pool terikat" />
+      </div>
+
+      <Card className="hcard">
         <div className="mb-4 flex flex-wrap items-center gap-2">
           {proxyPools.length > 0 && (
             <label className="flex items-center gap-1.5 text-xs text-text-muted cursor-pointer">
@@ -798,8 +805,6 @@ export default function ProxyPoolsPage() {
               {allSelected ? "Unselect all" : "Select all"}
             </label>
           )}
-          <Tag>Total: {proxyPools.length}</Tag>
-          <Tag color="success">Active: {activeCount}</Tag>
         </div>
 
         {(selectedIds.length > 0 || healthChecking) && (
@@ -902,9 +907,9 @@ export default function ProxyPoolsPage() {
                       return <Tag color="success">relay healthy</Tag>;
                     })()}
                   </div>
-                  <p className="text-xs text-text-muted truncate mt-1">{pool.proxyUrl}</p>
+                  <p className="hcard-mono text-xs text-text-muted truncate mt-1">{pool.proxyUrl}</p>
                   {pool.noProxy ? (
-                    <p className="text-xs text-text-muted truncate">No proxy: {pool.noProxy}</p>
+                    <p className="hcard-mono text-xs text-text-muted truncate">No proxy: {pool.noProxy}</p>
                   ) : null}
                   <p className="text-[11px] text-text-muted mt-1">
                     Last tested: {formatDateTime(pool.lastTestedAt)}
@@ -954,7 +959,7 @@ export default function ProxyPoolsPage() {
         )}
       </Card>
 
-      <Card>
+      <Card className="hcard">
         <div className="mb-2">
           <h2 className="text-base font-semibold">Egress Auto-Rotate</h2>
           <p className="text-xs text-text-muted mt-1">
@@ -972,7 +977,7 @@ export default function ProxyPoolsPage() {
               return (
                 <div key={providerId} className="flex flex-col gap-2 py-3 sm:flex-row sm:items-center sm:justify-between">
                   <div>
-                    <p className="text-sm font-medium">{providerId}</p>
+                    <p className="hcard-mono text-sm font-medium">{providerId}</p>
                     <p className="text-xs text-text-muted">
                       {poolCount} pool{poolCount === 1 ? "" : "s"} bound{poolCount < 2 ? " — rotation needs at least 2 pools" : ""}
                     </p>
@@ -989,10 +994,10 @@ export default function ProxyPoolsPage() {
             })}
           </div>
         )}
-        <div className="mt-3 rounded-md border border-black/10 bg-black/[0.03] p-3 dark:border-white/10 dark:bg-white/5">
+        <div className="hcard-panel mt-3">
           <p className="text-sm font-medium">Rust Relay Sidecar</p>
           <p className="text-xs text-text-muted mt-1">
-            Self-hosted relay (<code className="text-text-main">relay/target/release/h-router-relay</code>, default listen <code className="text-text-main">127.0.0.1:20129</code>). Supports both contracts: standard HTTP proxy and <code className="text-text-main">x-relay-target</code> mode. Register it as a pool of type <code className="text-text-main">http</code> with its URL to use it as an egress relay. See <code className="text-text-main">relay/README.md</code> for build, systemd, and update steps.
+            Self-hosted relay (<code className="hcard-mono text-text-main">relay/target/release/h-router-relay</code>, default listen <code className="hcard-mono text-text-main">127.0.0.1:20129</code>). Supports both contracts: standard HTTP proxy and <code className="hcard-mono text-text-main">x-relay-target</code> mode. Register it as a pool of type <code className="hcard-mono text-text-main">http</code> with its URL to use it as an egress relay. See <code className="hcard-mono text-text-main">relay/README.md</code> for build, systemd, and update steps.
           </p>
         </div>
       </Card>

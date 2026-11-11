@@ -1,7 +1,7 @@
 "use client";
 
 import PropTypes from "prop-types";
-import { Card, Statistic } from "antd";
+import { StatCard } from "@/shared/components/dashboard-cards";
 
 const fmt = (n) => new Intl.NumberFormat().format(n || 0);
 const fmtCost = (n) => `$${(n || 0).toFixed(2)}`;
@@ -31,16 +31,12 @@ export default function OverviewCards({ stats }) {
   return (
     <div className="grid min-w-0 grid-cols-1 gap-3 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 sm:gap-4">
       {items.map((item) => (
-        <Card key={item.title} styles={{ body: { padding: "12px 16px" } }}>
-          <Statistic
-            title={item.title}
-            value={item.value}
-            valueStyle={{ fontSize: 20, fontWeight: 700 }}
-          />
-          {item.extra && (
-            <div className="text-[10px] text-text-muted">{item.extra}</div>
-          )}
-        </Card>
+        <StatCard
+          key={item.title}
+          label={item.title}
+          value={item.value}
+          sub={item.extra}
+        />
       ))}
     </div>
   );

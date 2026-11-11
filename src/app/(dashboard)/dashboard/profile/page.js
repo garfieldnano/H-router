@@ -791,7 +791,7 @@ export default function ProfilePage() {
           <p className="text-sm text-text-muted">Appearance, language, security, routing, network, and observability.</p>
         </div>
         {/* Local Mode Info */}
-        <Card>
+        <Card className="hcard">
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-4">
             <div className="flex items-center gap-3 sm:gap-4">
               <div className="size-10 sm:size-12 rounded-md bg-green-500/10 text-green-500 flex items-center justify-center shrink-0">
@@ -823,11 +823,11 @@ export default function ProfilePage() {
               ))}
             </div>
           </div>
-          <div className="flex flex-col gap-3 pt-4 border-t border-border">
+          <div className="hcard-panel flex flex-col gap-3 pt-4 border-t border-border">
             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between p-3 rounded-md bg-bg border border-border gap-2">
               <div>
                 <p className="font-medium text-sm sm:text-base">Database Location</p>
-                <p className="text-xs sm:text-sm text-text-muted font-mono break-all">~/.9router/db/data.sqlite</p>
+                <p className="hcard-mono text-xs sm:text-sm text-text-muted font-mono break-all">~/.9router/db/data.sqlite</p>
               </div>
             </div>
             <div className="flex flex-col sm:flex-row gap-2">
@@ -864,7 +864,7 @@ export default function ProfilePage() {
         </Card>
 
         {/* Language */}
-        <Card>
+        <Card className="hcard">
           <div className="flex items-center gap-3 mb-4">
             <div className="size-10 rounded-md bg-blue-500/10 text-blue-500 flex items-center justify-center shrink-0">
               <span className="material-symbols-outlined text-[20px]">language</span>
@@ -882,7 +882,7 @@ export default function ProfilePage() {
         </Card>
 
         {/* Security */}
-        <Card>
+        <Card className="hcard">
           <div className="flex items-center gap-3 mb-4">
             <div className="p-2 rounded-md bg-primary/10 text-primary shrink-0">
               <span className="material-symbols-outlined text-[20px]">shield</span>
@@ -964,7 +964,7 @@ export default function ProfilePage() {
         </Card>
 
         {/* Single Sign-On (SSO) */}
-        <Card>
+        <Card className="hcard">
           <button
             type="button"
             onClick={() => setOidcExpanded((v) => !v)}
@@ -1449,7 +1449,7 @@ export default function ProfilePage() {
         </Card>
 
         {/* Routing Preferences */}
-        <Card>
+        <Card className="hcard">
           <div className="flex items-center gap-3 mb-4">
             <div className="p-2 rounded-md bg-blue-500/10 text-blue-500 shrink-0">
               <span className="material-symbols-outlined text-[20px]">route</span>
@@ -1559,7 +1559,7 @@ export default function ProfilePage() {
         </Card>
 
         {/* Network */}
-        <Card>
+        <Card className="hcard">
           <div className="flex items-center gap-3 mb-4">
             <div className="p-2 rounded-md bg-purple-500/10 text-purple-500 shrink-0">
               <span className="material-symbols-outlined text-[20px]">wifi</span>
@@ -1629,7 +1629,7 @@ export default function ProfilePage() {
         </Card>
 
         {/* Observability Settings */}
-        <Card>
+        <Card className="hcard">
           <div className="flex items-center gap-3 mb-4">
             <div className="p-2 rounded-md bg-orange-500/10 text-orange-500 shrink-0">
               <span className="material-symbols-outlined text-[20px]">monitoring</span>

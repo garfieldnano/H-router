@@ -288,7 +288,7 @@ default_subagent_model = "${effectiveSubagentModel}"
   };
 
   return (
-    <Card styles={{ body: { padding: 12 } }} className="overflow-hidden">
+    <Card styles={{ body: { padding: 12 } }} className="hcard overflow-hidden">
       <div className="flex items-start justify-between gap-3 hover:cursor-pointer sm:items-center" onClick={onToggle}>
         <div className="flex min-w-0 items-center gap-3">
           <div className="size-8 flex items-center justify-center shrink-0">
@@ -345,10 +345,10 @@ default_subagent_model = "${effectiveSubagentModel}"
                       <p className="text-text-muted mb-1">macOS / Linux / Windows:</p>
                       <code className="block px-3 py-2 bg-black/5 dark:bg-white/5 rounded font-mono text-xs">npm install -g @openai/codex</code>
                     </div>
-                    <p className="text-text-muted">After installation, run <code className="px-1 bg-black/5 dark:bg-white/5 rounded">codex</code> to verify.</p>
+                    <p className="text-text-muted">After installation, run <code className="hcard-mono px-1 bg-black/5 dark:bg-white/5 rounded">codex</code> to verify.</p>
                     <div className="pt-2 border-t border-border">
                       <p className="text-text-muted text-xs">
-                        Codex reads custom providers from <code className="px-1 bg-black/5 dark:bg-white/5 rounded">~/.codex/config.toml</code>.
+                        Codex reads custom providers from <code className="hcard-mono px-1 bg-black/5 dark:bg-white/5 rounded">~/.codex/config.toml</code>.
                         Click &quot;Apply&quot; to auto-configure.
                       </p>
                     </div>

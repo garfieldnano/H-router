@@ -33,7 +33,7 @@ function SkillRow({ skill }) {
   return (
     <Card
       styles={{ body: { padding: 16 } }}
-      className={skill.isEntry ? "!border-[#05f170]/40 !bg-[#05f170]/5" : ""}
+      className={`hcard-panel ${skill.isEntry ? "!border-[#05f170]/40 !bg-[#05f170]/5" : ""}`}
     >
       <div className="flex items-start gap-3">
         <div
@@ -50,7 +50,7 @@ function SkillRow({ skill }) {
             {skill.isEntry && <Tag color="#05f170">START HERE</Tag>}
             {skill.endpoint && (
               <Tag>
-                <code className="text-[10px]">{skill.endpoint}</code>
+                <code className="hcard-mono text-[10px]">{skill.endpoint}</code>
               </Tag>
             )}
           </div>
@@ -59,7 +59,7 @@ function SkillRow({ skill }) {
             href={getSkillBlobUrl(skill.id)}
             target="_blank"
             rel="noreferrer"
-            className="text-[11px] text-text-muted hover:text-primary mt-1 inline-flex items-center gap-1 break-all"
+            className="hcard-mono text-[11px] text-text-muted hover:text-primary mt-1 inline-flex items-center gap-1 break-all"
           >
             {url}
             <span className="material-symbols-outlined text-[12px]">open_in_new</span>
@@ -79,9 +79,9 @@ export default function SkillsPage() {
         <h1 className="text-xl font-semibold tracking-tight text-text-main">Skills</h1>
         <p className="text-sm text-text-muted">Skill files for AI coding assistants — paste the entry skill into your AI to get started.</p>
       </div>
-      <Card>
+      <Card className="hcard-panel">
         <div className="text-xs text-text-muted mb-2">Paste this to your AI:</div>
-        <div className="px-3 py-2 rounded bg-surface-2 font-mono text-[12px] text-text-main">
+        <div className="hcard-mono px-3 py-2 rounded bg-surface-2 font-mono text-[12px] text-text-main">
           Read this skill and use it: {getSkillRawUrl("9router")}
         </div>
       </Card>
@@ -92,7 +92,7 @@ export default function SkillsPage() {
         ))}
       </div>
 
-      <Card>
+      <Card className="hcard-panel">
         <div className="flex items-center justify-between gap-3 flex-wrap">
           <div>
             <h2 className="text-sm font-semibold text-text-main">More on GitHub</h2>

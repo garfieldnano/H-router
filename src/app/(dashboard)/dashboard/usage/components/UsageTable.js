@@ -187,7 +187,7 @@ export default function UsageTable({
   const expandedKeys = useMemo(() => [...expanded], [expanded]);
 
   return (
-    <Card title={title || undefined} styles={{ body: { padding: 0 } }}>
+    <Card title={title || undefined} styles={{ body: { padding: 0 } }} className="hcard-panel">
       <Table
         columns={antdColumns}
         dataSource={dataSource}

@@ -541,7 +541,7 @@ export default function TokenSaverClient() {
           Shrink tokens in and out — compress tool output, context, and replies before they reach the model.
         </p>
       </div>
-      <Card id="rtk">
+      <Card id="rtk" className="hcard-panel">
         <div className="flex items-center justify-between pt-2 pb-4 border-b border-border gap-4">
           <div className="min-w-0 flex-1">
             <p className="font-medium">
@@ -584,7 +584,7 @@ export default function TokenSaverClient() {
                     key={key}
                     className="flex items-center justify-between gap-4"
                   >
-                    <code className="text-sm break-all">{key}</code>
+                    <code className="hcard-mono text-sm break-all">{key}</code>
                     <div className="flex items-center gap-3 shrink-0">
                       <span className="text-xs text-text-muted">
                         {enabled ? "On" : "Off"}
@@ -657,7 +657,7 @@ export default function TokenSaverClient() {
               </Button>
             </div>
             <p className="text-sm text-text-muted mt-1">
-              Compress prompts via /v1/compress before routing to the model
+              Compress prompts via <code className="hcard-mono">/v1/compress</code> before routing to the model
             </p>
           </div>
           <Switch
@@ -756,11 +756,11 @@ export default function TokenSaverClient() {
               </pre>
             )}
             <p className="text-xs text-text-muted mt-1">
-              Installing adds the package; use <code>on</code>/<code>off</code>{" "}
+              Installing adds the package; use <code className="hcard-mono">on</code>/<code className="hcard-mono">off</code>{" "}
               to activate it (restarts the proxy). Default install is{" "}
-              <code>[proxy]</code> only (SmartCrusher for JSON). Adding{" "}
-              <code>[code]</code> enables AST compression
-              (Python/JS/TS/Go/Rust/Java/C/C++/Perl). Adding <code>[ml]</code>{" "}
+              <code className="hcard-mono">[proxy]</code> only (SmartCrusher for JSON). Adding{" "}
+              <code className="hcard-mono">[code]</code> enables AST compression
+              (Python/JS/TS/Go/Rust/Java/C/C++/Perl). Adding <code className="hcard-mono">[ml]</code>{" "}
               enables the Kompress-v2 HF model for prose/agentic traces but
               adds ~1 GB (torch + huggingface-hub).
             </p>
@@ -1119,7 +1119,7 @@ export default function TokenSaverClient() {
                 {pxpipeActionLoading || pxpipeStatus.installing ? "Installing…" : "Install"}
               </Button>
               <p className="text-xs text-text-muted">
-                Installs the npm package <code className="font-mono">pxpipe-proxy</code> into
+                Installs the npm package <code className="hcard-mono">pxpipe-proxy</code> into
                 the H-router data directory. May take a few minutes.
               </p>
             </div>
