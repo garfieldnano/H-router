@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { requireBotService } from "@/lib/bot/serviceAuth";
-import { getMemberById, getMemberUsageStats } from "@/lib/localDb";
+import { getMemberById, getApiKeysByMemberId, getMemberUsageStats } from "@/lib/localDb";
 
 export const dynamic = "force-dynamic";
 
@@ -19,7 +19,9 @@ export async function GET(request, { params }) {
     if (!PERIODS.includes(period)) {
       return NextResponse.json({ error: "period tidak valid" }, { status: 400 });
     }
-    const stats = await getMemberUsageStats(id, period);
+    // getMemberUsageStats expects API key VALUES (array), not a member id.
+    const ownKeys = await getApiKeysByMemberId(id);
+    const stats = await getMemberUsageStats(ownKeys.map((k) => k.key), period);
     return NextResponse.json({ member: { id: member.id, name: member.name }, period, ...stats });
   } catch (error) {
     console.log("Error fetching member usage for bot:", error);

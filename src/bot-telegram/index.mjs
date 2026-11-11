@@ -91,6 +91,19 @@ async function main() {
   });
   prober.start();
 
+  // Register bot commands so Telegram shows the Menu button (bottom-left)
+  // with /start, /menu and /admin. Without this the client shows no menu.
+  try {
+    await bot.telegram.setMyCommands([
+      { command: "start", description: "Mulai / tampilkan menu" },
+      { command: "menu", description: "Tampilkan menu utama" },
+      { command: "admin", description: "Panel admin (owner)" },
+    ]);
+    console.log("[bot] commands terdaftar (/start, /menu, /admin).");
+  } catch (e) {
+    console.error("[bot] gagal mendaftarkan commands:", e?.message || e);
+  }
+
   await bot.launch();
   console.log("[bot] polling berjalan (Telegraf long-polling). Tekan Ctrl+C untuk berhenti.");
 

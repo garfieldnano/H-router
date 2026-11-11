@@ -86,6 +86,17 @@ export function registerMemberHandlers(bot, { api, state, runtime }) {
     }
   });
 
+  // /menu — same as /start (no payload): show the main menu. Registered
+  // via setMyCommands so Telegram shows the Menu button (bottom-left).
+  bot.command("menu", async (ctx) => {
+    try {
+      const member = await resolveMember(ctx);
+      await showMenu(ctx, member);
+    } catch (e) {
+      await ctx.reply(`Terjadi kesalahan: ${e.message}`);
+    }
+  });
+
   bot.action("m:menu", async (ctx) => {
     await ctx.answerCbQuery().catch(() => {});
     const member = await resolveMember(ctx);
