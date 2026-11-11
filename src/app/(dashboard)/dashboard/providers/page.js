@@ -404,7 +404,13 @@ export default function ProvidersPage() {
 
   return (
     <div className="flex min-w-0 flex-col gap-6 px-1 sm:px-0">
-      <div className="flex items-center justify-end">
+      <div className="flex flex-wrap items-end justify-between gap-3">
+        <div>
+          <h1 className="text-xl font-semibold text-text-main">Providers</h1>
+          <p className="text-sm text-text-muted">
+            OAuth, free-tier, API-key, and custom compatible providers — connection status at a glance.
+          </p>
+        </div>
         <Select
           value={statusFilter}
           onChange={(v) => setStatusFilter(v)}
@@ -415,7 +421,7 @@ export default function ProvidersPage() {
       </div>
 
       {!hasAnyResult && (
-        <div className="text-center py-8 border border-dashed border-border rounded-xl">
+        <div className="text-center py-8 border border-dashed border-border rounded-md">
           <span className="material-symbols-outlined text-[32px] text-text-muted mb-2">
             search_off
           </span>
@@ -428,7 +434,7 @@ export default function ProvidersPage() {
       {/* Custom Providers (OpenAI/Anthropic Compatible) — dynamic */}
       <div className="flex flex-col gap-4">
         <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-          <h2 className="text-lg sm:text-xl font-semibold flex items-center gap-2 leading-tight">
+          <h2 className="text-base font-semibold flex items-center gap-2 leading-tight">
             Custom Providers (OpenAI/Anthropic Compatible){" "}
           </h2>
 {!isMember && (
@@ -453,7 +459,7 @@ export default function ProvidersPage() {
         </div>
         {compatibleProviders.length === 0 &&
         anthropicCompatibleProviders.length === 0 ? (
-          <div className="flex items-center justify-center gap-2 py-2 border border-dashed border-border rounded-xl text-text-muted text-sm">
+          <div className="flex items-center justify-center gap-2 py-2 border border-dashed border-border rounded-md text-text-muted text-sm">
             <span className="material-symbols-outlined text-[18px]">extension</span>
             <span>{isMember ? "No custom providers" : "No custom providers — use buttons above to add OpenAI/Anthropic compatible endpoints"}</span>
           </div>
@@ -482,7 +488,7 @@ export default function ProvidersPage() {
       {oauthEntries.length > 0 && (
       <div className="flex flex-col gap-4">
         <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-          <h2 className="text-lg sm:text-xl font-semibold flex items-center gap-2 leading-tight">
+          <h2 className="text-base font-semibold flex items-center gap-2 leading-tight">
             OAuth Providers
           </h2>
           <div className="flex w-full flex-col gap-2 sm:w-auto sm:flex-row sm:items-center">
@@ -524,7 +530,7 @@ export default function ProvidersPage() {
       {(freeEntries.length > 0 || freeTierEntries.length > 0) && (
       <div className="flex flex-col gap-4">
         <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-          <h2 className="text-lg sm:text-xl font-semibold flex items-center gap-2 leading-tight">
+          <h2 className="text-base font-semibold flex items-center gap-2 leading-tight">
             Free Tier Providers
           </h2>
           {!isMember && (
@@ -581,7 +587,7 @@ export default function ProvidersPage() {
       {apikeyEntries.length > 0 && (
       <div className="flex flex-col gap-4">
         <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-          <h2 className="text-lg sm:text-xl font-semibold flex items-center gap-2 leading-tight">
+          <h2 className="text-base font-semibold flex items-center gap-2 leading-tight">
             API Key Providers{" "}
           </h2>
           {!isMember && (
@@ -692,7 +698,7 @@ function ProviderCard({ providerId, provider, stats, authType, onToggle, isMembe
         <div className="flex min-w-0 items-center justify-between gap-3">
           <div className="flex min-w-0 items-center gap-3">
             <div
-              className="size-8 shrink-0 rounded-lg flex items-center justify-center"
+              className="size-8 shrink-0 rounded-md flex items-center justify-center"
               style={{
                 backgroundColor: `${provider.color?.length > 7 ? provider.color : provider.color + "15"}`,
               }}
@@ -823,7 +829,7 @@ function ApiKeyProviderCard({
         <div className="flex min-w-0 items-center justify-between gap-3">
           <div className="flex min-w-0 items-center gap-3">
             <div
-              className="size-8 shrink-0 rounded-lg flex items-center justify-center"
+              className="size-8 shrink-0 rounded-md flex items-center justify-center"
               style={{
                 backgroundColor: `${provider.color?.length > 7 ? provider.color : provider.color + "15"}`,
               }}
@@ -963,7 +969,7 @@ function ProviderTestResultsView({ results }) {
       {items.map((r, i) => (
         <div
           key={r.connectionId || i}
-          className="flex min-w-0 flex-wrap items-center gap-2 rounded-lg bg-black/[0.03] px-3 py-2 text-xs dark:bg-white/[0.03] sm:flex-nowrap"
+          className="flex min-w-0 flex-wrap items-center gap-2 rounded-md bg-black/[0.03] px-3 py-2 text-xs dark:bg-white/[0.03] sm:flex-nowrap"
         >
           <span
             className={`material-symbols-outlined text-[16px] ${r.valid ? "text-emerald-500" : "text-red-500"}`}

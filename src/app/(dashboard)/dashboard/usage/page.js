@@ -2,7 +2,7 @@
 
 import { Suspense, useState } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
-import { Segmented } from "antd";
+import { Segmented, Typography } from "antd";
 import { RequestLogger, CardSkeleton } from "@/shared/components";
 import UsageStats from "@/shared/components/UsageStats";
 import RequestDetailsTab from "./components/RequestDetailsTab";
@@ -45,7 +45,15 @@ function UsageContent() {
   };
 
   return (
-    <div className="flex min-w-0 flex-col gap-6 px-1 sm:px-0">
+    <div className="flex min-w-0 flex-col gap-4 px-1 sm:px-0">
+      <div>
+        <Typography.Title level={2} style={{ margin: 0 }}>
+          Usage
+        </Typography.Title>
+        <Typography.Text type="secondary">
+          Token, biaya &amp; request — per model, akun, kunci, dan endpoint.
+        </Typography.Text>
+      </div>
       {/* Tabs + period selector on same row */}
       <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
         <Segmented

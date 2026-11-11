@@ -119,7 +119,7 @@ export default function PackagesPage() {
   return (
     <div className="flex flex-col gap-6">
       <div>
-        <h1 className="text-2xl font-bold text-text-main">Paket &amp; Harga</h1>
+        <h1 className="text-xl font-semibold tracking-tight text-text-main">Paket &amp; Harga</h1>
         <p className="text-sm text-text-muted">
           Paket yang dijual lewat bot Telegram. Harga bisa diubah kapan saja — dari sini atau dari panel admin bot.
           Paket trial gratis (1 hari, sekali per pengguna) dibuat dengan tipe Trial.
@@ -176,7 +176,7 @@ export default function PackagesPage() {
         ) : (
           <div className="flex flex-col gap-3">
             {packages.map((p) => (
-              <div key={p.id} className="flex flex-wrap items-center justify-between gap-3 rounded-lg border border-border-subtle bg-bg-subtle p-3">
+              <div key={p.id} className="flex flex-wrap items-center justify-between gap-3 rounded-md border border-border-subtle bg-bg-subtle p-3">
                 <div>
                   <div className="font-medium text-text-main">
                     {p.name}{" "}

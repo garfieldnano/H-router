@@ -3,7 +3,7 @@
 // address shown in code samples; override it with
 // NEXT_PUBLIC_HROUTER_BASE_URL when this repo is deployed elsewhere.
 export const LANDING_CONFIG = {
-  brand: "h-router",
+  brand: "H-router",
   accent: "#05f170",
   baseUrl: (process.env.NEXT_PUBLIC_HROUTER_BASE_URL || "https://h-router.web.id/v1").replace(/\/+$/, ""),
   docsUrl: "https://github.com/garfieldnano/H-router/tree/master/docs/h-router",

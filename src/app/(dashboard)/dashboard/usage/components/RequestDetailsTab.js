@@ -266,7 +266,7 @@ export default function RequestDetailsTab() {
             </span>
           ),
           children: (
-            <pre className="max-h-[300px] max-w-full overflow-auto rounded-lg border border-black/5 bg-black/5 p-3 font-mono text-xs text-text-main dark:border-white/5 dark:bg-white/5 sm:p-4">
+            <pre className="max-h-[300px] max-w-full overflow-auto rounded-md border border-black/5 bg-black/5 p-3 font-mono text-xs text-text-main dark:border-white/5 dark:bg-white/5 sm:p-4">
               {JSON.stringify(selectedDetail.request, null, 2)}
             </pre>
           ),
@@ -282,7 +282,7 @@ export default function RequestDetailsTab() {
                   </span>
                 ),
                 children: (
-                  <pre className="max-h-[300px] max-w-full overflow-auto rounded-lg border border-black/5 bg-black/5 p-3 font-mono text-xs text-text-main dark:border-white/5 dark:bg-white/5 sm:p-4">
+                  <pre className="max-h-[300px] max-w-full overflow-auto rounded-md border border-black/5 bg-black/5 p-3 font-mono text-xs text-text-main dark:border-white/5 dark:bg-white/5 sm:p-4">
                     {JSON.stringify(selectedDetail.providerRequest, null, 2)}
                   </pre>
                 ),
@@ -300,7 +300,7 @@ export default function RequestDetailsTab() {
                   </span>
                 ),
                 children: (
-                  <pre className="max-h-[300px] max-w-full overflow-auto rounded-lg border border-black/5 bg-black/5 p-3 font-mono text-xs text-text-main dark:border-white/5 dark:bg-white/5 sm:p-4">
+                  <pre className="max-h-[300px] max-w-full overflow-auto rounded-md border border-black/5 bg-black/5 p-3 font-mono text-xs text-text-main dark:border-white/5 dark:bg-white/5 sm:p-4">
                     {typeof selectedDetail.providerResponse === "object"
                       ? JSON.stringify(selectedDetail.providerResponse, null, 2)
                       : selectedDetail.providerResponse}
@@ -325,7 +325,7 @@ export default function RequestDetailsTab() {
                     <span className="material-symbols-outlined text-[16px]">psychology</span>
                     Thinking Process
                   </h4>
-                  <pre className="max-h-[200px] max-w-full overflow-auto rounded-lg border border-amber-200 bg-amber-50 p-3 font-mono text-xs text-amber-900 dark:border-amber-800 dark:bg-amber-950/30 dark:text-amber-100 sm:p-4">
+                  <pre className="max-h-[200px] max-w-full overflow-auto rounded-md border border-amber-200 bg-amber-50 p-3 font-mono text-xs text-amber-900 dark:border-amber-800 dark:bg-amber-950/30 dark:text-amber-100 sm:p-4">
                     {selectedDetail.response.thinking}
                   </pre>
                 </div>
@@ -334,7 +334,7 @@ export default function RequestDetailsTab() {
                 <h4 className="font-semibold text-text-main mb-2 text-xs uppercase tracking-wide opacity-70">
                   Content
                 </h4>
-                <pre className="max-h-[300px] max-w-full overflow-auto rounded-lg border border-black/5 bg-black/5 p-3 font-mono text-xs text-text-main dark:border-white/5 dark:bg-white/5 sm:p-4">
+                <pre className="max-h-[300px] max-w-full overflow-auto rounded-md border border-black/5 bg-black/5 p-3 font-mono text-xs text-text-main dark:border-white/5 dark:bg-white/5 sm:p-4">
                   {selectedDetail.response?.content || "[No content]"}
                 </pre>
               </div>
@@ -504,7 +504,7 @@ export default function RequestDetailsTab() {
             </div>
 
             {selectedDetail.pxpipe && (
-              <div className="rounded-lg border border-black/5 dark:border-white/5 p-4">
+              <div className="rounded-md border border-black/5 dark:border-white/5 p-4">
                 <div className="flex items-center gap-2 mb-2">
                   <span className="material-symbols-outlined text-[18px] text-text-muted">image</span>
                   <span className="font-semibold text-sm text-text-main">PXPIPE</span>

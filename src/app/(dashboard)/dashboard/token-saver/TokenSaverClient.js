@@ -534,16 +534,14 @@ export default function TokenSaverClient() {
             : "Stopped";
 
   return (
-    <div className="space-y-6 p-6">
+    <div className="flex min-w-0 flex-col gap-6 px-1 sm:px-0">
+      <div>
+        <h1 className="text-xl font-semibold text-text-main">Token Saver</h1>
+        <p className="text-sm text-text-muted">
+          Shrink tokens in and out — compress tool output, context, and replies before they reach the model.
+        </p>
+      </div>
       <Card id="rtk">
-        <div className="flex items-center justify-between mb-2">
-          <h2 className="text-lg font-semibold flex items-center gap-2">
-            <span className="material-symbols-outlined text-primary">
-              bolt
-            </span>
-            Token Saver
-          </h2>
-        </div>
         <div className="flex items-center justify-between pt-2 pb-4 border-b border-border gap-4">
           <div className="min-w-0 flex-1">
             <p className="font-medium">
@@ -552,7 +550,7 @@ export default function TokenSaverClient() {
                 href="https://github.com/rtk-ai/rtk"
                 target="_blank"
                 rel="noreferrer"
-                className="text-xs font-normal text-primary underline hover:opacity-80"
+                className="text-xs font-normal text-[var(--daytona-link)] underline hover:opacity-80"
               >
                 (RTK)
               </a>
@@ -648,7 +646,7 @@ export default function TokenSaverClient() {
                   href="https://github.com/chopratejas/headroom"
                   target="_blank"
                   rel="noreferrer"
-                  className="text-xs font-normal text-primary underline hover:opacity-80"
+                  className="text-xs font-normal text-[var(--daytona-link)] underline hover:opacity-80"
                 >
                   (Headroom)
                 </a>
@@ -687,7 +685,7 @@ export default function TokenSaverClient() {
                   return (
                     <div
                       key={extra}
-                      className="flex items-center gap-1.5 text-xs px-2 py-1 rounded border border-success/40 bg-success/5 text-text"
+                      className="flex items-center gap-1.5 text-xs px-2 py-1 rounded-md border border-success/40 bg-success/5 text-text"
                       title={extraTitle}
                     >
                       <Switch
@@ -714,9 +712,9 @@ export default function TokenSaverClient() {
                 return (
                   <label
                     key={extra}
-                    className={`flex items-center gap-1.5 text-xs px-2 py-1 rounded border cursor-pointer transition-colors ${
+                    className={`flex items-center gap-1.5 text-xs px-2 py-1 rounded-md border cursor-pointer transition-colors ${
                       pending
-                        ? "border-primary bg-primary/10 text-primary"
+                        ? "border-[#05f170]/50 bg-[#05f170]/10 text-[var(--daytona-link)]"
                         : "border-border text-text-muted hover:bg-surface-2"
                     }`}
                     title={extraTitle}
@@ -747,13 +745,13 @@ export default function TokenSaverClient() {
               )}
             </div>
             {extrasActionError && (
-              <p className="text-xs text-error mt-1">{extrasActionError}</p>
+              <p className="text-xs text-danger mt-1">{extrasActionError}</p>
             )}
             {restartingProxy && (
               <p className="text-xs text-text-muted mt-1">Restarting proxy…</p>
             )}
             {(extrasActionLoading || removingExtra) && installLog && (
-              <pre className="mt-2 max-h-32 overflow-auto rounded bg-surface-2 p-2 text-[10px] leading-tight text-text-muted whitespace-pre-wrap">
+              <pre className="mt-2 max-h-32 overflow-auto rounded-md bg-surface-2 p-2 text-[10px] leading-tight text-text-muted whitespace-pre-wrap">
                 {installLog}
               </pre>
             )}
@@ -776,7 +774,7 @@ export default function TokenSaverClient() {
                 href="https://github.com/JuliusBrussee/caveman"
                 target="_blank"
                 rel="noreferrer"
-                className="text-xs font-normal text-primary underline hover:opacity-80"
+                className="text-xs font-normal text-[var(--daytona-link)] underline hover:opacity-80"
               >
                 (Caveman)
               </a>
@@ -795,7 +793,7 @@ export default function TokenSaverClient() {
                       onClick={() => handleCavemanLevel(lvl.id)}
                       className={`px-3 py-1.5 rounded text-xs font-medium border transition-colors ${
                         cavemanLevel === lvl.id
-                          ? "bg-primary text-white border-primary"
+                          ? "border-[#05f170]/50 bg-[#05f170]/10 text-[var(--daytona-link)]"
                           : "bg-transparent border-border text-text-muted hover:bg-surface-2"
                       }`}
                       title={lvl.desc}
@@ -804,7 +802,7 @@ export default function TokenSaverClient() {
                     </button>
                   ))}
                 </div>
-                <p className="text-xs text-primary">
+                <p className="text-xs text-[var(--daytona-link)]">
                   {
                     CAVEMAN_LEVELS.find((lvl) => lvl.id === cavemanLevel)
                       ?.desc
@@ -826,7 +824,7 @@ export default function TokenSaverClient() {
                 href="https://github.com/DietrichGebert/ponytail"
                 target="_blank"
                 rel="noreferrer"
-                className="text-xs font-normal text-primary underline hover:opacity-80"
+                className="text-xs font-normal text-[var(--daytona-link)] underline hover:opacity-80"
               >
                 (Ponytail)
               </a>
@@ -846,7 +844,7 @@ export default function TokenSaverClient() {
                       onClick={() => handlePonytailLevel(lvl.id)}
                       className={`px-3 py-1.5 rounded text-xs font-medium border transition-colors ${
                         ponytailLevel === lvl.id
-                          ? "bg-primary text-white border-primary"
+                          ? "border-[#05f170]/50 bg-[#05f170]/10 text-[var(--daytona-link)]"
                           : "bg-transparent border-border text-text-muted hover:bg-surface-2"
                       }`}
                       title={lvl.desc}
@@ -855,7 +853,7 @@ export default function TokenSaverClient() {
                     </button>
                   ))}
                 </div>
-                <p className="text-xs text-primary">
+                <p className="text-xs text-[var(--daytona-link)]">
                   {
                     PONYTAIL_LEVELS.find((lvl) => lvl.id === ponytailLevel)
                       ?.desc
@@ -910,7 +908,7 @@ export default function TokenSaverClient() {
                   href="https://github.com/teamchong/pxpipe"
                   target="_blank"
                   rel="noreferrer"
-                  className="text-xs font-normal text-primary underline hover:opacity-80"
+                  className="text-xs font-normal text-[var(--daytona-link)] underline hover:opacity-80"
                 >
                   (PXPIPE)
                 </a>
@@ -921,7 +919,7 @@ export default function TokenSaverClient() {
               </Button>
               <a
                 href="/dashboard/pxpipe"
-                className="text-xs text-primary underline hover:opacity-80"
+                className="text-xs text-[var(--daytona-link)] underline hover:opacity-80"
               >
                 Dashboard
               </a>
@@ -963,7 +961,7 @@ export default function TokenSaverClient() {
               href="/api/headroom/proxy/dashboard"
               target="_blank"
               rel="noreferrer"
-              className="w-full rounded border border-border px-4 py-2 text-center text-sm hover:bg-surface-2"
+              className="w-full rounded-md border border-border px-4 py-2 text-center text-sm hover:bg-surface-2"
             >
               Open Headroom Dashboard
             </a>
@@ -1032,7 +1030,7 @@ export default function TokenSaverClient() {
             <div className="flex flex-col gap-1">
               <p className="text-sm font-medium">Install then click Start:</p>
               <div className="flex items-center gap-2">
-                <pre className="flex-1 rounded bg-black/5 dark:bg-white/5 p-2 text-xs font-mono overflow-x-auto">
+                <pre className="flex-1 rounded-md bg-black/5 dark:bg-white/5 p-2 text-xs font-mono overflow-x-auto">
                   {`pip install "headroom-ai[proxy]"`}
                 </pre>
                 <Button
@@ -1091,7 +1089,7 @@ export default function TokenSaverClient() {
             </span>
           </div>
           {pxpipeHealth?.checks?.length > 0 && (
-            <div className="flex flex-col gap-1 rounded border border-border p-3">
+            <div className="flex flex-col gap-1 rounded-md border border-border p-3">
               <p className="text-sm font-medium mb-1">Health check</p>
               {pxpipeHealth.checks.map((check) => (
                 <div key={check.id} className="flex items-center justify-between text-xs">
@@ -1122,7 +1120,7 @@ export default function TokenSaverClient() {
               </Button>
               <p className="text-xs text-text-muted">
                 Installs the npm package <code className="font-mono">pxpipe-proxy</code> into
-                the 9Router data directory. May take a few minutes.
+                the H-router data directory. May take a few minutes.
               </p>
             </div>
           ) : (
@@ -1146,7 +1144,7 @@ export default function TokenSaverClient() {
               </Button>
               <a
                 href="/dashboard/pxpipe#logs"
-                className="col-span-2 rounded border border-border px-4 py-2 text-center text-sm hover:bg-surface-2"
+                className="col-span-2 rounded-md border border-border px-4 py-2 text-center text-sm hover:bg-surface-2"
               >
                 Open Logs
               </a>

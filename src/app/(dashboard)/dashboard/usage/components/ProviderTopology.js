@@ -36,10 +36,10 @@ function ProviderNode({ data }) {
   const [imgError, setImgError] = useState(false);
   return (
     <div
-      className="flex items-center gap-2.5 px-4 py-2.5 rounded-lg border-2 transition-all duration-300 bg-bg"
+      className="flex items-center gap-2.5 px-4 py-2.5 rounded-md border transition-all duration-300 bg-[var(--daytona-panel)]"
       style={{
-        borderColor: active ? color : "var(--color-border)",
-        boxShadow: active ? `0 0 16px ${color}40` : "none",
+        borderColor: active ? color : "var(--daytona-border)",
+        boxShadow: "none",
         minWidth: "150px",
       }}
     >
@@ -73,7 +73,7 @@ function ProviderNode({ data }) {
 
       {/* Provider name */}
       <span
-        className="text-base font-medium truncate"
+        className="text-sm font-medium truncate"
         style={{ color: active ? color : "var(--color-text)" }}
       >
         {label}
@@ -99,10 +99,10 @@ function RouterNode({ data }) {
   const powering = (data.activeCount || 0) > 0;
   return (
     <div
-      className={`relative z-[1] flex items-center justify-center px-5 py-3 rounded-xl border-2 min-w-[130px] ${
+      className={`relative z-[1] flex items-center justify-center px-5 py-3 rounded-md border min-w-[130px] bg-[var(--daytona-panel)] ${
         powering
-          ? "topology-router-core border-yellow-300 bg-gradient-to-br from-primary/30 via-yellow-400/20 to-cyan-400/25"
-          : "border-primary bg-primary/5 shadow-md"
+          ? "border-success"
+          : "border-border"
       }`}
     >
       <Handle type="source" position={Position.Top} id="top" className="!bg-transparent !border-0 !w-0 !h-0" />
@@ -112,16 +112,16 @@ function RouterNode({ data }) {
 
       <img
         src="/favicon.svg"
-        alt="h-router"
-        className={`w-6 h-6 mr-2 ${powering ? "topology-router-icon" : ""}`}
+        alt="H-router"
+        className="w-6 h-6 mr-2"
         loading="lazy"
         decoding="async"
       />
-      <span className={`text-sm font-bold ${powering ? "topology-router-label text-yellow-300" : "text-primary"}`}>
-        h-router
+      <span className="text-sm font-bold text-success">
+        H-router
       </span>
       {data.activeCount > 0 && (
-        <span className="ml-2 px-1.5 py-0.5 rounded-full bg-yellow-400 text-black text-xs font-bold topology-router-badge">
+        <span className="ml-2 px-1.5 py-0.5 rounded-full bg-success text-black text-xs font-bold">
           {data.activeCount}
         </span>
       )}
@@ -295,7 +295,7 @@ function buildLayout(providers, activeSet, lastSet, errorSet) {
     if (error) return { stroke: "#ef4444", strokeWidth: 2.5, opacity: 0.9 };
     if (active) return { stroke: "#22d3ee", strokeWidth: 3.5, opacity: 1 };
     if (last) return { stroke: "#f59e0b", strokeWidth: 2, opacity: 0.7 };
-    return { stroke: "var(--color-border)", strokeWidth: 1, opacity: 0.3 };
+    return { stroke: "var(--color-border)", strokeWidth: 1.5, opacity: 0.55 };
   };
 
   providers.forEach((p, i) => {
@@ -437,7 +437,7 @@ export default function ProviderTopology({ providers = [], activeRequests = [], 
   }, [nodes.length]);
 
   return (
-    <div ref={containerRef} className="h-[320px] w-full min-w-0 rounded-lg border border-border bg-bg-subtle/30 sm:h-[480px]">
+    <div ref={containerRef} className="h-[320px] w-full min-w-0 rounded-md border border-border bg-bg-subtle/30 sm:h-[480px]">
       {providers.length === 0 ? (
         <div className="h-full flex items-center justify-center text-text-muted text-sm">
           No providers connected

@@ -58,14 +58,14 @@ function MediaProviderCard({ provider, kind, connections, isCustom, onToggle }) 
         <div className="flex min-w-0 items-center justify-between gap-3">
           <div className="flex min-w-0 items-center gap-3">
             <div
-              className="size-8 rounded-lg flex items-center justify-center shrink-0"
+              className="size-8 rounded-md flex items-center justify-center shrink-0"
               style={{ backgroundColor: `${provider.color?.length > 7 ? provider.color : (provider.color ?? "#888") + "15"}` }}
             >
               <ProviderIcon
                 src={`/providers/${provider.id}.png`}
                 alt={provider.name}
                 size={30}
-                className="object-contain rounded-lg max-w-[30px] max-h-[30px]"
+                className="object-contain rounded-md max-w-[30px] max-h-[30px]"
                 fallbackText={provider.textIcon || provider.id.slice(0, 2).toUpperCase()}
                 fallbackColor={provider.color}
               />
@@ -230,6 +230,12 @@ export default function MediaProviderKindPage() {
 
   return (
     <div className="flex flex-col gap-6">
+      <div>
+        <h1 className="text-xl font-semibold tracking-tight text-text-main">{kindConfig.label}</h1>
+        <p className="text-sm text-text-muted">
+          {allProviders.length} provider{allProviders.length === 1 ? "" : "s"} — select one to connect or manage it.
+        </p>
+      </div>
       {(isEmbedding || supportsCombo) && (
         <div className="flex items-center justify-end gap-2">
           {supportsCombo && (
@@ -248,7 +254,7 @@ export default function MediaProviderKindPage() {
       )}
 
       {allProviders.length === 0 ? (
-        <div className="text-center py-12 border border-dashed border-border rounded-xl text-text-muted text-sm">
+        <div className="text-center py-12 border border-dashed border-border rounded-md text-text-muted text-sm">
           No providers support <strong>{kindConfig.label}</strong> yet.
         </div>
       ) : (

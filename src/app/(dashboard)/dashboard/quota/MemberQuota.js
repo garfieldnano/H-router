@@ -84,7 +84,15 @@ export default function MemberQuota() {
   if (keys === null) return <Typography.Text type="secondary">Memuat kuota…</Typography.Text>;
 
   return (
-    <div className="flex min-w-0 flex-col gap-6 px-1 sm:px-0">
+    <div className="flex min-w-0 flex-col gap-4 px-1 sm:px-0">
+      <div>
+        <Typography.Title level={2} style={{ margin: 0 }}>
+          Quota Tracker
+        </Typography.Title>
+        <Typography.Text type="secondary">
+          Kuota kunci API kamu — batas RPM &amp; IP, plus pemakaian 30 hari.
+        </Typography.Text>
+      </div>
       <div className="grid grid-cols-2 gap-3 sm:gap-4">
         <Card>
           <Statistic

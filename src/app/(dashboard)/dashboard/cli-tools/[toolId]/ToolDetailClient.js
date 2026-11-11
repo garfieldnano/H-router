@@ -189,7 +189,7 @@ export default function ToolDetailClient({ toolId, machineId }) {
   if (!tool) {
     return (
       <div className="mx-auto flex w-full max-w-5xl flex-col gap-4 px-1 sm:px-0">
-        <Link href="/dashboard/cli-tools" className="inline-flex items-center gap-1 text-sm text-text-muted hover:text-primary w-fit">
+        <Link href="/dashboard/cli-tools" className="inline-flex items-center gap-1 text-sm text-text-muted hover:text-success w-fit">
           <span className="material-symbols-outlined text-[18px]">arrow_back</span>
           Back to CLI Tools
         </Link>
@@ -200,7 +200,7 @@ export default function ToolDetailClient({ toolId, machineId }) {
 
   return (
     <div className="mx-auto flex w-full max-w-5xl flex-col gap-4 px-1 sm:px-0">
-      <Link href="/dashboard/cli-tools" className="inline-flex items-center gap-1 text-sm text-text-muted hover:text-primary w-fit">
+      <Link href="/dashboard/cli-tools" className="inline-flex items-center gap-1 text-sm text-text-muted hover:text-success w-fit">
         <span className="material-symbols-outlined text-[18px]">arrow_back</span>
         Back to CLI Tools
       </Link>

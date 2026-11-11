@@ -41,7 +41,7 @@ export function registerAdminHandlers(bot, { api, state, runtime }) {
     try {
       const res = await api.getOverview();
       await ctx.reply(
-        `🛠️ *Panel Admin h-router*\n\nMember: ${fmtNum(res.members)} (${fmtNum(res.activeMembers)} aktif)\nKunci: ${fmtNum(res.apiKeys)} (${fmtNum(res.activeKeys)} aktif)\nOrder menunggu konfirmasi: ${fmtNum(res.pendingOrders)}\nTotal order: ${fmtNum(res.totalOrders)}`,
+        `🛠️ *Panel Admin H-router*\n\nMember: ${fmtNum(res.members)} (${fmtNum(res.activeMembers)} aktif)\nKunci: ${fmtNum(res.apiKeys)} (${fmtNum(res.activeKeys)} aktif)\nOrder menunggu konfirmasi: ${fmtNum(res.pendingOrders)}\nTotal order: ${fmtNum(res.totalOrders)}`,
         { parse_mode: "Markdown", reply_markup: adminMenuKeyboard(webUrl()) }
       );
     } catch (e) {
@@ -52,7 +52,7 @@ export function registerAdminHandlers(bot, { api, state, runtime }) {
   bot.action("a:menu", async (ctx) => {
     if (!isOwner(ctx)) { await ctx.answerCbQuery().catch(() => {}); return; }
     await ctx.answerCbQuery().catch(() => {});
-    await ctx.reply("🛠️ *Panel Admin h-router*", { parse_mode: "Markdown", reply_markup: adminMenuKeyboard(webUrl()) });
+    await ctx.reply("🛠️ *Panel Admin H-router*", { parse_mode: "Markdown", reply_markup: adminMenuKeyboard(webUrl()) });
   });
 
   // ---------------------------------------------------------- orders

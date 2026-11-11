@@ -18,7 +18,7 @@ const inter = Inter({
 });
 
 export const metadata = {
-  title: "h-router - AI Infrastructure Management",
+  title: "H-router - AI Infrastructure Management",
   description: "One endpoint for all your AI providers. Manage keys, monitor usage, and scale effortlessly.",
   icons: {
     icon: "/favicon.svg",

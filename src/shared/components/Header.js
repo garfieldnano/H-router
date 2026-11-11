@@ -108,7 +108,7 @@ const getPageInfo = (pathname) => {
   if (pathname.includes("/mitm"))
     return {
       title: "MITM Proxy",
-      description: "Intercept CLI tool traffic and route through 9Router",
+      description: "Intercept CLI tool traffic and route through H-router",
       icon: "security",
       breadcrumbs: [],
     };
@@ -136,7 +136,7 @@ const getPageInfo = (pathname) => {
   if (pathname.includes("/skills"))
     return {
       title: "Agent Skills",
-      description: "Copy a link and paste to your AI to use 9Router — no install needed",
+      description: "Copy a link and paste to your AI to use H-router — no install needed",
       icon: "extension",
       breadcrumbs: [],
     };
@@ -224,14 +224,15 @@ export default function Header({ onMenuClick, showMenuButton = true }) {
     }
   };
 
+  // Daytona top bar: flat, fixed height, thin bottom border, no blur.
   return (
-    <header className="shrink-0 flex items-center justify-between gap-3 px-4 lg:px-8 pt-3 pb-2 border-b border-border-subtle bg-surface/60 backdrop-blur-xl lg:bg-transparent lg:backdrop-blur-none z-20">
+    <header className="shrink-0 flex h-14 items-center justify-between gap-3 px-4 lg:px-6 border-b border-[var(--daytona-border)] bg-[var(--daytona-panel)] z-20">
       {/* Mobile menu button */}
       <div className="flex items-center gap-3 lg:hidden shrink-0">
         {showMenuButton && (
           <button
             onClick={onMenuClick}
-            className="text-text-main hover:text-primary transition-colors"
+            className="p-1.5 rounded-md text-[var(--daytona-text-muted)] hover:text-[var(--daytona-text)] hover:bg-[var(--daytona-panel-2)] transition-colors"
           >
             <span className="material-symbols-outlined">menu</span>
           </button>
@@ -250,14 +251,14 @@ export default function Header({ onMenuClick, showMenuButton = true }) {
                 }`}
               >
                 {index > 0 && (
-                  <span className="material-symbols-outlined text-text-muted text-base hidden sm:inline">
+                  <span className="material-symbols-outlined text-[var(--daytona-text-subtle)] text-base hidden sm:inline">
                     chevron_right
                   </span>
                 )}
                 {crumb.href ? (
                   <Link
                     href={crumb.href}
-                    className="text-text-muted hover:text-primary transition-colors truncate"
+                    className="text-[var(--daytona-text-muted)] hover:text-[#05f170] transition-colors truncate"
                   >
                     {crumb.label}
                   </Link>
@@ -272,7 +273,7 @@ export default function Header({ onMenuClick, showMenuButton = true }) {
                         fallbackText={crumb.label.slice(0, 2).toUpperCase()}
                       />
                     )}
-                    <h1 className="text-base lg:text-2xl font-semibold text-text-main tracking-tight truncate">
+                    <h1 className="text-base lg:text-lg font-semibold text-[var(--daytona-text)] tracking-tight truncate">
                       {translate(crumb.label)}
                     </h1>
                   </div>
@@ -284,16 +285,16 @@ export default function Header({ onMenuClick, showMenuButton = true }) {
           <div>
             <div className="flex items-center gap-2">
               {icon && (
-                <span className="material-symbols-outlined text-primary text-xl lg:text-2xl">
+                <span className="material-symbols-outlined text-[#05f170] text-lg lg:text-xl">
                   {icon}
                 </span>
               )}
-              <h1 className="text-base lg:text-2xl font-semibold tracking-tight truncate">
+              <h1 className="text-base lg:text-lg font-semibold tracking-tight truncate">
                 {translate(title)}
               </h1>
             </div>
             {description && (
-              <p className="hidden lg:block text-sm text-text-muted truncate">
+              <p className="hidden lg:block text-[13px] text-[var(--daytona-text-muted)] truncate">
                 {translate(description)}
               </p>
             )}
@@ -305,12 +306,12 @@ export default function Header({ onMenuClick, showMenuButton = true }) {
       <div className="flex items-center gap-1 shrink-0">
         {displayName && (loginMethod === "OIDC" || loginMethod === "SAML") && (
           <div
-            className="hidden sm:flex items-center max-w-[220px] px-3 py-1.5 rounded-full border border-border bg-surface/70 text-xs text-text-muted truncate"
+            className="hidden sm:flex items-center max-w-[220px] px-3 py-1.5 rounded-md border border-[var(--daytona-border)] bg-[var(--daytona-panel-2)] text-xs text-[var(--daytona-text-muted)] truncate"
             title={displayName}
           >
-            <span className="material-symbols-outlined text-[14px] mr-1.5 text-primary">person</span>
+            <span className="material-symbols-outlined text-[14px] mr-1.5 text-[#05f170]">person</span>
             <span className="truncate">{displayName}</span>
-            <span className="ml-2 shrink-0 rounded-full bg-primary/10 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-primary">
+            <span className="ml-2 shrink-0 rounded-full bg-[var(--daytona-selected-bg)] px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-[#05f170]">
               {loginMethod}
             </span>
           </div>
@@ -334,7 +335,7 @@ function HeaderSearch() {
 
   return (
     <div className="relative w-[160px] sm:w-[220px]">
-      <span className="material-symbols-outlined absolute left-2 top-1/2 -translate-y-1/2 text-text-muted text-[16px] pointer-events-none">
+      <span className="material-symbols-outlined absolute left-2 top-1/2 -translate-y-1/2 text-[var(--daytona-text-subtle)] text-[16px] pointer-events-none">
         search
       </span>
       <input
@@ -342,13 +343,13 @@ function HeaderSearch() {
         value={query}
         onChange={(e) => setQuery(e.target.value)}
         placeholder={placeholder}
-        className="w-full h-8 pl-7 pr-7 rounded-lg border border-border bg-surface/60 text-sm focus:outline-none focus:border-primary/50 transition-colors"
+        className="w-full h-8 pl-7 pr-7 rounded-md border border-[var(--daytona-border)] bg-[var(--daytona-panel)] text-[13px] text-[var(--daytona-text)] placeholder:text-[var(--daytona-text-subtle)] focus:outline-none focus:border-[#05f170] transition-colors"
       />
       {query && (
         <button
           type="button"
           onClick={() => setQuery("")}
-          className="absolute right-1 top-1/2 -translate-y-1/2 text-text-muted hover:text-text-main p-0.5 rounded"
+          className="absolute right-1 top-1/2 -translate-y-1/2 text-[var(--daytona-text-muted)] hover:text-[var(--daytona-text)] hover:bg-[var(--daytona-panel-2)] p-0.5 rounded"
           aria-label="Clear search"
         >
           <span className="material-symbols-outlined text-[16px]">close</span>

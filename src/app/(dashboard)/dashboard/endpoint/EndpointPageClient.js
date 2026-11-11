@@ -790,11 +790,11 @@ export default function APIPageClient({ machineId }) {
   const currentEndpoint = baseUrl;
 
   return (
-    <div className="flex flex-col gap-8">
+    <div className="flex flex-col gap-6">
       {/* Endpoint Card */}
       <Card>
         <h2 className="text-lg font-semibold mb-4 flex items-center gap-2">
-          <span className="material-symbols-outlined text-primary">api</span>
+          <span className="material-symbols-outlined text-success">api</span>
           API Endpoint
         </h2>
 
@@ -812,7 +812,7 @@ export default function APIPageClient({ machineId }) {
           {!isMember && (
           <div className="flex items-center gap-2">
             <span className={`text-xs font-mono px-1.5 py-0.5 rounded shrink-0 min-w-[88px] text-center ${
-              tunnelEnabled ? "bg-primary/10 text-primary" : "bg-surface-2 text-text-muted"
+              tunnelEnabled ? "bg-success/10 text-success" : "bg-surface-2 text-text-muted"
             }`}>Tunnel</span>
             {tunnelEnabled && !tunnelLoading && tunnelReachable ? (
               <>
@@ -822,7 +822,7 @@ export default function APIPageClient({ machineId }) {
               </>
             ) : tunnelEnabled && !tunnelLoading && !tunnelReachable ? (
               <>
-                <div className="flex-1 flex items-center gap-2 px-3 py-1.5 rounded border border-amber-300 dark:border-amber-800 bg-amber-500/5 text-sm text-amber-600 dark:text-amber-400">
+                <div className="flex-1 flex items-center gap-2 px-3 py-1.5 rounded-md border border-amber-500/20 bg-amber-500/10 text-sm text-amber-600 dark:text-amber-400">
                   <span className="material-symbols-outlined animate-spin text-sm">progress_activity</span>
                   {tunnelEverReachable ? "Tunnel reconnecting..." : "Tunnel checking..."}
                 </div>
@@ -838,7 +838,7 @@ export default function APIPageClient({ machineId }) {
               </>
             ) : tunnelStatus?.type === "error" ? (
               <>
-                <div className="flex-1 flex items-center gap-2 px-3 py-1.5 rounded border border-red-300 dark:border-red-800 bg-red-500/5 text-sm text-red-600 dark:text-red-400">
+                <div className="flex-1 flex items-center gap-2 px-3 py-1.5 rounded-md border border-red-500/20 bg-red-500/10 text-sm text-red-600 dark:text-red-400">
                   <span className="material-symbols-outlined text-sm">error</span>
                   {tunnelStatus.message}
                 </div>
@@ -877,7 +877,7 @@ export default function APIPageClient({ machineId }) {
           {!isMember && (
           <div className="flex items-center gap-2">
             <span className={`text-xs font-mono px-1.5 py-0.5 rounded shrink-0 min-w-[88px] text-center ${
-              tsEnabled ? "bg-primary/10 text-primary" : "bg-surface-2 text-text-muted"
+              tsEnabled ? "bg-success/10 text-success" : "bg-surface-2 text-text-muted"
             }`}>Tailscale</span>
             {tsEnabled && !tsLoading && tsReachable ? (
               <>
@@ -887,7 +887,7 @@ export default function APIPageClient({ machineId }) {
               </>
             ) : tsEnabled && !tsLoading && !tsReachable ? (
               <>
-                <div className="flex-1 flex items-center gap-2 px-3 py-1.5 rounded border border-amber-300 dark:border-amber-800 bg-amber-500/5 text-sm text-amber-600 dark:text-amber-400">
+                <div className="flex-1 flex items-center gap-2 px-3 py-1.5 rounded-md border border-amber-500/20 bg-amber-500/10 text-sm text-amber-600 dark:text-amber-400">
                   <span className="material-symbols-outlined animate-spin text-sm">progress_activity</span>
                   {tsEverReachable ? "Tailscale reconnecting..." : "Tailscale checking..."}
                 </div>
@@ -913,7 +913,7 @@ export default function APIPageClient({ machineId }) {
               </>
             ) : tsStatus?.type === "error" ? (
               <>
-                <div className="flex-1 flex items-center gap-2 px-3 py-1.5 rounded border border-red-300 dark:border-red-800 bg-red-500/5 text-sm text-red-600 dark:text-red-400">
+                <div className="flex-1 flex items-center gap-2 px-3 py-1.5 rounded-md border border-red-500/20 bg-red-500/10 text-sm text-red-600 dark:text-red-400">
                   <span className="material-symbols-outlined text-sm">error</span>
                   {tsStatus.message}
                 </div>
@@ -930,7 +930,6 @@ export default function APIPageClient({ machineId }) {
                   }
                   handleOpenTsModal();
                 }}
-                className="bg-linear-to-r from-indigo-500 to-purple-500 hover:from-indigo-600 hover:to-purple-600 text-white!"
               >
                 Enable
               </Button>
@@ -994,7 +993,7 @@ export default function APIPageClient({ machineId }) {
       <Card>
         <div className="flex items-center justify-between mb-4">
           <h2 className="text-lg font-semibold flex items-center gap-2">
-            <span className="material-symbols-outlined text-primary">vpn_key</span>
+            <span className="material-symbols-outlined text-success">vpn_key</span>
             API Keys
           </h2>
           {!isMember && (
@@ -1027,7 +1026,7 @@ export default function APIPageClient({ machineId }) {
 
         {keys.length === 0 ? (
           <div className="text-center py-12">
-            <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-primary/10 text-primary mb-4">
+            <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-success/10 text-success mb-4">
               <span className="material-symbols-outlined text-[32px]">vpn_key</span>
             </div>
             <p className="text-text-main font-medium mb-1">No API keys yet</p>
@@ -1047,7 +1046,7 @@ export default function APIPageClient({ machineId }) {
             {keys.map((key) => (
               <div
                 key={key.id}
-                className={`group flex items-start justify-between gap-3 py-3 border-b border-black/[0.03] dark:border-white/[0.03] last:border-b-0 ${key.isActive === false ? "opacity-60" : ""}`}
+                className={`group flex items-start justify-between gap-3 py-3 border-b border-border last:border-b-0 ${key.isActive === false ? "opacity-60" : ""}`}
               >
                 <div className="flex-1 min-w-0">
                   <p className="text-sm font-medium">{key.name}</p>
@@ -1242,11 +1241,11 @@ export default function APIPageClient({ machineId }) {
         onCancel={() => setCreatedKey(null)}
       >
         <div className="flex flex-col gap-4">
-          <div className="bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-lg p-4">
-            <p className="text-sm text-yellow-800 dark:text-yellow-200 mb-2 font-medium">
+          <div className="rounded-md border border-amber-500/20 bg-amber-500/10 p-4">
+            <p className="text-sm text-amber-700 dark:text-amber-300 mb-2 font-medium">
               Save this key now!
             </p>
-            <p className="text-sm text-yellow-700 dark:text-yellow-300">
+            <p className="text-sm text-amber-700/80 dark:text-amber-300/80">
               Store this key securely. You can view or copy it later from the API Keys list.
             </p>
           </div>
@@ -1277,15 +1276,15 @@ export default function APIPageClient({ machineId }) {
         onCancel={() => setShowEnableTunnelModal(false)}
       >
         <div className="flex flex-col gap-4">
-          <div className="bg-surface-2 border border-border-subtle rounded-lg p-4">
+          <div className="bg-surface-2 border border-border-subtle rounded-md p-4">
             <div className="flex items-start gap-3">
-              <span className="material-symbols-outlined text-primary">cloud_upload</span>
+              <span className="material-symbols-outlined text-success">cloud_upload</span>
               <div>
                 <p className="text-sm text-text-main font-medium mb-1">
                   Cloudflare Tunnel
                 </p>
                 <p className="text-sm text-text-muted">
-                  Expose your local 9Router to the internet. No port forwarding, no static IP needed. Share endpoint URL with your team or use it in Cursor, Cline, and other AI tools from anywhere.
+                  Expose your local H-router to the internet. No port forwarding, no static IP needed. Share endpoint URL with your team or use it in Cursor, Cline, and other AI tools from anywhere.
                 </p>
               </div>
             </div>
@@ -1293,8 +1292,8 @@ export default function APIPageClient({ machineId }) {
 
           <div className="grid grid-cols-2 gap-3">
             {TUNNEL_BENEFITS.map((benefit) => (
-              <div key={benefit.title} className="flex flex-col items-center text-center p-3 rounded-lg bg-sidebar/50">
-                <span className="material-symbols-outlined text-xl text-primary mb-1">{benefit.icon}</span>
+              <div key={benefit.title} className="flex flex-col items-center text-center p-3 rounded-md bg-surface-2">
+                <span className="material-symbols-outlined text-xl text-success mb-1">{benefit.icon}</span>
                 <p className="text-xs font-semibold">{benefit.title}</p>
                 <p className="text-xs text-text-muted">{benefit.desc}</p>
               </div>

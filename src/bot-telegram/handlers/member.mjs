@@ -47,12 +47,12 @@ export function registerMemberHandlers(bot, { api, state, runtime }) {
   async function showMenu(ctx, member) {
     if (member) {
       await ctx.reply(
-        `👋 Halo *${member.name || "member"}*!\n\nMenu member h-router — penggunaan, kunci, dan pembelian.`,
+        `👋 Halo *${member.name || "member"}*!\n\nMenu member H-router — penggunaan, kunci, dan pembelian.`,
         { parse_mode: "Markdown", reply_markup: memberMenuKeyboard() }
       );
     } else {
       await ctx.reply(
-        "👋 Halo! Selamat datang di *h-router*.\n\nKamu belum menghubungkan akun member. Kamu tetap bisa beli paket atau klaim trial — akun member dibuat otomatis saat pembelian. Kalau sudah punya akun, hubungkan lewat dashboard member.",
+        "👋 Halo! Selamat datang di *H-router*.\n\nKamu belum menghubungkan akun member. Kamu tetap bisa beli paket atau klaim trial — akun member dibuat otomatis saat pembelian. Kalau sudah punya akun, hubungkan lewat dashboard member.",
         { parse_mode: "Markdown", reply_markup: publicMenuKeyboard() }
       );
     }

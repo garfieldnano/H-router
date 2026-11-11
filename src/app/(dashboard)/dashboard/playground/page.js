@@ -104,7 +104,7 @@ export default function PlaygroundPage() {
   };
 
   return (
-    <div className="flex flex-col gap-4 p-4">
+    <div className="flex min-w-0 flex-col gap-6 px-1 sm:px-0">
       <div>
         <h1 className="text-xl font-semibold text-text-main">Playground</h1>
         <p className="text-sm text-text-muted">
@@ -218,7 +218,7 @@ export default function PlaygroundPage() {
             <p className="text-sm text-text-muted">Jawaban model akan muncul di sini.</p>
           ) : (
             <div className="flex flex-col gap-3">
-              <pre className="max-h-[480px] overflow-auto whitespace-pre-wrap break-words rounded-lg border border-border-subtle bg-bg-subtle p-3 font-sans text-sm text-text-main">{result.content || "(jawaban kosong)"}</pre>
+              <pre className="max-h-[480px] overflow-auto whitespace-pre-wrap break-words rounded-md border border-border bg-[var(--daytona-panel-2)] p-3 font-sans text-sm text-text-main">{result.content || "(jawaban kosong)"}</pre>
               <div className="grid grid-cols-2 gap-2 md:grid-cols-4">
                 {[
                   ["Token input", (result.usage?.promptTokens ?? 0).toLocaleString("id-ID")],

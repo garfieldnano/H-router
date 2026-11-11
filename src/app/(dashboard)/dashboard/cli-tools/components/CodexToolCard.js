@@ -292,7 +292,7 @@ default_subagent_model = "${effectiveSubagentModel}"
       <div className="flex items-start justify-between gap-3 hover:cursor-pointer sm:items-center" onClick={onToggle}>
         <div className="flex min-w-0 items-center gap-3">
           <div className="size-8 flex items-center justify-center shrink-0">
-            <Image src="/providers/codex.png" alt={tool.name} width={32} height={32} className="size-8 object-contain rounded-lg" sizes="32px" onError={(e) => { e.target.style.display = "none"; }} loading="lazy" decoding="async" />
+            <Image src="/providers/codex.png" alt={tool.name} width={32} height={32} className="size-8 object-contain rounded-md" sizes="32px" onError={(e) => { e.target.style.display = "none"; }} loading="lazy" decoding="async" />
           </div>
           <div className="min-w-0">
             <div className="flex min-w-0 flex-wrap items-center gap-2">
@@ -318,16 +318,16 @@ default_subagent_model = "${effectiveSubagentModel}"
 
           {!checkingCodex && codexStatus && !codexStatus.installed && (
             <div className="flex flex-col gap-4">
-              <div className="flex flex-col gap-3 p-4 bg-yellow-500/10 border border-yellow-500/30 rounded-lg">
+              <div className="flex flex-col gap-3 p-4 bg-yellow-500/10 border border-yellow-500/30 rounded-md">
                 <div className="flex items-start gap-3">
                   <span className="material-symbols-outlined text-yellow-500">warning</span>
                   <div className="flex-1">
                     <p className="font-medium text-yellow-600 dark:text-yellow-400">Codex CLI not detected locally</p>
-                    <p className="text-sm text-text-muted">Manual configuration is still available if 9router is deployed on a remote server.</p>
+                    <p className="text-sm text-text-muted">Manual configuration is still available if H-router is deployed on a remote server.</p>
                   </div>
                 </div>
                 <div className="flex items-center gap-2 pl-9">
-                  <Button size="small" onClick={() => setShowManualConfigModal(true)} className="!bg-yellow-500/20 !border-yellow-500/40 !text-yellow-700 dark:!text-yellow-300 hover:!bg-yellow-500/30">
+                  <Button size="small" onClick={() => setShowManualConfigModal(true)}>
                     <span className="material-symbols-outlined text-[18px] mr-1">content_copy</span>
                     Manual Config
                   </Button>
@@ -338,7 +338,7 @@ default_subagent_model = "${effectiveSubagentModel}"
                 </div>
               </div>
               {showInstallGuide && (
-                <div className="p-4 bg-surface border border-border rounded-lg">
+                <div className="p-4 bg-surface border border-border rounded-md">
                   <h4 className="font-medium mb-3">Installation Guide</h4>
                   <div className="space-y-3 text-sm">
                     <div>
@@ -402,10 +402,10 @@ default_subagent_model = "${effectiveSubagentModel}"
                   <span className="text-xs font-semibold text-text-main sm:text-right sm:text-sm">Model</span>
                   <span className="material-symbols-outlined hidden text-text-muted text-[14px] sm:inline">arrow_forward</span>
                   <div className="relative w-full min-w-0">
-                    <input type="text" value={selectedModel} onChange={(e) => setSelectedModel(e.target.value)} placeholder="provider/model-id" className="w-full min-w-0 pl-2 pr-7 py-2 bg-surface rounded border border-border text-xs focus:outline-none focus:ring-1 focus:ring-primary/50 sm:py-1.5" />
+                    <input type="text" value={selectedModel} onChange={(e) => setSelectedModel(e.target.value)} placeholder="provider/model-id" className="w-full min-w-0 pl-2 pr-7 py-2 bg-surface rounded border border-border text-xs focus:outline-none focus:ring-1 focus:ring-success/50 sm:py-1.5" />
                     {selectedModel && <button onClick={() => setSelectedModel("")} className="absolute right-1 top-1/2 -translate-y-1/2 p-0.5 text-text-muted hover:text-red-500 rounded transition-colors" title="Clear"><span className="material-symbols-outlined text-[14px]">close</span></button>}
                   </div>
-                  <button onClick={() => setModalOpen(true)} disabled={!activeProviders?.length} className={`w-full sm:w-auto rounded border px-2 py-2 text-xs transition-colors sm:py-1.5 whitespace-nowrap sm:shrink-0 ${activeProviders?.length ? "bg-surface border-border text-text-main hover:border-primary cursor-pointer" : "opacity-50 cursor-not-allowed border-border"}`}>Select Model</button>
+                  <button onClick={() => setModalOpen(true)} disabled={!activeProviders?.length} className={`w-full sm:w-auto rounded border px-2 py-2 text-xs transition-colors sm:py-1.5 whitespace-nowrap sm:shrink-0 ${activeProviders?.length ? "bg-surface border-border text-text-main hover:border-success cursor-pointer" : "opacity-50 cursor-not-allowed border-border"}`}>Select Model</button>
                 </div>
 
                 {/* Subagent Model */}
@@ -418,7 +418,7 @@ default_subagent_model = "${effectiveSubagentModel}"
                       value={subagentModel}
                       onChange={(e) => setSubagentModel(e.target.value)}
                       placeholder={selectedModel || "provider/model-id (defaults to main model)"}
-                      className="w-full min-w-0 pl-2 pr-7 py-2 bg-surface rounded border border-border text-xs focus:outline-none focus:ring-1 focus:ring-primary/50 sm:py-1.5"
+                      className="w-full min-w-0 pl-2 pr-7 py-2 bg-surface rounded border border-border text-xs focus:outline-none focus:ring-1 focus:ring-success/50 sm:py-1.5"
                     />
                     {subagentModel && (
                       <button
@@ -433,7 +433,7 @@ default_subagent_model = "${effectiveSubagentModel}"
                   <button
                     onClick={() => setSubagentModalOpen(true)}
                     disabled={!activeProviders?.length}
-                    className={`w-full sm:w-auto rounded border px-2 py-2 text-xs transition-colors sm:py-1.5 whitespace-nowrap sm:shrink-0 ${activeProviders?.length ? "bg-surface border-border text-text-main hover:border-primary cursor-pointer" : "opacity-50 cursor-not-allowed border-border"}`}
+                    className={`w-full sm:w-auto rounded border px-2 py-2 text-xs transition-colors sm:py-1.5 whitespace-nowrap sm:shrink-0 ${activeProviders?.length ? "bg-surface border-border text-text-main hover:border-success cursor-pointer" : "opacity-50 cursor-not-allowed border-border"}`}
                   >
                     Select Model
                   </button>
@@ -468,11 +468,11 @@ default_subagent_model = "${effectiveSubagentModel}"
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2">
                     <span className="text-xs font-semibold text-text-main flex items-center gap-1.5">
-                      <span className="material-symbols-outlined text-[16px] text-primary">layers</span>
+                      <span className="material-symbols-outlined text-[16px] text-success">layers</span>
                       Additional Models
                     </span>
                     {profiles.length > 0 && (
-                      <span className="px-1.5 py-0.2 bg-primary/10 text-primary text-[10px] font-medium rounded-full">
+                      <span className="px-1.5 py-0.2 bg-success/10 text-success text-[10px] font-medium rounded-full">
                         {profiles.length}
                       </span>
                     )}
@@ -480,14 +480,14 @@ default_subagent_model = "${effectiveSubagentModel}"
                 </div>
 
                 {/* Quick Add Model bar */}
-                <div className="flex flex-col gap-1.5 p-2.5 bg-surface/40 border border-border rounded-lg">
+                <div className="flex flex-col gap-1.5 p-2.5 bg-surface/40 border border-border rounded-md">
                   <div className="grid grid-cols-1 gap-2 sm:grid-cols-[10rem_1fr_auto_auto] sm:items-center">
                     <input
                       type="text"
                       value={aliasInput}
                       onChange={(e) => setAliasInput(e.target.value.toLowerCase().replace(/[^a-z0-9_-]/g, ""))}
                       placeholder="Alias (e.g. claude)"
-                      className="w-full min-w-0 px-2.5 py-1.5 bg-surface rounded border border-border text-xs font-mono focus:outline-none focus:ring-1 focus:ring-primary/50"
+                      className="w-full min-w-0 px-2.5 py-1.5 bg-surface rounded border border-border text-xs font-mono focus:outline-none focus:ring-1 focus:ring-success/50"
                       onKeyDown={(e) => e.key === "Enter" && !readOnly && handleAddProfileWithAlias()}
                     />
                     <div className="relative w-full min-w-0">
@@ -501,7 +501,7 @@ default_subagent_model = "${effectiveSubagentModel}"
                           setAliasInput(deriveProfileNameFromModel(provider, profiles.map((p) => p.name)));
                         }}
                         placeholder="provider/model-id"
-                        className="w-full min-w-0 pl-2.5 pr-7 py-1.5 bg-surface rounded border border-border text-xs focus:outline-none focus:ring-1 focus:ring-primary/50"
+                        className="w-full min-w-0 pl-2.5 pr-7 py-1.5 bg-surface rounded border border-border text-xs focus:outline-none focus:ring-1 focus:ring-success/50"
                         onKeyDown={(e) => e.key === "Enter" && !readOnly && handleAddProfileWithAlias()}
                       />
                       {modelInput && (
@@ -519,7 +519,7 @@ default_subagent_model = "${effectiveSubagentModel}"
                       disabled={!activeProviders?.length}
                       className={`w-full sm:w-auto rounded border px-2.5 py-1.5 text-xs transition-colors whitespace-nowrap sm:shrink-0 ${
                         activeProviders?.length
-                          ? "bg-surface border-border text-text-main hover:border-primary cursor-pointer"
+                          ? "bg-surface border-border text-text-main hover:border-success cursor-pointer"
                           : "opacity-50 cursor-not-allowed border-border"
                       }`}
                     >
@@ -542,7 +542,7 @@ default_subagent_model = "${effectiveSubagentModel}"
                 </div>
 
                 {profiles.length === 0 ? (
-                  <div className="flex flex-col items-center justify-center p-4 border border-dashed border-border rounded-lg text-center bg-surface/30">
+                  <div className="flex flex-col items-center justify-center p-4 border border-dashed border-border rounded-md text-center bg-surface/30">
                     <span className="material-symbols-outlined text-[20px] text-text-muted mb-1 opacity-60">
                       terminal
                     </span>
@@ -558,7 +558,7 @@ default_subagent_model = "${effectiveSubagentModel}"
                       return (
                         <div
                           key={p.name}
-                          className="flex items-center justify-between gap-2 p-2.5 bg-surface/50 border border-border hover:border-border-hover rounded-lg transition-colors group"
+                          className="flex items-center justify-between gap-2 p-2.5 bg-surface/50 border border-border hover:border-border-hover rounded-md transition-colors group"
                         >
                           <div className="flex items-center gap-2.5 min-w-0">
                             <div className="size-6 flex items-center justify-center shrink-0 rounded bg-black/5 dark:bg-white/5 p-0.5">
@@ -580,7 +580,7 @@ default_subagent_model = "${effectiveSubagentModel}"
                               className={`flex items-center gap-1 px-2 py-1 rounded text-[11px] font-mono border transition-all ${
                                 isCopied
                                   ? "bg-green-500/10 border-green-500/30 text-green-600 dark:text-green-400"
-                                  : "bg-surface border-border text-text-muted hover:text-text-main hover:border-primary/50 cursor-pointer"
+                                  : "bg-surface border-border text-text-muted hover:text-text-main hover:border-success/50 cursor-pointer"
                               }`}
                               title="Click to copy command"
                             >

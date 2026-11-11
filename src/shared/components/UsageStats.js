@@ -71,7 +71,7 @@ function RecentRequests({ requests = [] }) {
       align: "right",
       render: (_, r) => (
         <span className="whitespace-nowrap">
-          <span className="text-primary">{fmt(r.promptTokens)}↑</span>{" "}
+          <span className="text-text-main">{fmt(r.promptTokens)}↑</span>{" "}
           <span className="text-success">{fmt(r.completionTokens)}↓</span>
         </span>
       ),
@@ -235,7 +235,7 @@ function makeRenderCell(labelField, plainModel = false) {
     if (record.isGroup) {
       if (field === labelField) {
         return (
-          <span className={`font-medium ${pending ? "text-primary" : ""}`}>
+          <span className={`font-medium ${pending ? "text-success" : ""}`}>
             {record.groupKey}
           </span>
         );
@@ -252,7 +252,7 @@ function makeRenderCell(labelField, plainModel = false) {
     }
     if (field === "provider") {
       return (
-        <Badge variant={plainModel ? "neutral" : pending ? "primary" : "neutral"} size="sm">
+        <Badge variant={plainModel ? "neutral" : pending ? "success" : "neutral"} size="sm">
           {record.provider}
         </Badge>
       );
@@ -277,7 +277,7 @@ function makeRenderCell(labelField, plainModel = false) {
     }
     if (field === "accountName") {
       return (
-        <span className={`font-medium ${pending ? "text-primary" : ""}`}>
+        <span className={`font-medium ${pending ? "text-success" : ""}`}>
           {record.accountName || `Account ${record.connectionId?.slice(0, 8)}...`}
         </span>
       );
@@ -286,7 +286,7 @@ function makeRenderCell(labelField, plainModel = false) {
       return plainModel ? (
         record.rawModel
       ) : (
-        <span className={`font-medium ${pending ? "text-primary" : ""}`}>
+        <span className={`font-medium ${pending ? "text-success" : ""}`}>
           {record.rawModel}
         </span>
       );
@@ -485,7 +485,7 @@ export default function UsageStats({ period: periodProp, setPeriod: setPeriodPro
   );
 
   return (
-    <div className="flex min-w-0 flex-col gap-6">
+    <div className="flex min-w-0 flex-col gap-4">
       {/* Period selector (hidden when controlled by parent) */}
       {!hidePeriodSelector && (
         <div className="flex w-full items-center gap-2 sm:w-auto sm:self-end">

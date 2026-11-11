@@ -29,7 +29,7 @@ const VIEW_MODES = [
 ];
 
 const VIEW_CONFIG = {
-  tokens:   { dataKey: "tokens",   color: "#6366f1", gradId: "gradTokens",   formatter: fmtTokens,   label: "Tokens" },
+  tokens:   { dataKey: "tokens",   color: "#05f170", gradId: "gradTokens",   formatter: fmtTokens,   label: "Tokens" },
   requests: { dataKey: "requests", color: "#14b8a6", gradId: "gradRequests", formatter: fmtRequests, label: "Requests" },
   cost:     { dataKey: "cost",     color: "#f59e0b", gradId: "gradCost",     formatter: fmtCost,     label: "Cost" },
 };
@@ -62,16 +62,16 @@ export default function UsageChart({ period = "7d" }) {
   const hasData = data.some((d) => (d[cfg.dataKey] || 0) > 0);
 
   return (
-    <Card className="flex min-w-0 flex-col gap-3 p-3 sm:p-4">
+    <Card className="flex min-w-0 flex-col gap-3 rounded-md p-3 sm:p-4" style={{ borderRadius: 6, boxShadow: "none" }}>
       <div
-        className="grid w-full items-center gap-1 rounded-lg border border-border bg-bg-subtle p-1 sm:w-auto sm:self-start"
+        className="grid w-full items-center gap-1 rounded-md border border-border bg-bg-subtle p-1 sm:w-auto sm:self-start"
         style={{ gridTemplateColumns: `repeat(${VIEW_MODES.length}, minmax(0, 1fr))` }}
       >
         {VIEW_MODES.map((m) => (
           <button
             key={m.value}
             onClick={() => setViewMode(m.value)}
-            className={`px-3 py-1 rounded-md text-sm font-medium transition-colors ${viewMode === m.value ? "bg-primary text-white shadow-sm" : "text-text-muted hover:text-text hover:bg-bg-hover"}`}
+            className={`px-3 py-1 rounded-md text-sm font-medium transition-colors ${viewMode === m.value ? "bg-[var(--daytona-primary-btn-bg)] text-[var(--daytona-primary-btn-text)]" : "text-text-muted hover:text-text hover:bg-bg-hover"}`}
           >
             {m.label}
           </button>
@@ -87,8 +87,8 @@ export default function UsageChart({ period = "7d" }) {
           <AreaChart data={data} margin={{ top: 4, right: 8, left: 0, bottom: 0 }}>
             <defs>
               <linearGradient id="gradTokens" x1="0" y1="0" x2="0" y2="1">
-                <stop offset="5%" stopColor="#6366f1" stopOpacity={0.25} />
-                <stop offset="95%" stopColor="#6366f1" stopOpacity={0} />
+                <stop offset="5%" stopColor="#05f170" stopOpacity={0.25} />
+                <stop offset="95%" stopColor="#05f170" stopOpacity={0} />
               </linearGradient>
               <linearGradient id="gradRequests" x1="0" y1="0" x2="0" y2="1">
                 <stop offset="5%" stopColor="#14b8a6" stopOpacity={0.25} />
@@ -118,7 +118,7 @@ export default function UsageChart({ period = "7d" }) {
               contentStyle={{
                 backgroundColor: "var(--color-bg)",
                 border: "1px solid var(--color-border)",
-                borderRadius: "8px",
+                borderRadius: "6px",
                 fontSize: "12px",
               }}
               formatter={(value) => [cfg.formatter(value), cfg.label]}

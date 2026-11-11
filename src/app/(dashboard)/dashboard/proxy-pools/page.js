@@ -721,7 +721,7 @@ export default function ProxyPoolsPage() {
     <div className="mx-auto flex w-full max-w-5xl flex-col gap-4 px-1 sm:gap-6 sm:px-0">
       <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
         <div className="min-w-0">
-          <h1 className="text-xl font-semibold sm:text-2xl">Proxy Pools</h1>
+          <h1 className="text-xl font-semibold tracking-tight">Proxy Pools</h1>
         </div>
 
         <div className="grid grid-cols-1 gap-2 sm:flex sm:items-center">
@@ -738,13 +738,13 @@ export default function ProxyPoolsPage() {
             </Button>
 
             {showRelayMenu && (
-              <div className="absolute left-0 top-full z-50 mt-1 w-48 rounded-xl border border-black/10 bg-white p-1 shadow-xl dark:border-white/10 dark:bg-zinc-900 sm:left-auto sm:right-0">
+              <div className="absolute left-0 top-full z-50 mt-1 w-48 rounded-md border border-border bg-white p-1 dark:bg-[#111111] sm:left-auto sm:right-0">
                 <button
                   onClick={() => {
                     openCloudflareModal();
                     setShowRelayMenu(false);
                   }}
-                  className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-sm text-text-main transition-colors hover:bg-black/5 dark:hover:bg-white/5"
+                  className="flex w-full items-center gap-2 rounded-md px-3 py-2 text-sm text-text-main transition-colors hover:bg-black/5 dark:hover:bg-white/5"
                 >
                   <span className="material-symbols-outlined text-[20px] text-orange-500">cloud</span>
                   Cloudflare Relay
@@ -754,7 +754,7 @@ export default function ProxyPoolsPage() {
                     openVercelModal();
                     setShowRelayMenu(false);
                   }}
-                  className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-sm text-text-main transition-colors hover:bg-black/5 dark:hover:bg-white/5"
+                  className="flex w-full items-center gap-2 rounded-md px-3 py-2 text-sm text-text-main transition-colors hover:bg-black/5 dark:hover:bg-white/5"
                 >
                   <span className="material-symbols-outlined text-[20px] text-blue-500">cloud_upload</span>
                   Vercel Relay
@@ -764,7 +764,7 @@ export default function ProxyPoolsPage() {
                     openDenoModal();
                     setShowRelayMenu(false);
                   }}
-                  className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-sm text-text-main transition-colors hover:bg-black/5 dark:hover:bg-white/5"
+                  className="flex w-full items-center gap-2 rounded-md px-3 py-2 text-sm text-text-main transition-colors hover:bg-black/5 dark:hover:bg-white/5"
                 >
                   <span className="material-symbols-outlined text-[20px] text-green-500">terminal</span>
                   Deno Relay
@@ -774,7 +774,7 @@ export default function ProxyPoolsPage() {
                     openNetlifyModal();
                     setShowRelayMenu(false);
                   }}
-                  className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-sm text-text-main transition-colors hover:bg-black/5 dark:hover:bg-white/5"
+                  className="flex w-full items-center gap-2 rounded-md px-3 py-2 text-sm text-text-main transition-colors hover:bg-black/5 dark:hover:bg-white/5"
                 >
                   <span className="material-symbols-outlined text-[20px] text-teal-500">deployed_code</span>
                   Netlify Relay
@@ -803,7 +803,7 @@ export default function ProxyPoolsPage() {
         </div>
 
         {(selectedIds.length > 0 || healthChecking) && (
-          <div className="mb-4 flex flex-wrap items-center gap-2 rounded-lg border border-primary/30 bg-primary/5 px-3 py-2">
+          <div className="mb-4 flex flex-wrap items-center gap-2 rounded-md border border-primary/30 bg-primary/5 px-3 py-2">
             <span className="material-symbols-outlined text-[18px] text-primary">checklist</span>
             <span className="text-xs font-medium text-primary">
               {selectedIds.length > 0 ? `${selectedIds.length} selected` : "All pools"}
@@ -989,7 +989,7 @@ export default function ProxyPoolsPage() {
             })}
           </div>
         )}
-        <div className="mt-3 rounded-lg border border-black/10 bg-black/[0.03] p-3 dark:border-white/10 dark:bg-white/5">
+        <div className="mt-3 rounded-md border border-black/10 bg-black/[0.03] p-3 dark:border-white/10 dark:bg-white/5">
           <p className="text-sm font-medium">Rust Relay Sidecar</p>
           <p className="text-xs text-text-muted mt-1">
             Self-hosted relay (<code className="text-text-main">relay/target/release/h-router-relay</code>, default listen <code className="text-text-main">127.0.0.1:20129</code>). Supports both contracts: standard HTTP proxy and <code className="text-text-main">x-relay-target</code> mode. Register it as a pool of type <code className="text-text-main">http</code> with its URL to use it as an egress relay. See <code className="text-text-main">relay/README.md</code> for build, systemd, and update steps.
@@ -1036,7 +1036,7 @@ export default function ProxyPoolsPage() {
         footer={null}
       >
         <div className="flex flex-col gap-4">
-          <div className="rounded-lg bg-blue-500/5 border border-blue-500/10 p-3 flex flex-col gap-1.5">
+          <div className="rounded-md bg-blue-500/5 border border-blue-500/10 p-3 flex flex-col gap-1.5">
             <p className="text-sm text-text-main font-medium">What is Vercel Relay?</p>
             <p className="text-xs text-text-muted">
               Deploys an edge relay function to Vercel. All AI provider requests will be forwarded through Vercel&apos;s edge network, masking your real IP from providers.
@@ -1077,7 +1077,7 @@ export default function ProxyPoolsPage() {
         footer={null}
       >
         <div className="flex flex-col gap-4">
-          <div className="rounded-lg bg-orange-500/5 border border-orange-500/10 p-3 flex flex-col gap-1.5">
+          <div className="rounded-md bg-orange-500/5 border border-orange-500/10 p-3 flex flex-col gap-1.5">
             <p className="text-sm text-text-main font-medium">What is Cloudflare Relay?</p>
             <p className="text-xs text-text-muted">
               Deploys a Cloudflare Worker as a proxy relay. All AI provider requests will be forwarded through Cloudflare&apos;s global edge network.
@@ -1130,7 +1130,7 @@ export default function ProxyPoolsPage() {
         footer={null}
       >
         <div className="flex flex-col gap-4">
-          <div className="rounded-lg bg-black/5 dark:bg-white/5 border border-black/10 dark:border-white/10 p-3 flex flex-col gap-1.5">
+          <div className="rounded-md bg-black/5 dark:bg-white/5 border border-black/10 dark:border-white/10 p-3 flex flex-col gap-1.5">
             <p className="text-sm text-text-main font-medium">What is Deno Relay?</p>
             <p className="text-xs text-text-muted">
               Deploys a relay worker to Deno Deploy&apos;s global edge network. All AI provider requests are forwarded through Deno&apos;s edge, masking your real IP.
@@ -1183,7 +1183,7 @@ export default function ProxyPoolsPage() {
         footer={null}
       >
         <div className="flex flex-col gap-4">
-          <div className="rounded-lg bg-teal-500/5 border border-teal-500/10 p-3 flex flex-col gap-1.5">
+          <div className="rounded-md bg-teal-500/5 border border-teal-500/10 p-3 flex flex-col gap-1.5">
             <p className="text-sm text-text-main font-medium">What is Netlify Relay?</p>
             <p className="text-xs text-text-muted">
               Deploys a serverless relay function to Netlify&apos;s global edge network. All AI provider requests are forwarded through Netlify&apos;s edge, masking your real IP.
@@ -1242,7 +1242,7 @@ export default function ProxyPoolsPage() {
             <Input value={formData.noProxy} onChange={(e) => setFormData((prev) => ({ ...prev, noProxy: e.target.value }))} placeholder="localhost,127.0.0.1,.internal" />
           </Field>
 
-          <div className="flex flex-col gap-3 rounded-lg border border-border/50 p-3 sm:flex-row sm:items-center sm:justify-between">
+          <div className="flex flex-col gap-3 rounded-md border border-border/50 p-3 sm:flex-row sm:items-center sm:justify-between">
             <div>
               <p className="font-medium text-sm">Active</p>
               <p className="text-xs text-text-muted">Inactive pools are ignored by runtime resolution.</p>
@@ -1254,7 +1254,7 @@ export default function ProxyPoolsPage() {
             />
           </div>
 
-          <div className="flex flex-col gap-3 rounded-lg border border-border/50 p-3 sm:flex-row sm:items-center sm:justify-between">
+          <div className="flex flex-col gap-3 rounded-md border border-border/50 p-3 sm:flex-row sm:items-center sm:justify-between">
             <div>
               <p className="font-medium text-sm">Strict Proxy</p>
               <p className="text-xs text-text-muted">Fail request if proxy is unreachable instead of falling back to direct.</p>

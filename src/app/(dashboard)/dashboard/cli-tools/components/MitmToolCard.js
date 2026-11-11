@@ -141,7 +141,7 @@ export default function MitmToolCard({
                 alt={tool.name}
                 width={32}
                 height={32}
-                className="size-8 object-contain rounded-lg"
+                className="size-8 object-contain rounded-md"
                 sizes="32px"
                 onError={(e) => { e.target.style.display = "none"; }}
               loading="lazy"
@@ -184,7 +184,7 @@ export default function MitmToolCard({
             )}
             {/* Info */}
             <div className="flex flex-col gap-0.5 text-[11px] text-text-muted px-1">
-              <p>Toggle DNS to redirect {tool.name} traffic through 9Router via MITM.</p>
+              <p>Toggle DNS to redirect {tool.name} traffic through H-router via MITM.</p>
               {!dnsActive && (
                 <p className="text-amber-600 text-[10px] mt-1">
                   ⚠️ Enable DNS to edit model mappings
@@ -207,7 +207,7 @@ export default function MitmToolCard({
                         onBlur={(e) => handleMappingBlur(model.alias, e.target.value)}
                         placeholder="provider/model-id"
                         disabled={!dnsActive}
-                        className={`w-full min-w-0 pl-2 pr-7 py-2 bg-surface rounded border border-border text-xs focus:outline-none focus:ring-1 focus:ring-primary/50 sm:py-1.5 ${!dnsActive ? "opacity-50 cursor-not-allowed" : ""}`}
+                        className={`w-full min-w-0 pl-2 pr-7 py-2 bg-surface rounded border border-border text-xs focus:outline-none focus:ring-1 focus:ring-success/50 sm:py-1.5 ${!dnsActive ? "opacity-50 cursor-not-allowed" : ""}`}
                       />
                       {modelMappings[model.alias] && (
                         <button
@@ -225,7 +225,7 @@ export default function MitmToolCard({
                     <button
                       onClick={() => openModelSelector(model.alias)}
                       disabled={!hasActiveProviders || !dnsActive}
-                      className={`rounded border px-2 py-2 text-xs transition-colors sm:py-1.5 ${hasActiveProviders && dnsActive ? "bg-surface border-border hover:border-primary cursor-pointer" : "opacity-50 cursor-not-allowed border-border"}`}
+                      className={`rounded border px-2 py-2 text-xs transition-colors sm:py-1.5 ${hasActiveProviders && dnsActive ? "bg-surface border-border hover:border-success cursor-pointer" : "opacity-50 cursor-not-allowed border-border"}`}
                     >
                       Select
                     </button>
@@ -244,7 +244,7 @@ export default function MitmToolCard({
                 <button
                   onClick={handleDnsToggle}
                   disabled={!serverRunning || loading}
-                  className="flex w-full items-center justify-center gap-1.5 rounded-lg border border-red-500/30 bg-red-500/10 px-4 py-2 text-xs font-medium text-red-500 transition-colors hover:bg-red-500/20 disabled:cursor-not-allowed disabled:opacity-50 sm:w-auto sm:py-1.5"
+                  className="flex w-full items-center justify-center gap-1.5 rounded-md border border-red-500/30 bg-red-500/10 px-4 py-2 text-xs font-medium text-red-500 transition-colors hover:bg-red-500/20 disabled:cursor-not-allowed disabled:opacity-50 sm:w-auto sm:py-1.5"
                 >
                   <span className="material-symbols-outlined text-[16px]">stop_circle</span>
                   Stop DNS
@@ -253,7 +253,7 @@ export default function MitmToolCard({
                 <button
                   onClick={handleDnsToggle}
                   disabled={!serverRunning || loading}
-                  className="flex w-full items-center justify-center gap-1.5 rounded-lg border border-primary/30 bg-primary/10 px-4 py-2 text-xs font-medium text-primary transition-colors hover:bg-primary/20 disabled:cursor-not-allowed disabled:opacity-50 sm:w-auto sm:py-1.5"
+                  className="flex w-full items-center justify-center gap-1.5 rounded-md border border-success/30 bg-success/10 px-4 py-2 text-xs font-medium text-success transition-colors hover:bg-success/20 disabled:cursor-not-allowed disabled:opacity-50 sm:w-auto sm:py-1.5"
                 >
                   <span className="material-symbols-outlined text-[16px]">play_circle</span>
                   Start DNS
@@ -280,7 +280,7 @@ export default function MitmToolCard({
         width={400}
         footer={null}
       >
-            <div className="flex items-start gap-3 p-3 bg-yellow-500/10 border border-yellow-500/30 rounded-lg">
+            <div className="flex items-start gap-3 p-3 bg-yellow-500/10 border border-yellow-500/30 rounded-md">
               <span className="material-symbols-outlined text-yellow-500 text-[20px]">warning</span>
               <p className="text-xs text-text-muted">Required to modify /etc/hosts and flush DNS cache</p>
             </div>

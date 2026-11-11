@@ -32,7 +32,7 @@ function ModelField({ label, value, placeholder, onChange, onSelect, disabled, h
           value={value}
           onChange={(event) => onChange(event.target.value)}
           placeholder={placeholder}
-          className="w-full min-w-0 pl-2 pr-7 py-2 bg-surface rounded border border-border text-xs focus:outline-none focus:ring-1 focus:ring-primary/50 sm:py-1.5"
+          className="w-full min-w-0 pl-2 pr-7 py-2 bg-surface rounded border border-border text-xs focus:outline-none focus:ring-1 focus:ring-success/50 sm:py-1.5"
         />
         {value && (
           <button
@@ -51,7 +51,7 @@ function ModelField({ label, value, placeholder, onChange, onSelect, disabled, h
         disabled={disabled}
         className={`w-full sm:w-auto rounded border px-2 py-2 text-xs transition-colors sm:py-1.5 whitespace-nowrap sm:shrink-0 ${
           !disabled
-            ? "bg-surface border-border text-text-main hover:border-primary cursor-pointer"
+            ? "bg-surface border-border text-text-main hover:border-success cursor-pointer"
             : "opacity-50 cursor-not-allowed border-border"
         }`}
       >
@@ -263,7 +263,7 @@ export default function GrokBuildToolCard({
               alt={tool.name}
               width={32}
               height={32}
-              className="size-8 object-contain rounded-lg"
+              className="size-8 object-contain rounded-md"
               sizes="32px"
               onError={(e) => { e.target.style.display = "none"; }}
               loading="lazy"
@@ -288,7 +288,7 @@ export default function GrokBuildToolCard({
           {checking && <div className="flex items-center gap-2 text-text-muted"><span className="material-symbols-outlined animate-spin">progress_activity</span><span>Checking Grok Build...</span></div>}
 
           {!checking && grokStatus && !grokStatus.installed && (
-            <div className="flex flex-col gap-3 p-4 bg-yellow-500/10 border border-yellow-500/30 rounded-lg">
+            <div className="flex flex-col gap-3 p-4 bg-yellow-500/10 border border-yellow-500/30 rounded-md">
               <div className="flex items-start gap-3">
                 <span className="material-symbols-outlined text-yellow-500">warning</span>
                 <div className="flex-1">
@@ -337,7 +337,7 @@ export default function GrokBuildToolCard({
 
                 <div className="my-1 border-t border-border pt-3">
                   <div className="mb-2 flex items-start gap-2">
-                    <span className="material-symbols-outlined text-primary text-[16px]">account_tree</span>
+                    <span className="material-symbols-outlined text-success text-[16px]">account_tree</span>
                     <div>
                       <p className="text-xs font-semibold text-text-main">Subagent model overrides</p>
                       <p className="text-[10px] text-text-muted">Leave blank to inherit Main Model. Each override keeps its own context window.</p>

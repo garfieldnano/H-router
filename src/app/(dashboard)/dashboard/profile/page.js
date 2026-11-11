@@ -785,11 +785,16 @@ export default function ProfilePage() {
   return (
     <div className="max-w-2xl mx-auto px-4 sm:px-0">
       <div className="flex flex-col gap-6">
+        {/* Page header */}
+        <div>
+          <h1 className="text-xl font-semibold tracking-tight text-text-main">Settings</h1>
+          <p className="text-sm text-text-muted">Appearance, language, security, routing, network, and observability.</p>
+        </div>
         {/* Local Mode Info */}
         <Card>
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-4">
             <div className="flex items-center gap-3 sm:gap-4">
-              <div className="size-10 sm:size-12 rounded-lg bg-green-500/10 text-green-500 flex items-center justify-center shrink-0">
+              <div className="size-10 sm:size-12 rounded-md bg-green-500/10 text-green-500 flex items-center justify-center shrink-0">
                 <span className="material-symbols-outlined text-xl sm:text-2xl">computer</span>
               </div>
               <div>
@@ -797,7 +802,7 @@ export default function ProfilePage() {
                 <p className="text-sm text-text-muted">Running on your machine</p>
               </div>
             </div>
-            <div className="inline-flex p-1 rounded-lg bg-black/5 dark:bg-white/5 w-full sm:w-auto">
+            <div className="inline-flex p-1 rounded-md border border-border bg-black/[0.03] dark:bg-white/[0.03] w-full sm:w-auto">
               {["light", "dark", "system"].map((option) => (
                 <button
                   key={option}
@@ -806,7 +811,7 @@ export default function ProfilePage() {
                   className={cn(
                     "flex items-center justify-center gap-1 sm:gap-1.5 px-2 sm:px-3 py-1.5 rounded-md font-medium transition-all flex-1 sm:flex-initial",
                     theme === option
-                      ? "bg-white dark:bg-white/10 text-text-main shadow-sm"
+                      ? "bg-white dark:bg-white/10 text-text-main"
                       : "text-text-muted hover:text-text-main"
                   )}
                 >
@@ -819,7 +824,7 @@ export default function ProfilePage() {
             </div>
           </div>
           <div className="flex flex-col gap-3 pt-4 border-t border-border">
-            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between p-3 rounded-lg bg-bg border border-border gap-2">
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between p-3 rounded-md bg-bg border border-border gap-2">
               <div>
                 <p className="font-medium text-sm sm:text-base">Database Location</p>
                 <p className="text-xs sm:text-sm text-text-muted font-mono break-all">~/.9router/db/data.sqlite</p>
@@ -861,14 +866,14 @@ export default function ProfilePage() {
         {/* Language */}
         <Card>
           <div className="flex items-center gap-3 mb-4">
-            <div className="size-10 rounded-lg bg-blue-500/10 text-blue-500 flex items-center justify-center shrink-0">
+            <div className="size-10 rounded-md bg-blue-500/10 text-blue-500 flex items-center justify-center shrink-0">
               <span className="material-symbols-outlined text-[20px]">language</span>
             </div>
             <h3 className="text-base sm:text-lg font-semibold">Language</h3>
           </div>
           <button
             onClick={() => setLangOpen(true)}
-            className="flex items-center justify-between w-full p-3 rounded-lg bg-bg border border-border hover:border-primary/50 transition-colors"
+            className="flex items-center justify-between w-full p-3 rounded-md bg-bg border border-border hover:border-primary/50 transition-colors"
             data-i18n-skip="true"
           >
             <span className="text-sm text-text-muted">Display language</span>
@@ -879,7 +884,7 @@ export default function ProfilePage() {
         {/* Security */}
         <Card>
           <div className="flex items-center gap-3 mb-4">
-            <div className="p-2 rounded-lg bg-primary/10 text-primary shrink-0">
+            <div className="p-2 rounded-md bg-primary/10 text-primary shrink-0">
               <span className="material-symbols-outlined text-[20px]">shield</span>
             </div>
             <h3 className="text-base sm:text-lg font-semibold">Security</h3>
@@ -913,7 +918,7 @@ export default function ProfilePage() {
                   </div>
                 )}
                 {/* {!settings.hasPassword && (
-                  <div className="p-3 rounded-lg bg-blue-500/10 border border-blue-500/20">
+                  <div className="p-3 rounded-md bg-blue-500/10 border border-blue-500/20">
                     <p className="text-sm text-blue-600 dark:text-blue-400">
                       Setting password for the first time. Leave current password empty or use default: <code className="bg-blue-500/20 px-1 rounded">123456</code>
                     </p>
@@ -965,7 +970,7 @@ export default function ProfilePage() {
             onClick={() => setOidcExpanded((v) => !v)}
             className="w-full flex items-center gap-3 text-left"
           >
-            <div className="p-2 rounded-lg bg-indigo-500/10 text-indigo-500 shrink-0">
+            <div className="p-2 rounded-md bg-indigo-500/10 text-indigo-500 shrink-0">
               <span className="material-symbols-outlined text-[20px]">lock_open</span>
             </div>
             <div className="flex-1 min-w-0">
@@ -991,14 +996,14 @@ export default function ProfilePage() {
               {/* SSO Protocol Switcher Tabs */}
               <div className="flex flex-col gap-2">
                 <label className="font-medium text-sm sm:text-base">SSO Protocol</label>
-                <div className="flex p-1 rounded-lg bg-black/5 dark:bg-white/5 border border-border">
+                <div className="flex p-1 rounded-md bg-black/5 dark:bg-white/5 border border-border">
                   <button
                     type="button"
                     onClick={() => setSsoTypeTab("saml")}
                     className={cn(
                       "flex-1 py-1.5 px-3 rounded-md font-medium text-xs sm:text-sm transition-all text-center",
                       ssoTypeTab === "saml"
-                        ? "bg-white dark:bg-white/10 text-text-main shadow-sm"
+                        ? "bg-white dark:bg-white/10 text-text-main"
                         : "text-text-muted hover:text-text-main"
                     )}
                   >
@@ -1010,7 +1015,7 @@ export default function ProfilePage() {
                     className={cn(
                       "flex-1 py-1.5 px-3 rounded-md font-medium text-xs sm:text-sm transition-all text-center",
                       ssoTypeTab === "oidc"
-                        ? "bg-white dark:bg-white/10 text-text-main shadow-sm"
+                        ? "bg-white dark:bg-white/10 text-text-main"
                         : "text-text-muted hover:text-text-main"
                     )}
                   >
@@ -1053,7 +1058,7 @@ export default function ProfilePage() {
                         type="button"
                         onClick={() => updateOidcForm("authMode", option.value)}
                         className={cn(
-                          "text-left rounded-lg border p-3 transition-colors",
+                          "text-left rounded-md border p-3 transition-colors",
                           active
                             ? "border-primary bg-primary/5"
                             : "border-border bg-bg hover:bg-black/5 dark:hover:bg-white/5"
@@ -1072,7 +1077,7 @@ export default function ProfilePage() {
                 /* SAML Configuration Panel */
                 <div className="flex flex-col gap-4 pt-2 border-t border-border/50">
                   {/* IdP Setup Guidelines Banner & Collapsible Drawer */}
-                  <div className="rounded-lg border border-border bg-bg/80 overflow-hidden">
+                  <div className="rounded-md border border-border bg-bg/80 overflow-hidden">
                     <button
                       type="button"
                       onClick={() => setShowSamlGuide((prev) => !prev)}
@@ -1174,7 +1179,7 @@ export default function ProfilePage() {
                   </div>
 
                   {/* Quick Import Card */}
-                  <div className="p-3 rounded-lg border border-dashed border-primary/40 bg-primary/5 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                  <div className="p-3 rounded-md border border-dashed border-primary/40 bg-primary/5 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                     <div>
                       <p className="font-medium text-sm text-text-main">1-Click IdP Metadata XML Import</p>
                       <p className="text-xs text-text-muted">Auto-fill SSO URL, Issuer & Cert from XML metadata</p>
@@ -1278,7 +1283,7 @@ export default function ProfilePage() {
                     </div>
                   </div>
 
-                  <div className="flex flex-col gap-2 p-3 rounded-lg border border-border bg-bg text-xs sm:text-sm text-text-muted">
+                  <div className="flex flex-col gap-2 p-3 rounded-md border border-border bg-bg text-xs sm:text-sm text-text-muted">
                     <div className="flex items-center justify-between gap-2">
                       <div>
                         <p className="font-medium text-text-main">ACS Callback URL</p>
@@ -1400,7 +1405,7 @@ export default function ProfilePage() {
                     </div>
                   </div>
 
-                  <div className="rounded-lg border border-border bg-bg p-3 text-xs sm:text-sm text-text-muted">
+                  <div className="rounded-md border border-border bg-bg p-3 text-xs sm:text-sm text-text-muted">
                     <p className="font-medium text-text-main mb-1">Redirect URI</p>
                     <code className="block break-all font-mono">{oidcRedirectUri}</code>
                   </div>
@@ -1446,7 +1451,7 @@ export default function ProfilePage() {
         {/* Routing Preferences */}
         <Card>
           <div className="flex items-center gap-3 mb-4">
-            <div className="p-2 rounded-lg bg-blue-500/10 text-blue-500 shrink-0">
+            <div className="p-2 rounded-md bg-blue-500/10 text-blue-500 shrink-0">
               <span className="material-symbols-outlined text-[20px]">route</span>
             </div>
             <h3 className="text-base sm:text-lg font-semibold">Routing Strategy</h3>
@@ -1556,7 +1561,7 @@ export default function ProfilePage() {
         {/* Network */}
         <Card>
           <div className="flex items-center gap-3 mb-4">
-            <div className="p-2 rounded-lg bg-purple-500/10 text-purple-500 shrink-0">
+            <div className="p-2 rounded-md bg-purple-500/10 text-purple-500 shrink-0">
               <span className="material-symbols-outlined text-[20px]">wifi</span>
             </div>
             <h3 className="text-base sm:text-lg font-semibold">Network</h3>
@@ -1626,7 +1631,7 @@ export default function ProfilePage() {
         {/* Observability Settings */}
         <Card>
           <div className="flex items-center gap-3 mb-4">
-            <div className="p-2 rounded-lg bg-orange-500/10 text-orange-500 shrink-0">
+            <div className="p-2 rounded-md bg-orange-500/10 text-orange-500 shrink-0">
               <span className="material-symbols-outlined text-[20px]">monitoring</span>
             </div>
             <h3 className="text-base sm:text-lg font-semibold">Observability</h3>

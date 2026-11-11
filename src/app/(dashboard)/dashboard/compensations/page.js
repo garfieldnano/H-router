@@ -34,7 +34,7 @@ const INCIDENT_COLUMNS = [
     title: "Status",
     dataIndex: "status",
     key: "status",
-    render: (s) => (s === "open" ? "🔴 Berlangsung" : "✅ Selesai"),
+    render: (s) => <Tag color={s === "open" ? "error" : "success"}>{s === "open" ? "Berlangsung" : "Selesai"}</Tag>,
   },
   { title: "Mulai", dataIndex: "startedAt", key: "startedAt", render: (v) => fmtTime(v) },
   { title: "Selesai", dataIndex: "endedAt", key: "endedAt", render: (v) => (v ? fmtTime(v) : "—") },
@@ -144,7 +144,7 @@ export default function CompensationsPage() {
   return (
     <div className="flex flex-col gap-6">
       <div>
-        <h1 className="text-2xl font-bold text-text-main">Kompensasi Gangguan</h1>
+        <h1 className="text-xl font-semibold tracking-tight text-text-main">Kompensasi Gangguan</h1>
         <p className="text-sm text-text-muted">
           Insiden dicatat otomatis oleh pemantau uptime gateway. Kompensasi berupa perpanjangan masa aktif kunci — diberikan manual oleh admin, tidak pernah otomatis.
         </p>
@@ -164,7 +164,7 @@ export default function CompensationsPage() {
               placeholder="— Pilih insiden —"
               options={incidents.map((i) => ({
                 value: i.id,
-                label: `${i.status === "open" ? "🔴 " : "✅ "}${fmtDate(i.startedAt)} · ${i.durationMinutes ?? "?"} menit · tier +${i.derivedTierHours}j · ${i.compensationsGranted} diberi`,
+                label: `${fmtDate(i.startedAt)} · ${i.durationMinutes ?? "?"} menit · tier +${i.derivedTierHours}j · ${i.compensationsGranted} diberi`,
               }))}
             />
           </label>

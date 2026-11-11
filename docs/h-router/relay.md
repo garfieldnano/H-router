@@ -81,7 +81,7 @@ Setelah deploy pertama, di VPS:
    `HROUTER_RELAY_KILOCODE_ORG_ID`, …).
 2. `sudo systemctl restart h-router-relay`
 3. `curl http://127.0.0.1:20129/health` → `{"status":"ok",...}`
-4. Di dashboard h-router, daftarkan relay sebagai pool tipe `http` dengan
+4. Di dashboard H-router, daftarkan relay sebagai pool tipe `http` dengan
    `proxyUrl` `http://<vps-ip>:20129` (halaman proxy-pools) dan ikat ke
    koneksi provider (`proxyPoolId`).
 

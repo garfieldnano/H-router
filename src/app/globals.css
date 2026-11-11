@@ -13,37 +13,38 @@
 .fonts-loaded .material-symbols-outlined { opacity: 1; transition: opacity .12s ease-out; }
 
 /* ============================================================
-   9Router palette — adopted from 9remote_private/web
-   Brand orange (dark) / soft coral (light), neutral warm bases
+   H-router palette — Daytona design system
+   Brand green #05f170, neutral white/gray surfaces (light),
+   near-black surfaces (dark). No cream/beige, no coral.
    ============================================================ */
 :root {
-  /* Brand scale (light) - centered on #E56A4A */
-  --color-brand-50: #fdf1ed;
-  --color-brand-100: #fadccf;
-  --color-brand-200: #f4b59c;
-  --color-brand-300: #ee8d6a;
-  --color-brand-400: #ea7855;
-  --color-brand-500: #E56A4A;
-  --color-brand-600: #cc5236;
-  --color-brand-700: #a64027;
-  --color-brand-800: #7a2f1d;
-  --color-brand-900: #4d1e12;
+  /* Brand scale (light) - centered on #05f170 */
+  --color-brand-50: #ebfef4;
+  --color-brand-100: #d1fbe3;
+  --color-brand-200: #a7f6c9;
+  --color-brand-300: #6fec9f;
+  --color-brand-400: #2fe372;
+  --color-brand-500: #05f170;
+  --color-brand-600: #04c65e;
+  --color-brand-700: #039e4b;
+  --color-brand-800: #027a39;
+  --color-brand-900: #015c2c;
 
   /* Primary (legacy alias for backward compat with existing components) */
   --color-primary: var(--color-brand-500);
   --color-primary-hover: var(--color-brand-600);
 
-  /* Surfaces & backgrounds (light) */
-  --color-bg: #FDFAF6;
-  --color-bg-alt: #F7F3EE;
+  /* Surfaces & backgrounds (light) — clean white / neutral gray */
+  --color-bg: #ffffff;
+  --color-bg-alt: #fafafa;
   --color-surface: #ffffff;
   --color-surface-2: #f4f4f5;
   --color-surface-3: #e7e7e9;
-  --color-sidebar: rgba(244, 241, 236, 0.85);
+  --color-sidebar: rgba(255, 255, 255, 0.85);
 
   /* Borders */
-  --color-border: #e5e7eb;
-  --color-border-subtle: #f1f1f3;
+  --color-border: #e4e4e7;
+  --color-border-subtle: #f4f4f5;
 
   /* Text */
   --color-text: #0a0a0a;
@@ -63,62 +64,94 @@
 
   /* Shadows */
   --shadow-soft: 0 1px 2px 0 rgba(0,0,0,0.04);
-  --shadow-warm: 0 2px 12px -2px rgba(229, 106, 74, 0.18);
+  --shadow-warm: 0 2px 12px -2px rgba(5, 241, 112, 0.18);
   --shadow-elevated: 0 12px 28px -4px rgba(60, 50, 45, 0.06);
   --shadow-elev:
     inset 0 1px 0 0 rgba(255,255,255,0.8),
     0 1px 2px rgba(15,23,42,0.04),
     0 12px 36px -8px rgba(15,23,42,0.10);
-  --shadow-focus: 0 0 0 3px rgba(229,106,74,0.18);
+  --shadow-focus: 0 0 0 3px rgba(5, 241, 112, 0.18);
+
+  /* Daytona surfaces (wave 1 design system) — consumed by the antd
+     overrides at the bottom of this file. Light values here; dark
+     values are re-declared in .dark below. */
+  --daytona-panel: #ffffff;
+  --daytona-panel-2: #fafafa;
+  --daytona-panel-3: #f4f4f5;
+  --daytona-border: #e4e4e7;
+  --daytona-border-strong: #d4d4d8;
+  --daytona-text: #0a0a0a;
+  --daytona-text-muted: #71717a;
+  --daytona-text-subtle: #a1a1aa;
+  --daytona-primary-btn-bg: #0a0a0a;
+  --daytona-primary-btn-text: #ffffff;
+  --daytona-primary-btn-hover: #262626;
+  --daytona-link: #00853f;
+  --daytona-selected-bg: rgba(5, 241, 112, 0.10);
+  --daytona-focus-ring: rgba(5, 241, 112, 0.20);
 
   color-scheme: light;
 }
 
 .dark {
-  /* Brand scale (dark) - centered on #E56A4A, same as light for consistency */
-  --color-brand-50: #fdf1ed;
-  --color-brand-100: #fadccf;
-  --color-brand-200: #f4b59c;
-  --color-brand-300: #ee8d6a;
-  --color-brand-400: #ea7855;
-  --color-brand-500: #E56A4A;
-  --color-brand-600: #cc5236;
-  --color-brand-700: #a64027;
-  --color-brand-800: #7a2f1d;
-  --color-brand-900: #4d1e12;
+  /* Brand scale (dark) - centered on #05f170, same as light */
+  --color-brand-50: #ebfef4;
+  --color-brand-100: #d1fbe3;
+  --color-brand-200: #a7f6c9;
+  --color-brand-300: #6fec9f;
+  --color-brand-400: #2fe372;
+  --color-brand-500: #05f170;
+  --color-brand-600: #04c65e;
+  --color-brand-700: #039e4b;
+  --color-brand-800: #027a39;
+  --color-brand-900: #015c2c;
 
-  --color-primary: #E56A4A;
-  --color-primary-hover: #cc5236;
+  --color-primary: #05f170;
+  --color-primary-hover: #04c65e;
 
-  /* Surfaces (dark - Claude-like neutral warm) */
-  --color-bg: #1a1a1a;
-  --color-bg-alt: #1F1F1E;
-  --color-surface: #262626;
-  --color-surface-2: #303030;
-  --color-surface-3: #3a3a3a;
-  --color-sidebar: rgba(30, 30, 30, 0.85);
+  /* Surfaces (dark - Daytona: near-black base, flat panels) */
+  --color-bg: #000000;
+  --color-bg-alt: #0a0a0a;
+  --color-surface: #0a0a0a;
+  --color-surface-2: #111111;
+  --color-surface-3: #1a1a1a;
+  --color-sidebar: rgba(0, 0, 0, 0.85);
 
-  --color-border: #333333;
-  --color-border-subtle: #2a2a2a;
+  --color-border: #1f1f1f;
+  --color-border-subtle: #171717;
 
-  --color-text: #ededed;
-  --color-text-main: #ededed;
-  --color-text-muted: #9ca3af;
-  --color-text-subtle: #6b7280;
+  --color-text: #fafafa;
+  --color-text-main: #fafafa;
+  --color-text-muted: #a1a1aa;
+  --color-text-subtle: #71717a;
 
   --color-danger: #ef4444;
-  --color-success: #22c55e;
+  --color-success: #05f170;
   --color-warning: #fbbf24;
   --color-info: #60a5fa;
 
-  --shadow-soft: 0 1px 2px 0 rgba(0,0,0,0.3);
-  --shadow-warm: 0 2px 12px -2px rgba(229, 106, 74, 0.25);
-  --shadow-elevated: 0 12px 28px -4px rgba(0, 0, 0, 0.45);
-  --shadow-elev:
-    inset 0 1px 0 0 rgba(255,255,255,0.06),
-    0 1px 2px rgba(0,0,0,0.4),
-    0 16px 48px -8px rgba(0,0,0,0.55);
-  --shadow-focus: 0 0 0 3px rgba(229, 106, 74, 0.18);
+  /* Flat: no shadows in dark mode (thin borders carry elevation) */
+  --shadow-soft: none;
+  --shadow-warm: none;
+  --shadow-elevated: none;
+  --shadow-elev: none;
+  --shadow-focus: 0 0 0 3px rgba(5, 241, 112, 0.25);
+
+  /* Daytona surfaces (dark) */
+  --daytona-panel: #0a0a0a;
+  --daytona-panel-2: #111111;
+  --daytona-panel-3: #1a1a1a;
+  --daytona-border: #1f1f1f;
+  --daytona-border-strong: #2e2e2e;
+  --daytona-text: #fafafa;
+  --daytona-text-muted: #a1a1aa;
+  --daytona-text-subtle: #71717a;
+  --daytona-primary-btn-bg: #ffffff;
+  --daytona-primary-btn-text: #000000;
+  --daytona-primary-btn-hover: #e4e4e7;
+  --daytona-link: #05f170;
+  --daytona-selected-bg: rgba(5, 241, 112, 0.08);
+  --daytona-focus-ring: rgba(5, 241, 112, 0.12);
 
   color-scheme: dark;
 }
@@ -176,18 +209,18 @@ select {
   --color-info: var(--color-info);
 
   /* Static fallbacks (explicit per-mode usage if needed) */
-  --color-bg-light: #FCFBF9;
-  --color-bg-dark: #1a1a1a;
+  --color-bg-light: #ffffff;
+  --color-bg-dark: #000000;
   --color-surface-light: #ffffff;
-  --color-surface-dark: #262626;
-  --color-sidebar-light: #F4F1EC;
-  --color-sidebar-dark: #1F1F1E;
-  --color-border-light: #e5e7eb;
-  --color-border-dark: #333333;
+  --color-surface-dark: #0a0a0a;
+  --color-sidebar-light: #fafafa;
+  --color-sidebar-dark: #0a0a0a;
+  --color-border-light: #e4e4e7;
+  --color-border-dark: #1f1f1f;
   --color-text-main-light: #0a0a0a;
-  --color-text-main-dark: #ededed;
-  --color-text-muted-light: #6B7280;
-  --color-text-muted-dark: #9ca3af;
+  --color-text-main-dark: #fafafa;
+  --color-text-muted-light: #71717a;
+  --color-text-muted-dark: #a1a1aa;
 
   /* Radius */
   --radius-brand: var(--radius-brand);
@@ -215,11 +248,11 @@ body {
 
 /* Selection - brand-tinted */
 ::selection {
-  background-color: rgba(229, 106, 74, 0.25);
+  background-color: rgba(5, 241, 112, 0.25);
   color: var(--color-primary);
 }
 .dark ::selection {
-  background-color: rgba(229, 106, 74, 0.3);
+  background-color: rgba(5, 241, 112, 0.3);
   color: var(--color-brand-300);
 }
 
@@ -246,19 +279,19 @@ input, textarea {
 /* Thin horizontal scrollbar - brand colored */
 .scroll-thin-x {
   scrollbar-width: thin;
-  scrollbar-color: rgba(229, 106, 74, 0.55) transparent;
+  scrollbar-color: rgba(5, 241, 112, 0.55) transparent;
 }
 .dark .scroll-thin-x {
-  scrollbar-color: rgba(229, 106, 74, 0.55) transparent;
+  scrollbar-color: rgba(5, 241, 112, 0.55) transparent;
 }
 .scroll-thin-x::-webkit-scrollbar { height: 3px; }
 .scroll-thin-x::-webkit-scrollbar-track { background: transparent; }
 .scroll-thin-x::-webkit-scrollbar-thumb {
-  background: rgba(229, 106, 74, 0.55);
+  background: rgba(5, 241, 112, 0.55);
   border-radius: 3px;
 }
 .dark .scroll-thin-x::-webkit-scrollbar-thumb {
-  background: rgba(229, 106, 74, 0.55);
+  background: rgba(5, 241, 112, 0.55);
 }
 
 /* Global thin mac-like scrollbars (overrides clunky Windows/Linux default) */
@@ -392,12 +425,12 @@ button:disabled,
 
 @keyframes border-glow {
   0%, 100% {
-    box-shadow: 0 0 5px rgba(229, 106, 74, 0.3), 0 0 10px rgba(229, 106, 74, 0.2);
-    border-color: rgba(229, 106, 74, 0.5);
+    box-shadow: 0 0 5px rgba(5, 241, 112, 0.3), 0 0 10px rgba(5, 241, 112, 0.2);
+    border-color: rgba(5, 241, 112, 0.5);
   }
   50% {
-    box-shadow: 0 0 10px rgba(229, 106, 74, 0.5), 0 0 20px rgba(229, 106, 74, 0.3);
-    border-color: rgba(229, 106, 74, 0.8);
+    box-shadow: 0 0 10px rgba(5, 241, 112, 0.5), 0 0 20px rgba(5, 241, 112, 0.3);
+    border-color: rgba(5, 241, 112, 0.8);
   }
 }
 .animate-border-glow { animation: border-glow 2s ease-in-out infinite; }
@@ -430,8 +463,8 @@ button:disabled,
   100% { transform: translateX(220%) skewX(-20deg); }
 }
 @keyframes ctaGlowPulse {
-  0%, 100% { box-shadow: 0 8px 24px -8px rgba(229, 106, 74, 0.45), 0 0 0 0 rgba(229, 106, 74, 0.5); }
-  50% { box-shadow: 0 12px 32px -8px rgba(229, 106, 74, 0.6), 0 0 0 8px rgba(229, 106, 74, 0); }
+  0%, 100% { box-shadow: 0 8px 24px -8px rgba(5, 241, 112, 0.45), 0 0 0 0 rgba(5, 241, 112, 0.5); }
+  50% { box-shadow: 0 12px 32px -8px rgba(5, 241, 112, 0.6), 0 0 0 8px rgba(5, 241, 112, 0); }
 }
 .btn-cta {
   position: relative;
@@ -457,13 +490,13 @@ button:disabled,
 .dot-grid-bg {
   background-color: var(--color-bg);
   background-image:
-    radial-gradient(circle at 15% 20%, rgba(229, 106, 74, 0.10) 0%, transparent 40%),
-    radial-gradient(circle at 85% 80%, rgba(229, 106, 74, 0.06) 0%, transparent 40%);
+    radial-gradient(circle at 15% 20%, rgba(5, 241, 112, 0.10) 0%, transparent 40%),
+    radial-gradient(circle at 85% 80%, rgba(5, 241, 112, 0.06) 0%, transparent 40%);
 }
 .dark .dot-grid-bg {
   background-image:
-    radial-gradient(circle at 15% 20%, rgba(229, 106, 74, 0.18) 0%, transparent 40%),
-    radial-gradient(circle at 85% 80%, rgba(229, 106, 74, 0.10) 0%, transparent 40%);
+    radial-gradient(circle at 15% 20%, rgba(5, 241, 112, 0.18) 0%, transparent 40%),
+    radial-gradient(circle at 85% 80%, rgba(5, 241, 112, 0.10) 0%, transparent 40%);
 }
 
 /* Landing-style faint grid overlay (use absolute pos inside relative parent) */
@@ -628,4 +661,420 @@ button:disabled,
   border: none;
   border-top: 1px solid var(--color-border);
   margin: 1.5rem 0;
+}
+
+/* ============================================================
+   DAYTONA DESIGN SYSTEM — antd primitive overrides (wave 1)
+   ------------------------------------------------------------
+   Lives in @layer components, which the layer order at the top of
+   this file places AFTER @layer antd, so these rules win over antd's
+   own styles at equal specificity. Dark overrides are scoped under
+   `html.dark` (the class themeStore/layout.js toggles on <html>);
+   light-specific fixes use `html:not(.dark)`. Everything else uses
+   the --daytona-* vars declared in :root / .dark above, so both
+   modes are served by the same rules.
+
+   What the tokens in src/shared/theme/antdTheme.js already cover
+   (do NOT duplicate here): Button default colors/borders, Table
+   header/row/padding, Input/Select border + focus colors, Tabs
+   ink-bar + item colors, Tag default bg/color, Modal bg, Segmented
+   track/selected colors, Switch checked color (global colorPrimary).
+
+   What this layer covers (no component token exists, or antd's
+   selector specificity needs a direct override):
+   - primary button background (comes from global colorPrimary; the
+     token only controls its text color via Button.primaryColor)
+   - Card / Table / Input / Drawer / overlay backgrounds (global
+     colorBgContainer / colorBgElevated are shared across modes,
+     so they cannot be per-mode tokens — see antdTheme.js header)
+   - flatness: no shadows, 6px radius, thin borders everywhere
+   - light-mode link contrast (#05f170 on white is too faint)
+   ============================================================ */
+@layer components {
+  /* ---------- Buttons ---------- */
+  /* Primary CTA: white bg + black text (dark) / black bg + white
+     text (light). `html.dark` prefix also lifts specificity above
+     antd's :not(:disabled) hover chains. */
+  html.dark .ant-btn-color-primary.ant-btn-variant-solid,
+  html.dark .ant-btn-primary {
+    background: var(--daytona-primary-btn-bg);
+    border-color: var(--daytona-primary-btn-bg);
+    color: var(--daytona-primary-btn-text);
+    box-shadow: none;
+  }
+  html.dark .ant-btn-color-primary.ant-btn-variant-solid:not(:disabled):hover,
+  html.dark .ant-btn-primary:not(:disabled):hover {
+    background: var(--daytona-primary-btn-hover);
+    border-color: var(--daytona-primary-btn-hover);
+    color: var(--daytona-primary-btn-text);
+  }
+  html.dark .ant-btn-color-primary.ant-btn-variant-solid:not(:disabled):active,
+  html.dark .ant-btn-primary:not(:disabled):active {
+    background: #d4d4d8;
+    border-color: #d4d4d8;
+    color: var(--daytona-primary-btn-text);
+  }
+  html:not(.dark) .ant-btn-color-primary.ant-btn-variant-solid,
+  html:not(.dark) .ant-btn-primary {
+    background: var(--daytona-primary-btn-bg);
+    border-color: var(--daytona-primary-btn-bg);
+    color: var(--daytona-primary-btn-text);
+    box-shadow: none;
+  }
+  html:not(.dark) .ant-btn-color-primary.ant-btn-variant-solid:not(:disabled):hover,
+  html:not(.dark) .ant-btn-primary:not(:disabled):hover {
+    background: var(--daytona-primary-btn-hover);
+    border-color: var(--daytona-primary-btn-hover);
+    color: var(--daytona-primary-btn-text);
+  }
+  html:not(.dark) .ant-btn-color-primary.ant-btn-variant-solid:not(:disabled):active,
+  html:not(.dark) .ant-btn-primary:not(:disabled):active {
+    background: #000000;
+    border-color: #000000;
+    color: var(--daytona-primary-btn-text);
+  }
+  /* Disabled primary must not inherit the white/black bg. */
+  .ant-btn-color-primary.ant-btn-variant-solid:disabled,
+  .ant-btn-primary:disabled {
+    background: var(--daytona-panel-3);
+    border-color: var(--daytona-border);
+    color: var(--daytona-text-subtle);
+    box-shadow: none;
+  }
+  /* Flat everywhere: kill the default-button shadow token leftovers. */
+  .ant-btn {
+    box-shadow: none;
+  }
+
+  /* Links: #05f170 is unreadable on white, so light mode uses a
+     darker green. Dark mode keeps the brand green from the token. */
+  html:not(.dark) .ant-btn-variant-link,
+  html:not(.dark) .ant-btn-link,
+  html:not(.dark) a.ant-typography,
+  html:not(.dark) .ant-typography a {
+    color: var(--daytona-link);
+  }
+  html:not(.dark) .ant-btn-variant-link:hover,
+  html:not(.dark) .ant-btn-link:hover,
+  html:not(.dark) a.ant-typography:hover,
+  html:not(.dark) .ant-typography a:hover {
+    color: #00a651;
+  }
+
+  /* ---------- Card ---------- */
+  .ant-card {
+    background: var(--daytona-panel);
+    border: 1px solid var(--daytona-border);
+    border-radius: 6px;
+    box-shadow: none;
+  }
+  .ant-card-head {
+    background: var(--daytona-panel);
+    border-bottom: 1px solid var(--daytona-border);
+  }
+  .ant-card-actions {
+    background: var(--daytona-panel);
+    border-top: 1px solid var(--daytona-border);
+  }
+  .ant-card-actions > li {
+    border-right: 1px solid var(--daytona-border);
+  }
+
+  /* ---------- Table ---------- */
+  .ant-table {
+    background: var(--daytona-panel);
+    border-radius: 6px;
+  }
+  .ant-table-wrapper .ant-table-thead > tr > th {
+    background: var(--daytona-panel);
+    color: var(--daytona-text-muted);
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    border-bottom: 1px solid var(--daytona-border);
+  }
+  /* Drop antd's 1px dividers between header cells. */
+  .ant-table-wrapper .ant-table-thead > tr > th::before {
+    display: none;
+  }
+  .ant-table-wrapper .ant-table-tbody > tr > td {
+    border-bottom: 1px solid var(--daytona-border);
+  }
+  .ant-table-wrapper .ant-table-tbody > tr:last-child > td {
+    border-bottom: none;
+  }
+  .ant-table-wrapper .ant-table-tbody > tr.ant-table-row:hover > td {
+    background: var(--daytona-panel-2);
+  }
+  .ant-table-wrapper .ant-table-tbody > tr.ant-table-row-selected > td {
+    background: var(--daytona-selected-bg);
+  }
+  .ant-table-wrapper .ant-table-footer {
+    background: var(--daytona-panel);
+    border-top: 1px solid var(--daytona-border);
+  }
+  .ant-table-wrapper .ant-table-thead > tr > th.ant-table-cell-scrollbar {
+    background: var(--daytona-panel);
+  }
+  /* Pagination that belongs to a table: same flat language. */
+  .ant-pagination .ant-pagination-item {
+    background: var(--daytona-panel);
+    border: 1px solid var(--daytona-border);
+    border-radius: 6px;
+  }
+  .ant-pagination .ant-pagination-item a {
+    color: var(--daytona-text-muted);
+  }
+  .ant-pagination .ant-pagination-item-active {
+    border-color: #05f170;
+  }
+  .ant-pagination .ant-pagination-item-active a {
+    color: #05f170;
+  }
+  .ant-pagination .ant-pagination-prev .ant-pagination-item-link,
+  .ant-pagination .ant-pagination-next .ant-pagination-item-link {
+    background: var(--daytona-panel);
+    border: 1px solid var(--daytona-border);
+    border-radius: 6px;
+    color: var(--daytona-text-muted);
+  }
+
+  /* ---------- Input / Select / Picker (same input family) ---------- */
+  .ant-input,
+  .ant-input-affix-wrapper,
+  .ant-input-number,
+  textarea.ant-input,
+  .ant-picker {
+    background: var(--daytona-panel);
+    border: 1px solid var(--daytona-border);
+    border-radius: 6px;
+    box-shadow: none;
+  }
+  .ant-input:hover,
+  .ant-input-affix-wrapper:hover,
+  .ant-input-number:hover,
+  textarea.ant-input:hover,
+  .ant-picker:hover {
+    border-color: var(--daytona-border-strong);
+  }
+  .ant-input:focus,
+  .ant-input-focused,
+  .ant-input-affix-wrapper-focused,
+  .ant-input-number-focused,
+  textarea.ant-input:focus,
+  .ant-picker-focused {
+    border-color: #05f170;
+    box-shadow: 0 0 0 2px var(--daytona-focus-ring);
+  }
+  .ant-input::placeholder,
+  textarea.ant-input::placeholder {
+    color: var(--daytona-text-subtle);
+  }
+  .ant-input-affix-wrapper .ant-input {
+    background: transparent;
+    border: none;
+    box-shadow: none;
+  }
+  .ant-input-group-addon {
+    background: var(--daytona-panel-2);
+    border: 1px solid var(--daytona-border);
+    color: var(--daytona-text-muted);
+  }
+  .ant-select .ant-select-selector {
+    background: var(--daytona-panel);
+    border: 1px solid var(--daytona-border);
+    border-radius: 6px;
+    box-shadow: none;
+  }
+  .ant-select:not(.ant-select-disabled):hover .ant-select-selector {
+    border-color: var(--daytona-border-strong);
+  }
+  /* Full :not() chain matches antd's own focused selector so this
+     wins on layer order instead of needing !important. */
+  .ant-select-focused.ant-select-outlined:not(.ant-select-disabled):not(.ant-select-customize-input):not(.ant-pagination-size-changer) .ant-select-selector {
+    border-color: #05f170;
+    box-shadow: 0 0 0 2px var(--daytona-focus-ring);
+  }
+  .ant-select .ant-select-selection-placeholder {
+    color: var(--daytona-text-subtle);
+  }
+  .ant-select-dropdown,
+  .ant-picker-dropdown .ant-picker-panel-container {
+    background: var(--daytona-panel-2);
+    border: 1px solid var(--daytona-border);
+    border-radius: 6px;
+    box-shadow: none;
+  }
+  .ant-select-dropdown .ant-select-item-option-active:not(.ant-select-item-option-disabled) {
+    background: var(--daytona-panel-3);
+  }
+  .ant-select-dropdown .ant-select-item-option-selected:not(.ant-select-item-option-disabled) {
+    background: var(--daytona-selected-bg);
+  }
+
+  /* ---------- Tabs ---------- */
+  .ant-tabs .ant-tabs-tab {
+    color: var(--daytona-text-muted);
+  }
+  .ant-tabs .ant-tabs-tab:hover {
+    color: var(--daytona-text);
+  }
+  .ant-tabs .ant-tabs-tab.ant-tabs-tab-active .ant-tabs-tab-btn {
+    color: var(--daytona-text);
+  }
+  .ant-tabs .ant-tabs-ink-bar {
+    background: #05f170;
+  }
+  .ant-tabs-top > .ant-tabs-nav::before,
+  .ant-tabs-bottom > .ant-tabs-nav::before {
+    border-bottom: 1px solid var(--daytona-border);
+  }
+
+  /* ---------- Tag ---------- */
+  .ant-tag {
+    border-radius: 6px;
+    box-shadow: none;
+  }
+
+  /* ---------- Modal / Drawer ---------- */
+  .ant-modal-content {
+    background: var(--daytona-panel);
+    border: 1px solid var(--daytona-border);
+    border-radius: 6px;
+    box-shadow: none;
+    padding: 0;
+  }
+  .ant-modal-header {
+    background: var(--daytona-panel);
+    border-bottom: 1px solid var(--daytona-border);
+    border-radius: 6px 6px 0 0;
+    padding: 16px 24px;
+    margin-bottom: 0;
+  }
+  .ant-modal-body {
+    padding: 16px 24px;
+  }
+  .ant-modal-footer {
+    border-top: 1px solid var(--daytona-border);
+    padding: 12px 24px;
+    margin-top: 0;
+  }
+  html.dark .ant-modal-mask {
+    background: rgba(0, 0, 0, 0.7);
+  }
+  .ant-drawer-content {
+    background: var(--daytona-panel);
+  }
+  .ant-drawer-header {
+    background: var(--daytona-panel);
+    border-bottom: 1px solid var(--daytona-border);
+  }
+  .ant-drawer-footer {
+    background: var(--daytona-panel);
+    border-top: 1px solid var(--daytona-border);
+  }
+  .ant-drawer-body {
+    background: var(--daytona-panel);
+  }
+
+  /* ---------- Segmented ---------- */
+  .ant-segmented {
+    border: 1px solid var(--daytona-border);
+    border-radius: 6px;
+    box-shadow: none;
+  }
+  .ant-segmented .ant-segmented-item-selected {
+    border-radius: 4px;
+    box-shadow: none;
+  }
+
+  /* ---------- Switch ---------- */
+  .ant-switch {
+    box-shadow: none;
+  }
+  .ant-switch .ant-switch-handle {
+    box-shadow: none;
+  }
+
+  /* ---------- Collapse (Details tab) ---------- */
+  .ant-collapse {
+    background: var(--daytona-panel);
+    border: 1px solid var(--daytona-border);
+    border-radius: 6px;
+  }
+  .ant-collapse > .ant-collapse-item {
+    border-bottom: 1px solid var(--daytona-border);
+  }
+  .ant-collapse > .ant-collapse-item:last-child {
+    border-bottom: none;
+  }
+  .ant-collapse > .ant-collapse-item > .ant-collapse-header {
+    color: var(--daytona-text);
+  }
+  .ant-collapse .ant-collapse-content {
+    background: var(--daytona-panel);
+    border-top: 1px solid var(--daytona-border);
+  }
+
+  /* ---------- Divider ---------- */
+  .ant-divider {
+    border-color: var(--daytona-border);
+  }
+
+  /* ---------- Overlays (Dropdown / Popover / Message / Notification) ----------
+     bg comes from the shared global colorBgElevated, so pin it here
+     to the Daytona panel instead of antd's derived #1f1f1f. Tooltip
+     is deliberately excluded: its dark spotlight bg is intentional
+     contrast in both modes. */
+  .ant-dropdown-menu,
+  .ant-popover-inner,
+  .ant-message-notice-content,
+  .ant-notification-notice {
+    background: var(--daytona-panel-2);
+    border: 1px solid var(--daytona-border);
+    border-radius: 6px;
+    box-shadow: none;
+  }
+  .ant-dropdown-menu-item:hover,
+  .ant-dropdown-menu-submenu-title:hover {
+    background: var(--daytona-panel-3);
+  }
+  .ant-popover-arrow::before,
+  .ant-popover-arrow::after {
+    background: var(--daytona-panel-2);
+    border-color: var(--daytona-border);
+  }
+
+  /* ---------- List (member keys / compensations) ---------- */
+  .ant-list-item {
+    border-block-end: 1px solid var(--daytona-border);
+  }
+  .ant-list-split .ant-list-item:last-child {
+    border-block-end: none;
+  }
+  .ant-list-item-meta-title {
+    color: var(--daytona-text);
+  }
+  .ant-list-item-meta-description {
+    color: var(--daytona-text-muted);
+  }
+
+  /* ---------- Statistic (stat cards) ---------- */
+  .ant-statistic .ant-statistic-title {
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    color: var(--daytona-text-muted);
+  }
+  .ant-statistic .ant-statistic-content-value {
+    font-weight: 600;
+    color: var(--daytona-text);
+  }
+
+  /* ---------- Empty state ---------- */
+  .ant-empty-description {
+    color: var(--daytona-text-muted);
+  }
 }

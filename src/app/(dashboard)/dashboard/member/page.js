@@ -211,7 +211,7 @@ export default function MemberDashboardPage() {
     : [];
 
   return (
-    <div className="flex flex-col gap-6">
+    <div className="flex flex-col gap-4">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
           <Typography.Title level={2} style={{ margin: 0 }}>
@@ -383,7 +383,7 @@ export default function MemberDashboardPage() {
               </Typography.Text>
             ) : (
               <Typography.Text type="secondary">
-                Kirim <Typography.Text code>/start {linkCode}</Typography.Text> ke bot Telegram h-router.
+                Kirim <Typography.Text code>/start {linkCode}</Typography.Text> ke bot Telegram H-router.
               </Typography.Text>
             )}
             <div className="flex gap-2">

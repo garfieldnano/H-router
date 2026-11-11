@@ -3,10 +3,15 @@
 import { cn } from "@/shared/utils/cn";
 
 const variants = {
-  primary: "bg-brand-500 hover:bg-brand-600 text-white shadow-sm disabled:bg-surface-3 disabled:text-text-muted",
+  // Daytona primary: black bg + white text (light) / white bg + black
+  // text (dark). Matches the antd primary-button treatment.
+  // Disabled state keeps NO opacity cut and uses explicit zinc tones:
+  // the old `disabled:opacity-50` + surface-3/muted combo rendered
+  // grey-on-grey in dark mode (unreadable "Masuk sebagai Member").
+  primary: "bg-[#0a0a0a] hover:bg-[#262626] text-white dark:bg-white dark:hover:bg-zinc-200 dark:text-black shadow-sm disabled:bg-zinc-300 disabled:text-zinc-600 dark:disabled:bg-zinc-800 dark:disabled:text-zinc-400",
   secondary: "bg-surface-2 hover:bg-surface-3 text-text-main border border-border disabled:opacity-50",
-  outline: "border border-border text-text-main hover:bg-surface-2 hover:border-brand-500/40",
-  ghost: "text-text-muted hover:bg-surface-2 hover:text-text-main",
+  outline: "border border-border text-text-main hover:bg-surface-2 hover:border-brand-500/40 disabled:opacity-50",
+  ghost: "text-text-muted hover:bg-surface-2 hover:text-text-main disabled:opacity-50",
   danger: "bg-red-500 hover:bg-red-600 text-white shadow-sm disabled:bg-surface-3 disabled:text-text-muted",
   success: "bg-green-600 hover:bg-green-700 text-white shadow-sm disabled:bg-surface-3 disabled:text-text-muted",
 };
@@ -34,7 +39,7 @@ export default function Button({
     <button
       className={cn(
         "inline-flex items-center justify-center gap-2 font-semibold transition-all duration-150 ease-out cursor-pointer",
-        "active:scale-[0.97] disabled:opacity-50 disabled:cursor-not-allowed disabled:active:scale-100",
+        "active:scale-[0.97] disabled:cursor-not-allowed disabled:active:scale-100",
         variants[variant],
         sizes[size],
         fullWidth && "w-full",

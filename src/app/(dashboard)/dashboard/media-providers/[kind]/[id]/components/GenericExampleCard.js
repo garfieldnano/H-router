@@ -267,7 +267,7 @@ export function GenericExampleCard({ providerId, kind }) {
             <select
               value={selectedModel}
               onChange={(e) => setSelectedModel(e.target.value)}
-              className="w-full px-3 py-1.5 text-sm border border-border rounded-lg bg-background focus:outline-none focus:border-primary"
+              className="w-full px-3 py-1.5 text-sm border border-border rounded-md bg-background focus:outline-none focus:border-primary"
             >
               {kindModels.map((m) => (
                 <option key={m.id} value={m.id}>{m.name || m.id}</option>
@@ -280,7 +280,7 @@ export function GenericExampleCard({ providerId, kind }) {
               value={selectedModel}
               onChange={(e) => setSelectedModel(e.target.value)}
               placeholder="Enter model id (provider-specific)"
-              className="w-full px-3 py-1.5 text-sm border border-border rounded-lg bg-background focus:outline-none focus:border-primary font-mono"
+              className="w-full px-3 py-1.5 text-sm border border-border rounded-md bg-background focus:outline-none focus:border-primary font-mono"
             />
           </Row>
         ) : null}
@@ -288,14 +288,14 @@ export function GenericExampleCard({ providerId, kind }) {
         {/* Endpoint */}
         <Row label="Endpoint">
           <div className="flex w-full flex-col gap-2 sm:w-auto sm:flex-row sm:items-center">
-            <span className="w-full min-w-0 flex-1 px-3 py-1.5 text-sm font-mono text-text-main bg-sidebar rounded-lg truncate">
+            <span className="w-full min-w-0 flex-1 px-3 py-1.5 text-sm font-mono text-text-main bg-sidebar rounded-md truncate">
               {endpoint}{apiPath}
             </span>
             {tunnelEndpoint && (
               <button
                 onClick={() => setUseTunnel((v) => !v)}
                 title={useTunnel ? "Using tunnel" : "Using local"}
-                className={`flex items-center gap-1 text-xs px-2 py-1.5 rounded-lg border shrink-0 transition-colors ${
+                className={`flex items-center gap-1 text-xs px-2 py-1.5 rounded-md border shrink-0 transition-colors ${
                   useTunnel ? "border-primary/40 bg-primary/10 text-primary" : "border-border text-text-muted hover:text-primary"
                 }`}
               >
@@ -308,7 +308,7 @@ export function GenericExampleCard({ providerId, kind }) {
 
         {/* API Key */}
         <Row label="API Key">
-          <span className="px-3 py-1.5 text-sm font-mono text-text-main bg-sidebar rounded-lg truncate block">
+          <span className="px-3 py-1.5 text-sm font-mono text-text-main bg-sidebar rounded-md truncate block">
             {apiKey ? `${apiKey.slice(0, 8)}${"\u2022".repeat(Math.min(20, Math.max(0, apiKey.length - 8)))}` : <span className="text-text-muted italic">No key configured</span>}
           </span>
         </Row>
@@ -319,7 +319,7 @@ export function GenericExampleCard({ providerId, kind }) {
             <select
               value={pinnedConnectionId}
               onChange={(e) => setPinnedConnectionId(e.target.value)}
-              className="w-full px-3 py-1.5 text-sm border border-border rounded-lg bg-background focus:outline-none focus:border-primary"
+              className="w-full px-3 py-1.5 text-sm border border-border rounded-md bg-background focus:outline-none focus:border-primary"
             >
               <option value="">Auto (by priority)</option>
               {connections.map((c) => {
@@ -342,7 +342,7 @@ export function GenericExampleCard({ providerId, kind }) {
               value={input}
               onChange={(e) => setInput(e.target.value)}
               placeholder={exConfig.inputPlaceholder}
-              className="w-full px-3 py-1.5 pr-7 text-sm border border-border rounded-lg bg-background focus:outline-none focus:border-primary"
+              className="w-full px-3 py-1.5 pr-7 text-sm border border-border rounded-md bg-background focus:outline-none focus:border-primary"
             />
             {input && (
               <button
@@ -364,7 +364,7 @@ export function GenericExampleCard({ providerId, kind }) {
                 value={question}
                 onChange={(e) => setQuestion(e.target.value)}
                 placeholder="Enter evaluation question or criteria"
-                className="w-full px-3 py-1.5 pr-7 text-sm border border-border rounded-lg bg-background focus:outline-none focus:border-primary"
+                className="w-full px-3 py-1.5 pr-7 text-sm border border-border rounded-md bg-background focus:outline-none focus:border-primary"
               />
               {question && (
                 <button
@@ -388,7 +388,7 @@ export function GenericExampleCard({ providerId, kind }) {
                   value={refImage}
                   onChange={(e) => setRefImage(e.target.value)}
                   placeholder={imageEditDefaults.image || "https://example.com/source.png"}
-                  className="w-full px-3 py-1.5 pr-7 text-sm border border-border rounded-lg bg-background focus:outline-none focus:border-primary"
+                  className="w-full px-3 py-1.5 pr-7 text-sm border border-border rounded-md bg-background focus:outline-none focus:border-primary"
                 />
                 {refImage && (
                   <button
@@ -404,7 +404,7 @@ export function GenericExampleCard({ providerId, kind }) {
                 <img
                   src={refImagePreviewSrc}
                   alt="Reference"
-                  className="max-h-40 rounded-lg border border-border object-contain bg-sidebar"
+                  className="max-h-40 rounded-md border border-border object-contain bg-sidebar"
                   onError={(e) => { e.currentTarget.style.display = "none"; }}
                   onLoad={(e) => { e.currentTarget.style.display = "block"; }}
                 loading="lazy"
@@ -423,7 +423,7 @@ export function GenericExampleCard({ providerId, kind }) {
                   value={maskImage}
                   onChange={(e) => setMaskImage(e.target.value)}
                   placeholder={imageEditDefaults.mask_image || "https://example.com/mask.png"}
-                  className="w-full px-3 py-1.5 pr-7 text-sm border border-border rounded-lg bg-background focus:outline-none focus:border-primary"
+                  className="w-full px-3 py-1.5 pr-7 text-sm border border-border rounded-md bg-background focus:outline-none focus:border-primary"
                 />
                 {maskImage && (
                   <button
@@ -439,7 +439,7 @@ export function GenericExampleCard({ providerId, kind }) {
                 <img
                   src={maskImagePreviewSrc}
                   alt="Mask"
-                  className="max-h-40 rounded-lg border border-border object-contain bg-sidebar"
+                  className="max-h-40 rounded-md border border-border object-contain bg-sidebar"
                   onError={(e) => { e.currentTarget.style.display = "none"; }}
                   onLoad={(e) => { e.currentTarget.style.display = "block"; }}
                 loading="lazy"
@@ -459,7 +459,7 @@ export function GenericExampleCard({ providerId, kind }) {
               <select
                 value={effectiveExtraValues[f.key] ?? ""}
                 onChange={(e) => setExtraValues((s) => ({ ...s, [f.key]: e.target.value }))}
-                className="w-full px-3 py-1.5 text-sm border border-border rounded-lg bg-background focus:outline-none focus:border-primary"
+                className="w-full px-3 py-1.5 text-sm border border-border rounded-md bg-background focus:outline-none focus:border-primary"
               >
                 {(f.options || []).map((opt) => (
                   <option key={opt} value={opt}>{opt === "" ? "(default)" : opt}</option>
@@ -471,7 +471,7 @@ export function GenericExampleCard({ providerId, kind }) {
                 value={extraValues[f.key] ?? ""}
                 placeholder={f.placeholder}
                 onChange={(e) => setExtraValues((s) => ({ ...s, [f.key]: e.target.value }))}
-                className="w-full px-3 py-1.5 text-sm border border-border rounded-lg bg-background focus:outline-none focus:border-primary"
+                className="w-full px-3 py-1.5 text-sm border border-border rounded-md bg-background focus:outline-none focus:border-primary"
               />
             ) : f.type === "image" ? (
               <div className="flex gap-2 items-center">
@@ -480,9 +480,9 @@ export function GenericExampleCard({ providerId, kind }) {
                   value={extraValues[f.key] ?? ""}
                   placeholder="https://… or click Upload"
                   onChange={(e) => setExtraValues((s) => ({ ...s, [f.key]: e.target.value }))}
-                  className="flex-1 min-w-0 px-3 py-1.5 text-sm border border-border rounded-lg bg-background focus:outline-none focus:border-primary"
+                  className="flex-1 min-w-0 px-3 py-1.5 text-sm border border-border rounded-md bg-background focus:outline-none focus:border-primary"
                 />
-                <label className="shrink-0 inline-flex items-center gap-1 px-3 py-1.5 text-sm border border-border rounded-lg bg-background hover:bg-accent cursor-pointer transition-colors">
+                <label className="shrink-0 inline-flex items-center gap-1 px-3 py-1.5 text-sm border border-border rounded-md bg-background hover:bg-accent cursor-pointer transition-colors">
                   <span className="material-symbols-outlined text-[16px]">upload</span>
                   Upload
                   <input
@@ -516,7 +516,7 @@ export function GenericExampleCard({ providerId, kind }) {
                 min={f.min}
                 max={f.max}
                 onChange={(e) => setExtraValues((s) => ({ ...s, [f.key]: e.target.value === "" ? "" : Number(e.target.value) }))}
-                className="w-full px-3 py-1.5 text-sm border border-border rounded-lg bg-background focus:outline-none focus:border-primary"
+                className="w-full px-3 py-1.5 text-sm border border-border rounded-md bg-background focus:outline-none focus:border-primary"
               />
             )}
           </Row>
@@ -528,7 +528,7 @@ export function GenericExampleCard({ providerId, kind }) {
             <select
               value={imageOutputFormat}
               onChange={(e) => setImageOutputFormat(e.target.value)}
-              className="w-full px-3 py-1.5 text-sm border border-border rounded-lg bg-background focus:outline-none focus:border-primary"
+              className="w-full px-3 py-1.5 text-sm border border-border rounded-md bg-background focus:outline-none focus:border-primary"
             >
               <option value="json">JSON (Base64)</option>
               <option value="binary">Binary File</option>
@@ -551,7 +551,7 @@ export function GenericExampleCard({ providerId, kind }) {
             <button
               onClick={handleRun}
               disabled={running || !input.trim() || !modelFull}
-              className="flex w-full sm:w-auto items-center justify-center gap-1.5 px-3 py-1 rounded-lg bg-primary text-white text-xs font-medium hover:bg-primary/90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              className="flex w-full sm:w-auto items-center justify-center gap-1.5 px-3 py-1 rounded-md bg-primary text-white text-xs font-medium hover:bg-primary/90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
             >
                 <span className="material-symbols-outlined text-[14px]" style={running ? { animation: "spin 1s linear infinite" } : undefined}>
                   play_arrow
@@ -560,12 +560,12 @@ export function GenericExampleCard({ providerId, kind }) {
               </button>
             </div>
           </div>
-          <pre className="bg-sidebar rounded-lg px-3 py-2.5 text-xs font-mono text-text-main overflow-x-auto whitespace-pre-wrap break-all">{curlSnippet}</pre>
+          <pre className="bg-sidebar rounded-md px-3 py-2.5 text-xs font-mono text-text-main overflow-x-auto whitespace-pre-wrap break-all">{curlSnippet}</pre>
         </div>
 
         {/* Streaming progress */}
         {(running || progress) && useStreaming && (
-          <div className="flex flex-col gap-2 px-3 py-2 rounded-lg bg-sidebar border border-border sm:flex-row sm:items-center sm:gap-3">
+          <div className="flex flex-col gap-2 px-3 py-2 rounded-md bg-sidebar border border-border sm:flex-row sm:items-center sm:gap-3">
             <span className="material-symbols-outlined text-[16px] text-primary" style={running ? { animation: "spin 1s linear infinite" } : undefined}>
               {running ? "progress_activity" : "check_circle"}
             </span>
@@ -583,7 +583,7 @@ export function GenericExampleCard({ providerId, kind }) {
             <img
               src={`data:image/png;base64,${partialImage.b64_json}`}
               alt="Partial"
-              className="max-w-full rounded-lg border border-border mt-1.5 opacity-80"
+              className="max-w-full rounded-md border border-border mt-1.5 opacity-80"
             loading="lazy"
             decoding="async"
             />
@@ -624,7 +624,7 @@ export function GenericExampleCard({ providerId, kind }) {
               <img
                 src={binaryImageUrl || (result?.data?.data?.[0]?.b64_json ? `data:image/png;base64,${result.data.data[0].b64_json}` : result?.data?.data?.[0]?.url)}
                 alt="Generated"
-                className="max-w-full rounded-lg border border-border"
+                className="max-w-full rounded-md border border-border"
               loading="lazy"
               decoding="async"
               />
@@ -645,11 +645,11 @@ export function GenericExampleCard({ providerId, kind }) {
               <video
                 controls
                 src={videoUrl}
-                className="max-w-full rounded-lg border border-border"
+                className="max-w-full rounded-md border border-border"
               />
             </div>
           )}
-          <pre className="bg-sidebar rounded-lg px-3 py-2.5 text-xs font-mono text-text-main overflow-x-auto whitespace-pre-wrap break-all opacity-70">
+          <pre className="bg-sidebar rounded-md px-3 py-2.5 text-xs font-mono text-text-main overflow-x-auto whitespace-pre-wrap break-all opacity-70">
             {result ? resultJson : exConfig.defaultResponse}
           </pre>
         </div>

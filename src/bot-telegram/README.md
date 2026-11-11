@@ -1,6 +1,6 @@
-# Bot Telegram h-router
+# Bot Telegram H-router
 
-Bot Telegram untuk h-router: member cek penggunaan & kunci, beli paket (transfer manual + konfirmasi admin), klaim trial gratis 1 hari, hubungi owner, dan panel admin lengkap di dalam bot. Laporan harian: digest otomatis ke owner tiap pagi ~08:00 WIB + laporan harian member on-demand. Kompensasi gangguan: pemantau uptime gateway mencatat insiden otomatis; admin memberi perpanjangan masa aktif kunci secara manual dari bot atau web.
+Bot Telegram untuk H-router: member cek penggunaan & kunci, beli paket (transfer manual + konfirmasi admin), klaim trial gratis 1 hari, hubungi owner, dan panel admin lengkap di dalam bot. Laporan harian: digest otomatis ke owner tiap pagi ~08:00 WIB + laporan harian member on-demand. Kompensasi gangguan: pemantau uptime gateway mencatat insiden otomatis; admin memberi perpanjangan masa aktif kunci secara manual dari bot atau web.
 
 ## Arsitektur
 

@@ -55,7 +55,7 @@ Guard (`src/dashboardGuard.js`) + scoping di tiap route API:
   `usageHistory` milik kunci member — bukan rollup harian `usageDaily`.
 - Sidebar member hanya menampilkan "Dashboard Member"; admin mendapat item
   "Members" di bagian System. Logo sidebar: `public/h-router-logo.svg` +
-  heading `h-router`.
+  heading `H-router`.
 
 ## Skema (v3)
 

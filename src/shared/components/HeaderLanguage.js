@@ -26,7 +26,7 @@ export default function HeaderLanguage() {
     <>
       <button
         onClick={() => setOpen(true)}
-        className="flex items-center justify-center p-2 rounded-lg text-text-muted hover:text-text-main hover:bg-black/5 dark:hover:bg-white/5 transition-all"
+        className="flex items-center justify-center size-8 rounded-md text-[var(--daytona-text-muted)] hover:text-[var(--daytona-text)] hover:bg-[var(--daytona-panel-2)] transition-colors"
         title="Language"
         data-i18n-skip="true"
       >

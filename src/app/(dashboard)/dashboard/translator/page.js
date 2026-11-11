@@ -218,11 +218,11 @@ export default function TranslatorPage() {
   };
 
   return (
-    <div className="p-8 space-y-3">
+    <div className="flex flex-col gap-6">
       {/* Header */}
       <div className="flex items-center justify-between mb-2">
         <div>
-          <h1 className="text-2xl font-bold text-text-main">Translator Debug</h1>
+          <h1 className="text-xl font-semibold tracking-tight text-text-main">Translator Debug</h1>
           <p className="text-sm text-text-muted mt-1">Replay request flow — matches log files</p>
         </div>
         {meta && (
@@ -243,7 +243,7 @@ export default function TranslatorPage() {
 
         return (
           <Card key={step.id}>
-            <div className="p-4 space-y-3">
+            <div className="space-y-3">
               {/* Step header */}
               <div className="flex items-center justify-between">
                 <button onClick={() => toggle(step.id)} className="flex items-center gap-2 flex-1 text-left group">
@@ -266,7 +266,7 @@ export default function TranslatorPage() {
               {/* Expanded content */}
               {isExpanded && (
                 <>
-                  <div className="border border-border rounded-lg overflow-hidden">
+                  <div className="border border-border rounded-md overflow-hidden">
                     <Editor
                       height="400px"
                       defaultLanguage={step.lang === "text" ? "plaintext" : "json"}

@@ -6,7 +6,7 @@ import { arrayMove, SortableContext, sortableKeyboardCoordinates, useSortable, v
 import { CSS } from "@dnd-kit/utilities";
 import { restrictToVerticalAxis, restrictToParentElement } from "@dnd-kit/modifiers";
 import { CardSkeleton, ModelSelectModal, CapacityBadges, SmartPolicyModal } from "@/shared/components";
-import { Button, Card, Checkbox, Input, Modal, Select, Switch, Table, Tag, Typography } from "antd";
+import { Button, Card, Checkbox, Collapse, Input, Modal, Select, Switch, Table, Tag, Typography } from "antd";
 import { useCopyToClipboard } from "@/shared/hooks/useCopyToClipboard";
 import { useModelCaps } from "@/shared/hooks/useModelCaps";
 import { useMemberRole } from "@/shared/hooks/useMemberRole";
@@ -396,17 +396,35 @@ export default function CombosPage() {
       {/* Header */}
       <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
         <div className="min-w-0">
-          <p className="text-sm text-text-muted mt-1">
-            Group models under one name, then pick a strategy per combo:
-          </p>
-          <ul className="text-sm text-text-muted mt-2 flex flex-col gap-1">
-            <li><span className="font-medium text-text-main">Fallback</span> — tries models in order (next on failure)</li>
-            <li><span className="font-medium text-text-main">Round Robin</span> — rotates models across requests to spread load</li>
-            <li><span className="font-medium text-text-main">Smart Router</span> — queries a System One decision model to pick the optimal model before generation; supports Smart Switch (adaptive hysteresis), Strict Lock (1 task = 1 session, +0ms latency), and Per-Turn modes to maximize prompt-cache retention</li>
-            <li><span className="font-medium text-text-main">Fusion</span> — queries all models in parallel, then a judge synthesizes one answer. Best quality, but costs the most: every request bills all panel models + the judge (N+1 calls)</li>
-          </ul>
+          <h1 className="text-xl font-semibold text-text-main">Combos</h1>
+          {/* Strategy explainer — collapsed by default so it no longer
+              dominates the top of the page; text unchanged. */}
+          <Collapse
+            ghost
+            size="small"
+            className="mt-1"
+            items={[
+              {
+                key: "how-strategies-work",
+                label: "How strategies work",
+                children: (
+                  <>
+                    <p className="text-sm text-text-muted">
+                      Group models under one name, then pick a strategy per combo:
+                    </p>
+                    <ul className="text-sm text-text-muted mt-2 flex flex-col gap-1">
+                      <li><span className="font-medium text-text-main">Fallback</span> — tries models in order (next on failure)</li>
+                      <li><span className="font-medium text-text-main">Round Robin</span> — rotates models across requests to spread load</li>
+                      <li><span className="font-medium text-text-main">Smart Router</span> — queries a System One decision model to pick the optimal model before generation; supports Smart Switch (adaptive hysteresis), Strict Lock (1 task = 1 session, +0ms latency), and Per-Turn modes to maximize prompt-cache retention</li>
+                      <li><span className="font-medium text-text-main">Fusion</span> — queries all models in parallel, then a judge synthesizes one answer. Best quality, but costs the most: every request bills all panel models + the judge (N+1 calls)</li>
+                    </ul>
+                  </>
+                ),
+              },
+            ]}
+          />
           <p className="hidden text-xs text-text-muted mt-3 max-w-2xl">
-            <span className="font-medium text-text-main">Cursor / Claude Default</span> create combos named exactly like those clients&apos; model IDs (e.g. <code className="font-mono">composer-2.5</code>, <code className="font-mono">opus</code>), seeded with the matching <code className="font-mono">cu/…</code> or <code className="font-mono">cc/…</code> route so traffic can hit 9router without the prefix.
+            <span className="font-medium text-text-main">Cursor / Claude Default</span> create combos named exactly like those clients&apos; model IDs (e.g. <code className="font-mono">composer-2.5</code>, <code className="font-mono">opus</code>), seeded with the matching <code className="font-mono">cu/…</code> or <code className="font-mono">cc/…</code> route so traffic can hit H-router without the prefix.
             {" "}Note: Cursor IDE itself often blocks built-in Composer / Grok from Override OpenAI Base URL (&quot;model does not support custom API&quot;); add them via Cursor&apos;s <span className="font-medium text-text-main">Add Custom Model</span> using the combo name, or pick a model Cursor allows through the custom endpoint.
           </p>
         </div>
@@ -453,7 +471,7 @@ export default function CombosPage() {
       {combos.length === 0 ? (
         <Card>
           <div className="text-center py-12">
-            <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-primary/10 text-primary mb-4">
+            <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-[var(--daytona-selected-bg)] text-[var(--daytona-link)] mb-4">
               <span className="material-symbols-outlined text-[32px]">layers</span>
             </div>
             <p className="text-text-main font-medium mb-1">No combos yet</p>
@@ -469,7 +487,7 @@ export default function CombosPage() {
         <div className="flex flex-col gap-3">
           {/* Selection toolbar */}
           {!isMember && (
-          <div className="flex min-w-0 flex-col gap-2 rounded-lg border border-black/5 bg-black/[0.015] px-3 py-2 dark:border-white/5 dark:bg-white/[0.02] sm:flex-row sm:items-center sm:justify-between">
+          <div className="flex min-w-0 flex-col gap-2 rounded-md border border-border bg-[var(--daytona-panel-2)] px-3 py-2 sm:flex-row sm:items-center sm:justify-between">
             <Checkbox
               indeterminate={someSelected && !allSelected}
               checked={allSelected}
@@ -660,7 +678,7 @@ function ComboCard({ combo, getCaps, comboByName = {}, activeProviders = [], cop
   const comboCaps = aggregateComboCapabilities(combo.models, comboByName, getCaps);
 
   return (
-    <Card styles={{ body: { padding: 16 } }} className={`group ${selected ? "ring-1 ring-primary/40 bg-primary/[0.03]" : ""}`}>
+    <Card styles={{ body: { padding: 16 } }} className={`group ${selected ? "ring-1 ring-[#05f170]/40 bg-[var(--daytona-selected-bg)]" : ""}`}>
       <div className="flex min-w-0 flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div className="flex min-w-0 flex-1 items-start gap-3 sm:items-center">
 {!isMember && (
@@ -673,8 +691,8 @@ function ComboCard({ combo, getCaps, comboByName = {}, activeProviders = [], cop
             className="shrink-0 pt-1 sm:pt-0"
           />
           )}
-          <div className="size-8 rounded-lg bg-primary/10 flex items-center justify-center shrink-0">
-            <span className="material-symbols-outlined text-primary text-[18px]">layers</span>
+          <div className="size-8 rounded-md bg-[var(--daytona-selected-bg)] flex items-center justify-center shrink-0">
+            <span className="material-symbols-outlined text-[var(--daytona-link)] text-[18px]">layers</span>
           </div>
           <div className="min-w-0 flex-1">
             <code className="block truncate font-mono text-sm font-medium">{combo.name}</code>
@@ -711,7 +729,7 @@ function ComboCard({ combo, getCaps, comboByName = {}, activeProviders = [], cop
                 <button
                   onClick={isMember ? undefined : () => setShowJudgeSelect(true)}
                   disabled={isMember}
-                  className="inline-flex max-w-full items-center gap-1 rounded border border-dashed border-primary/40 px-1.5 py-0.5 font-mono text-[11px] text-primary hover:border-primary hover:bg-primary/5 transition-colors"
+                  className="inline-flex max-w-full items-center gap-1 rounded border border-dashed border-[#05f170]/40 px-1.5 py-0.5 font-mono text-[11px] text-[var(--daytona-link)] hover:border-[#05f170] hover:bg-[#05f170]/5 transition-colors"
                   title="Pick the model that fuses panel answers"
                 >
                   <span className="material-symbols-outlined text-[13px]">gavel</span>
@@ -738,7 +756,7 @@ function ComboCard({ combo, getCaps, comboByName = {}, activeProviders = [], cop
                   <button
                     onClick={isMember ? undefined : () => setShowRouterSelect(true)}
                     disabled={isMember}
-                    className="inline-flex max-w-full items-center gap-1 rounded border border-dashed border-primary/40 px-1.5 py-0.5 font-mono text-[11px] text-primary hover:border-primary hover:bg-primary/5 transition-colors"
+                    className="inline-flex max-w-full items-center gap-1 rounded border border-dashed border-[#05f170]/40 px-1.5 py-0.5 font-mono text-[11px] text-[var(--daytona-link)] hover:border-[#05f170] hover:bg-[#05f170]/5 transition-colors"
                     title="Pick the System One model that decides model routing"
                   >
                     <span className="material-symbols-outlined text-[13px]">psychology</span>
@@ -752,7 +770,7 @@ function ComboCard({ combo, getCaps, comboByName = {}, activeProviders = [], cop
                       {!isMember && (
                         <Link
                           href={`/dashboard/media-providers/systemone/${routerStatus.providerId}`}
-                          className="text-[10px] text-primary hover:underline font-medium"
+                          className="text-[10px] text-[var(--daytona-link)] hover:underline font-medium"
                           title="Configure in Media Providers"
                         >
                           Configure
@@ -763,7 +781,7 @@ function ComboCard({ combo, getCaps, comboByName = {}, activeProviders = [], cop
                   <button
                     onClick={isMember ? undefined : () => setShowPolicyModal(true)}
                     disabled={isMember}
-                    className="inline-flex items-center gap-1 rounded border border-border/70 bg-black/[0.02] dark:bg-white/[0.02] px-2 py-0.5 text-[11px] text-text-main hover:border-primary/50 hover:bg-primary/5 transition-colors"
+                    className="inline-flex items-center gap-1 rounded border border-border/70 bg-black/[0.02] dark:bg-white/[0.02] px-2 py-0.5 text-[11px] text-text-main hover:border-[#05f170]/50 hover:bg-[#05f170]/5 transition-colors"
                     title="Configure routing policy and prompt cache retention"
                   >
                     <span className="material-symbols-outlined text-[13px] text-text-muted">tune</span>
@@ -801,7 +819,7 @@ function ComboCard({ combo, getCaps, comboByName = {}, activeProviders = [], cop
           <div className="grid grid-cols-3 gap-1 sm:flex">
             <button
               onClick={(e) => { e.stopPropagation(); onCopy(combo.name, `combo-${combo.id}`); }}
-              className="flex flex-col items-center rounded px-2 py-1 text-text-muted transition-colors hover:bg-black/5 hover:text-primary dark:hover:bg-white/5"
+              className="flex flex-col items-center rounded px-2 py-1 text-text-muted transition-colors hover:bg-black/5 hover:text-[var(--daytona-link)] dark:hover:bg-white/5"
               title="Copy combo name"
             >
               <span className="material-symbols-outlined text-[18px]">
@@ -812,7 +830,7 @@ function ComboCard({ combo, getCaps, comboByName = {}, activeProviders = [], cop
 {!isMember && (
             <button
               onClick={onEdit}
-              className="flex flex-col items-center rounded px-2 py-1 text-text-muted transition-colors hover:bg-black/5 hover:text-primary dark:hover:bg-white/5"
+              className="flex flex-col items-center rounded px-2 py-1 text-text-muted transition-colors hover:bg-black/5 hover:text-[var(--daytona-link)] dark:hover:bg-white/5"
               title="Edit"
             >
               <span className="material-symbols-outlined text-[18px]">edit</span>
@@ -945,8 +963,8 @@ function CapacityAdapterCap({ cap, entry, onChange, activeProviders, getCaps, re
             disabled={readOnly}
             aria-label={`Enable ${cap.label} adapter`}
           />
-          <div className="size-8 rounded-lg bg-primary/10 flex items-center justify-center shrink-0">
-            <span className="material-symbols-outlined text-primary text-[18px]">{cap.icon}</span>
+          <div className="size-8 rounded-md bg-[var(--daytona-selected-bg)] flex items-center justify-center shrink-0">
+            <span className="material-symbols-outlined text-[var(--daytona-link)] text-[18px]">{cap.icon}</span>
           </div>
           <div className="min-w-0 flex-1">
             <div className="flex items-center gap-1.5">
@@ -1106,14 +1124,14 @@ function ModelItem({ id, index, model, isFirst, isLast, onEdit, onMoveUp, onMove
     <div
       ref={setNodeRef}
       style={style}
-      className={`group flex min-w-0 items-center gap-1.5 rounded-md px-2 py-1 bg-black/[0.02] hover:bg-black/[0.04] dark:bg-white/[0.02] dark:hover:bg-white/[0.04] transition-colors ${isDragging ? "shadow-md ring-1 ring-primary/30" : ""}`}
+      className={`group flex min-w-0 items-center gap-1.5 rounded-md px-2 py-1 bg-black/[0.02] hover:bg-black/[0.04] dark:bg-white/[0.02] dark:hover:bg-white/[0.04] transition-colors ${isDragging ? "shadow-md ring-1 ring-[#05f170]/30" : ""}`}
     >
       {/* Drag handle */}
       <button
         {...attributes}
         {...listeners}
         type="button"
-        className="cursor-grab touch-none p-0.5 rounded text-text-muted hover:text-primary active:cursor-grabbing shrink-0"
+        className="cursor-grab touch-none p-0.5 rounded text-text-muted hover:text-[var(--daytona-link)] active:cursor-grabbing shrink-0"
         title="Drag to reorder"
       >
         <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
@@ -1134,7 +1152,7 @@ function ModelItem({ id, index, model, isFirst, isLast, onEdit, onMoveUp, onMove
           onChange={(e) => setDraft(e.target.value)}
           onBlur={commit}
           onKeyDown={handleKeyDown}
-          className="min-w-0 flex-1 rounded border border-primary/40 bg-white px-1.5 py-0.5 font-mono text-xs text-text-main outline-none dark:bg-black/20"
+          className="min-w-0 flex-1 rounded border border-[#05f170]/40 bg-white px-1.5 py-0.5 font-mono text-xs text-text-main outline-none dark:bg-black/20"
         />
       ) : (
         <div
@@ -1151,7 +1169,7 @@ function ModelItem({ id, index, model, isFirst, isLast, onEdit, onMoveUp, onMove
         <button
           onClick={onMoveUp}
           disabled={isFirst}
-          className={`p-0.5 rounded ${isFirst ? "text-text-muted/20 cursor-not-allowed" : "text-text-muted hover:text-primary hover:bg-black/5 dark:hover:bg-white/5"}`}
+          className={`p-0.5 rounded ${isFirst ? "text-text-muted/20 cursor-not-allowed" : "text-text-muted hover:text-[var(--daytona-link)] hover:bg-black/5 dark:hover:bg-white/5"}`}
           title="Move up"
         >
           <span className="material-symbols-outlined text-[12px]">arrow_upward</span>
@@ -1159,7 +1177,7 @@ function ModelItem({ id, index, model, isFirst, isLast, onEdit, onMoveUp, onMove
         <button
           onClick={onMoveDown}
           disabled={isLast}
-          className={`p-0.5 rounded ${isLast ? "text-text-muted/20 cursor-not-allowed" : "text-text-muted hover:text-primary hover:bg-black/5 dark:hover:bg-white/5"}`}
+          className={`p-0.5 rounded ${isLast ? "text-text-muted/20 cursor-not-allowed" : "text-text-muted hover:text-[var(--daytona-link)] hover:bg-black/5 dark:hover:bg-white/5"}`}
           title="Move down"
         >
           <span className="material-symbols-outlined text-[12px]">arrow_downward</span>
@@ -1312,7 +1330,7 @@ function ComboFormModal({ isOpen, combo, onClose, onSave, activeProviders, kindF
             <label className="text-sm font-medium mb-1.5 block">Models</label>
 
             {models.length === 0 ? (
-              <div className="text-center py-4 border border-dashed border-black/10 dark:border-white/10 rounded-lg bg-black/[0.01] dark:bg-white/[0.01]">
+              <div className="text-center py-4 border border-dashed border-border rounded-md bg-[var(--daytona-panel-2)]">
                 <span className="material-symbols-outlined text-text-muted text-xl mb-1">layers</span>
                 <p className="text-xs text-text-muted">No models added yet</p>
               </div>

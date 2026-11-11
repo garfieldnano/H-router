@@ -10,7 +10,7 @@ import Image from "next/image";
 export default function MitmLinkCard({ tool }) {
   return (
     <Link href="/dashboard/mitm" className="block">
-      <Card styles={{ body: { padding: 16 } }} className="overflow-hidden hover:border-primary/50 transition-colors cursor-pointer">
+      <Card styles={{ body: { padding: 16 } }} className="overflow-hidden hover:border-success/50 transition-colors cursor-pointer">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
             <div className="size-8 flex items-center justify-center shrink-0">
@@ -19,7 +19,7 @@ export default function MitmLinkCard({ tool }) {
                 alt={tool.name}
                 width={32}
                 height={32}
-                className="size-8 object-contain rounded-lg"
+                className="size-8 object-contain rounded-md"
                 sizes="32px"
                 onError={(e) => { e.target.style.display = "none"; }}
               loading="lazy"

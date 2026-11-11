@@ -306,7 +306,7 @@ export default function RebrandPage() {
   return (
     <div className="flex flex-col gap-6">
       <div>
-        <h1 className="text-2xl font-bold text-text-main">Rebranding</h1>
+        <h1 className="text-xl font-semibold tracking-tight text-text-main">Rebranding</h1>
         <p className="text-sm text-text-muted">
           Jual model dengan nama brand sendiri (mis. <code>h-router/ultra-pro</code>) dan suntik system prompt
           live ke request — sebelum RTK dan sebelum translasi. Prompt live hanya terlihat admin di sini.
@@ -461,7 +461,7 @@ export default function RebrandPage() {
             ) : (
               <div className="flex flex-col gap-3">
                 {prompts.map((p) => (
-                  <div key={p.id} className="flex flex-col gap-2 rounded-lg border border-border-subtle bg-bg-subtle p-3">
+                  <div key={p.id} className="flex flex-col gap-2 rounded-md border border-border-subtle bg-bg-subtle p-3">
                     <div className="flex flex-wrap items-center justify-between gap-3">
                       <div>
                         <div className="font-medium text-text-main">
@@ -533,7 +533,7 @@ export default function RebrandPage() {
                   const vision = visionOfUpstream(b.upstreamProvider, b.upstreamModel);
                   const override = overrideForBrand(b);
                   return (
-                    <div key={b.id} className="flex flex-wrap items-center justify-between gap-3 rounded-lg border border-border-subtle bg-bg-subtle p-3">
+                    <div key={b.id} className="flex flex-wrap items-center justify-between gap-3 rounded-md border border-border-subtle bg-bg-subtle p-3">
                       <div>
                         <div className="font-medium text-text-main">
                           {b.brandModelId}{" "}
@@ -595,7 +595,7 @@ export default function RebrandPage() {
                 <Typography.Text type="secondary">Belum ada override.</Typography.Text>
               ) : (
                 Object.entries(visionOverrides).map(([key, value]) => (
-                  <div key={key} className="flex flex-wrap items-center justify-between gap-3 rounded-lg border border-border-subtle bg-bg-subtle p-3">
+                  <div key={key} className="flex flex-wrap items-center justify-between gap-3 rounded-md border border-border-subtle bg-bg-subtle p-3">
                     <div className="font-medium text-text-main">
                       {key} <span className="text-sm text-text-muted">→ {value ? "vision" : "teks saja"}</span>
                     </div>

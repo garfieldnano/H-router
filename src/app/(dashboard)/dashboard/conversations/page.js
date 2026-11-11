@@ -99,7 +99,7 @@ export default function ConversationsPage() {
   ];
 
   return (
-    <div className="flex flex-col gap-4 p-4">
+    <div className="flex min-w-0 flex-col gap-6 px-1 sm:px-0">
       <div>
         <h1 className="text-xl font-semibold text-text-main">Percakapan</h1>
         <p className="text-sm text-text-muted">
@@ -153,7 +153,9 @@ export default function ConversationsPage() {
           }
         />
       ) : rows.length === 0 ? (
-        <p className="text-sm text-text-muted">Belum ada percakapan tercatat untuk filter ini.</p>
+        <div className="rounded-md border border-dashed border-border px-4 py-8 text-center text-sm text-text-muted">
+          Belum ada percakapan tercatat untuk filter ini.
+        </div>
       ) : (
         <Card styles={{ body: { padding: 0 } }}>
           <Table
@@ -200,7 +202,7 @@ export default function ConversationsPage() {
                 <p className="text-sm text-text-muted">Isi percakapan tidak tersimpan untuk permintaan ini (mis. respons streaming yang tidak selesai).</p>
               ) : (
                 (detail.turns || []).map((t, i) => (
-                  <div key={i} className="rounded-lg border border-border-subtle bg-bg-subtle px-3 py-2">
+                  <div key={i} className="rounded-md border border-border bg-[var(--daytona-panel-2)] px-3 py-2">
                     <div className="mb-1 flex items-center gap-2">
                       <Tag color={ROLE_TAG_COLOR[t.kind] || "default"}>{t.role}{t.truncated ? " · dipotong" : ""}</Tag>
                     </div>

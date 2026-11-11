@@ -60,6 +60,48 @@ const memberNavItems = [
   { href: "/dashboard/cli-tools", label: "CLI Tools", icon: "terminal" },
 ];
 
+// ---------------------------------------------------------------------------
+// Daytona nav-item presentation (presentation only — no behavior change).
+// Active = subtle green-tinted bg + green left bar + green filled icon;
+// inactive = muted text, subtle hover. Green is #05f170 written out
+// explicitly: the legacy --color-primary orange must not leak into the
+// dashboard chrome (globals :root is shared with the landing page).
+// ---------------------------------------------------------------------------
+function navItemClass(active) {
+  return cn(
+    "relative flex items-center gap-2.5 px-2.5 py-[7px] rounded-md text-[13px] font-medium transition-colors group",
+    active
+      ? "bg-[var(--daytona-selected-bg)] text-[var(--daytona-text)]"
+      : "text-[var(--daytona-text-muted)] hover:bg-[var(--daytona-panel-2)] hover:text-[var(--daytona-text)]"
+  );
+}
+
+function subNavItemClass(active) {
+  return cn(
+    "relative flex items-center gap-2.5 px-2.5 py-[6px] rounded-md text-xs font-medium transition-colors group",
+    active
+      ? "bg-[var(--daytona-selected-bg)] text-[var(--daytona-text)]"
+      : "text-[var(--daytona-text-muted)] hover:bg-[var(--daytona-panel-2)] hover:text-[var(--daytona-text)]"
+  );
+}
+
+function navIconClass(active, size = "text-[18px]") {
+  return cn(
+    "material-symbols-outlined shrink-0",
+    size,
+    active ? "fill-1 text-[#05f170]" : "group-hover:text-[var(--daytona-text)] transition-colors"
+  );
+}
+
+function ActiveBar() {
+  return (
+    <span
+      aria-hidden="true"
+      className="absolute left-0 top-1/2 h-4 w-[2px] -translate-y-1/2 rounded-full bg-[#05f170]"
+    />
+  );
+}
+
 export default function Sidebar({ onClose }) {
   const pathname = usePathname();
   const [mediaOpen, setMediaOpen] = useState(false);
@@ -75,12 +117,28 @@ export default function Sidebar({ onClose }) {
   }, []);
 
   const isMember = role === "member";
+  const isAdmin = role === "admin";
+  // While the role is still loading (role === null), render a NEUTRAL
+  // skeleton — never either role's nav. The previous fix showed the
+  // member items while loading, which flashed the member nav to admins
+  // right after login (the mirror of the member-direction flash).
+  // Admin sections render only once the role is positively known.
 
   useEffect(() => {
     useSettingsStore.getState().fetchSettings().then((data) => {
       if (data?.enableTranslator) setEnableTranslator(true);
     });
   }, []);
+
+  // Same logout as the header menu: POST /api/auth/logout, then /login.
+  const handleLogout = async () => {
+    try {
+      const res = await fetch("/api/auth/logout", { method: "POST" });
+      if (res.ok) window.location.assign("/login");
+    } catch (err) {
+      console.error("Failed to logout:", err);
+    }
+  };
 
   const isActive = (href) => {
     if (href === "/dashboard/endpoint") {
@@ -91,23 +149,16 @@ export default function Sidebar({ onClose }) {
 
   return (
     <>
-      <aside className="flex w-72 flex-col border-r border-border-subtle bg-vibrancy backdrop-blur-xl transition-colors duration-300 min-h-full">
-        {/* Traffic lights */}
-        <div className="flex items-center gap-2 px-6 pt-5 pb-2">
-          <div className="w-3 h-3 rounded-full bg-[#FF5F56]" />
-          <div className="w-3 h-3 rounded-full bg-[#FFBD2E]" />
-          <div className="w-3 h-3 rounded-full bg-[#27C93F]" />
-        </div>
-
+      <aside className="flex w-60 flex-col border-r border-[var(--daytona-border)] bg-[var(--daytona-panel)] min-h-full">
         {/* Logo */}
-        <div className="px-6 py-4 flex flex-col gap-2">
-          <Link href={isMember ? "/dashboard/member" : "/dashboard"} className="flex items-center gap-3">
-            <img src="/h-router-logo.svg" alt="h-router logo" className="size-9 shrink-0" width={36} height={36} />
-            <div className="flex flex-col">
-              <h1 className="text-lg font-semibold tracking-tight text-text-main">
-                h-router
+        <div className="px-5 pt-4 pb-3">
+          <Link href={isMember ? "/dashboard/member" : "/dashboard"} className="flex items-center gap-2.5">
+            <img src="/h-router-logo.svg" alt="H-router logo" className="size-7 shrink-0" width={28} height={28} />
+            <div className="flex flex-col leading-tight">
+              <h1 className="text-[15px] font-semibold tracking-tight text-[var(--daytona-text)]">
+                H-router
               </h1>
-              <span className="text-xs text-text-muted">v{APP_CONFIG.version}</span>
+              <span className="text-[11px] text-[var(--daytona-text-subtle)]">v{APP_CONFIG.version}</span>
             </div>
           </Link>
           {/* NOTE: the upstream npm updater panel ("Update now" + install command)
@@ -115,86 +166,73 @@ export default function Sidebar({ onClose }) {
               so `npm i -g 9router@latest` would install upstream 9Router. */}
         </div>
 
-        {/* Navigation */}
-        <nav className="flex-1 px-4 py-2 space-y-0.5 overflow-y-auto custom-scrollbar">
-          {(isMember ? memberNavItems : navItems).map((item) => (
+        {/* Navigation — neutral skeleton while the role is unresolved */}
+        <nav className="flex-1 px-3 py-2 space-y-px overflow-y-auto custom-scrollbar">
+          {role === null ? (
+            <div className="space-y-px" aria-hidden="true">
+              {[0, 1, 2, 3, 4].map((i) => (
+                <div key={i} className="h-[34px] rounded-md bg-[var(--daytona-panel-2)] animate-pulse" />
+              ))}
+            </div>
+          ) : (isMember ? memberNavItems : navItems).map((item) => (
             <Link
               key={item.href}
               href={item.href}
               onClick={onClose}
-              className={cn(
-                "flex items-center gap-3 px-3 py-1 rounded-lg transition-all group",
-                isActive(item.href)
-                  ? "bg-primary/10 text-primary"
-                  : "text-text-muted hover:bg-surface-2 hover:text-text-main"
-              )}
+              className={navItemClass(isActive(item.href))}
             >
-              <span
-                className={cn(
-                  "material-symbols-outlined text-[18px]",
-                  isActive(item.href) ? "fill-1" : "group-hover:text-primary transition-colors"
-                )}
-              >
+              {isActive(item.href) && <ActiveBar />}
+              <span className={navIconClass(isActive(item.href))}>
                 {item.icon}
               </span>
-              <span className="text-[13px] font-medium">{item.label}</span>
+              <span>{item.label}</span>
             </Link>
           ))}
 
-          {/* System section (admin only) */}
-          {!isMember && (
-          <div className="pt-3 mt-2 space-y-0.5">
-            <p className="px-4 text-xs font-semibold text-text-muted/60 uppercase tracking-wider mb-2">
+          {/* System section (admin only — rendered only once the role is
+              positively known to be admin, never while it is loading) */}
+          {isAdmin && (
+          <div className="mt-3 space-y-px border-t border-[var(--daytona-border)] pt-3">
+            <p className="px-2.5 pb-1.5 pt-1 text-[11px] font-medium text-[var(--daytona-text-subtle)] uppercase tracking-wider">
               System
             </p>
 
             {/* Media Providers accordion */}
             <button
               onClick={() => setMediaOpen((v) => !v)}
-              className={cn(
-                "w-full flex items-center gap-3 px-3 py-1 rounded-lg transition-all group",
-                pathname.startsWith("/dashboard/media-providers")
-                  ? "bg-primary/10 text-primary"
-                  : "text-text-muted hover:bg-surface-2 hover:text-text-main"
-              )}
+              className={navItemClass(pathname.startsWith("/dashboard/media-providers"))}
+              aria-expanded={mediaOpen}
             >
-              <span className="material-symbols-outlined text-[18px]">perm_media</span>
-              <span className="text-[13px] font-medium flex-1 text-left">Media Providers</span>
-              <span className="material-symbols-outlined text-[14px] transition-transform" style={{ transform: mediaOpen ? "rotate(180deg)" : "rotate(0deg)" }}>
+              {pathname.startsWith("/dashboard/media-providers") && <ActiveBar />}
+              <span className={navIconClass(pathname.startsWith("/dashboard/media-providers"))}>perm_media</span>
+              <span className="flex-1 text-left">Media Providers</span>
+              <span className="material-symbols-outlined text-[16px] text-[var(--daytona-text-subtle)] transition-transform" style={{ transform: mediaOpen ? "rotate(180deg)" : "rotate(0deg)" }}>
                 expand_more
               </span>
             </button>
             {mediaOpen && (
-              <div className="pl-4">
+              <div className="ml-[13px] mt-0.5 space-y-px border-l border-[var(--daytona-border)] pl-2">
                 {MEDIA_PROVIDER_KINDS.filter((k) => VISIBLE_MEDIA_KINDS.includes(k.id)).map((kind) => (
                   <Link
                     key={kind.id}
                     href={`/dashboard/media-providers/${kind.id}`}
                     onClick={onClose}
-                    className={cn(
-                      "flex items-center gap-3 px-4 py-1 rounded-lg transition-all group",
-                      pathname.startsWith(`/dashboard/media-providers/${kind.id}`)
-                        ? "bg-primary/10 text-primary"
-                        : "text-text-muted hover:bg-surface-2 hover:text-text-main"
-                    )}
+                    className={subNavItemClass(pathname.startsWith(`/dashboard/media-providers/${kind.id}`))}
                   >
-                    <span className="material-symbols-outlined text-[16px]">{kind.icon}</span>
-                    <span className="text-sm">{kind.label}</span>
+                    {pathname.startsWith(`/dashboard/media-providers/${kind.id}`) && <ActiveBar />}
+                    <span className={navIconClass(pathname.startsWith(`/dashboard/media-providers/${kind.id}`), "text-[16px]")}>{kind.icon}</span>
+                    <span>{kind.label}</span>
                   </Link>
                 ))}
                 <Link
                   key={COMBINED_WEB_ITEM.id}
                   href={COMBINED_WEB_ITEM.href}
                   onClick={onClose}
-                  className={cn(
-                    "flex items-center gap-3 px-4 py-1 rounded-lg transition-all group",
-                    pathname.startsWith(COMBINED_WEB_ITEM.href)
-                      ? "bg-primary/10 text-primary"
-                      : "text-text-muted hover:bg-surface-2 hover:text-text-main"
-                  )}
+                  className={subNavItemClass(pathname.startsWith(COMBINED_WEB_ITEM.href))}
                 >
-                  <span className="material-symbols-outlined text-[16px]">{COMBINED_WEB_ITEM.icon}</span>
-                  <span className="text-sm">{COMBINED_WEB_ITEM.label}</span>
+                  {pathname.startsWith(COMBINED_WEB_ITEM.href) && <ActiveBar />}
+                  <span className={navIconClass(pathname.startsWith(COMBINED_WEB_ITEM.href), "text-[16px]")}>{COMBINED_WEB_ITEM.icon}</span>
+                  <span>{COMBINED_WEB_ITEM.label}</span>
                 </Link>
               </div>
             )}
@@ -204,22 +242,13 @@ export default function Sidebar({ onClose }) {
                 key={item.href}
                 href={item.href}
                 onClick={onClose}
-                className={cn(
-                  "flex items-center gap-3 px-3 py-1 rounded-lg transition-all group",
-                  isActive(item.href)
-                    ? "bg-primary/10 text-primary"
-                    : "text-text-muted hover:bg-surface-2 hover:text-text-main"
-                )}
+                className={navItemClass(isActive(item.href))}
               >
-                <span
-                  className={cn(
-                    "material-symbols-outlined text-[18px]",
-                    isActive(item.href) ? "fill-1" : "group-hover:text-primary transition-colors"
-                  )}
-                >
+                {isActive(item.href) && <ActiveBar />}
+                <span className={navIconClass(isActive(item.href))}>
                   {item.icon}
                 </span>
-                <span className="text-[13px] font-medium">{item.label}</span>
+                <span>{item.label}</span>
               </Link>
             ))}
 
@@ -231,22 +260,13 @@ export default function Sidebar({ onClose }) {
                   key={item.href}
                   href={item.href}
                   onClick={onClose}
-                  className={cn(
-                    "flex items-center gap-3 px-3 py-1 rounded-lg transition-all group",
-                    isActive(item.href)
-                      ? "bg-primary/10 text-primary"
-                      : "text-text-muted hover:bg-surface-2 hover:text-text-main"
-                  )}
+                  className={navItemClass(isActive(item.href))}
                 >
-                  <span
-                    className={cn(
-                      "material-symbols-outlined text-[18px]",
-                      isActive(item.href) ? "fill-1" : "group-hover:text-primary transition-colors"
-                    )}
-                  >
+                  {isActive(item.href) && <ActiveBar />}
+                  <span className={navIconClass(isActive(item.href))}>
                     {item.icon}
                   </span>
-                  <span className="text-[13px] font-medium">{item.label}</span>
+                  <span>{item.label}</span>
                 </Link>
               ) : null;
             })}
@@ -257,27 +277,30 @@ export default function Sidebar({ onClose }) {
             <Link
               href="/dashboard/profile"
               onClick={onClose}
-              className={cn(
-                "flex items-center gap-3 px-3 py-1 rounded-lg transition-all group",
-                isActive("/dashboard/profile")
-                  ? "bg-primary/10 text-primary"
-                  : "text-text-muted hover:bg-surface-2 hover:text-text-main"
-              )}
+              className={navItemClass(isActive("/dashboard/profile"))}
             >
-              <span
-                className={cn(
-                  "material-symbols-outlined text-[18px]",
-                  isActive("/dashboard/profile") ? "fill-1" : "group-hover:text-primary transition-colors"
-                )}
-              >
+              {isActive("/dashboard/profile") && <ActiveBar />}
+              <span className={navIconClass(isActive("/dashboard/profile"))}>
                 settings
               </span>
-              <span className="text-[13px] font-medium">Settings</span>
+              <span>Settings</span>
             </Link>
           </div>
           )}
         </nav>
 
+        {/* Logout — footer; renders in the desktop sidebar AND in the
+            mobile drawer (previously logout was only in the header menu) */}
+        <div className="border-t border-[var(--daytona-border)] px-3 py-2">
+          <button
+            type="button"
+            onClick={handleLogout}
+            className="flex w-full items-center gap-2.5 px-2.5 py-[7px] rounded-md text-[13px] font-medium text-[var(--daytona-text-muted)] hover:bg-[var(--daytona-panel-2)] hover:text-[var(--daytona-text)] transition-colors"
+          >
+            <span className="material-symbols-outlined text-[18px] shrink-0">logout</span>
+            <span>Keluar</span>
+          </button>
+        </div>
       </aside>
     </>
   );

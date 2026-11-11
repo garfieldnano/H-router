@@ -37,7 +37,7 @@ function SkillRow({ skill }) {
     >
       <div className="flex items-start gap-3">
         <div
-          className={`size-9 rounded-lg flex items-center justify-center shrink-0 ${
+          className={`size-9 rounded-md flex items-center justify-center shrink-0 ${
             skill.isEntry ? "bg-primary text-white" : "bg-primary/10 text-primary"
           }`}
         >
@@ -75,6 +75,10 @@ function SkillRow({ skill }) {
 export default function SkillsPage() {
   return (
     <div className="max-w-4xl mx-auto space-y-6">
+      <div>
+        <h1 className="text-xl font-semibold tracking-tight text-text-main">Skills</h1>
+        <p className="text-sm text-text-muted">Skill files for AI coding assistants — paste the entry skill into your AI to get started.</p>
+      </div>
       <Card>
         <div className="text-xs text-text-muted mb-2">Paste this to your AI:</div>
         <div className="px-3 py-2 rounded bg-surface-2 font-mono text-[12px] text-text-main">

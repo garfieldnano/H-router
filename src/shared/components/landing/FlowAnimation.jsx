@@ -45,7 +45,7 @@ export default function FlowAnimation() {
         {/* h-router hub — center */}
         <div className="absolute left-1/2 top-1/2 z-20 flex h-28 w-28 -translate-x-1/2 -translate-y-1/2 flex-col items-center justify-center gap-1 rounded-full border-2 border-[#05f170] bg-white shadow-[0_0_40px_rgba(5,241,112,0.25)] transition-transform duration-500 hover:scale-105 dark:bg-zinc-900 dark:shadow-[0_0_40px_rgba(5,241,112,0.15)]">
           <img src="/h-router-logo.svg" alt="" aria-hidden="true" className="h-10 w-10" />
-          <span className="text-xs font-bold tracking-widest text-zinc-900 uppercase dark:text-white">h-router</span>
+          <span className="text-xs font-bold tracking-widest text-zinc-900 uppercase dark:text-white">H-router</span>
           <span className="absolute inset-0 animate-ping rounded-full border border-[#05f170]/30 opacity-20" aria-hidden="true" />
         </div>
 
@@ -117,7 +117,7 @@ export default function FlowAnimation() {
         </span>
         <span className="flex items-center gap-1.5 rounded-full border-2 border-[#05f170] bg-white px-3 py-1.5 text-xs font-bold text-zinc-900 dark:bg-zinc-900 dark:text-white">
           <img src="/h-router-logo.svg" alt="" className="h-4 w-4" />
-          h-router
+          H-router
         </span>
         <span className="relative h-px flex-1 bg-zinc-300 dark:bg-zinc-700">
           <span className="absolute top-1/2 size-2 -translate-y-1/2 animate-[landing-dot-travel_2s_linear_infinite] rounded-full bg-[#05f170]" style={{ animationDelay: "1s" }} />
@@ -127,7 +127,7 @@ export default function FlowAnimation() {
         </span>
       </div>
       <p className="mt-3 text-center text-xs text-zinc-500 md:hidden dark:text-zinc-400">
-        Aplikasi kamu → h-router → model AI
+        Aplikasi kamu → H-router → model AI
       </p>
     </div>
   );

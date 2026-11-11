@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { Card, Button, Input } from "@/shared/components";
+import ThemeToggle from "@/shared/components/ThemeToggle";
 
 export default function LoginPage() {
   const [password, setPassword] = useState("");
@@ -173,7 +174,7 @@ export default function LoginPage() {
     return (
       <div className="min-h-screen flex items-center justify-center bg-bg p-4">
         <div className="text-center">
-          <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+          <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-[#05f170]"></div>
           <p className="text-text-muted mt-4">Loading...</p>
         </div>
       </div>
@@ -182,11 +183,18 @@ export default function LoginPage() {
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-bg p-4 relative overflow-hidden">
+      {/* Theme toggle — top-right (same control as the dashboard header) */}
+      <div className="absolute top-4 right-4 z-20">
+        <ThemeToggle />
+      </div>
       {/* Faint grid background */}
       <div className="landing-grid absolute inset-0 pointer-events-none" aria-hidden="true" />
       <div className="relative z-10 w-full max-w-md">
         <div className="text-center mb-8">
-          <h1 className="text-3xl font-bold text-primary mb-2">9Router</h1>
+          <div className="flex items-center justify-center gap-2.5 mb-2">
+            <img src="/h-router-logo.svg" alt="H-router logo" className="size-8" width={32} height={32} />
+            <h1 className="text-3xl font-bold text-[#00853f] dark:text-[#05f170]">H-router</h1>
+          </div>
           <p className="text-text-muted">
             {samlAvailable
               ? "Sign in with SAML 2.0 Single Sign-On"
@@ -196,18 +204,18 @@ export default function LoginPage() {
           </p>
         </div>
 
-        <div className="flex rounded-lg border border-border bg-bg-subtle p-1 mb-4">
+        <div className="flex rounded-lg border border-[var(--daytona-border)] bg-[var(--daytona-panel)] p-1 mb-4">
           <button
             type="button"
             onClick={() => { setMode("admin"); setError(""); }}
-            className={`flex-1 rounded-md px-3 py-1.5 text-sm font-medium transition-colors ${mode === "admin" ? "bg-primary text-white shadow-sm" : "text-text-muted hover:text-text"}`}
+            className={`flex-1 rounded-md px-3 py-1.5 text-sm font-medium transition-colors ${mode === "admin" ? "bg-[var(--daytona-panel-2)] text-[var(--daytona-text)] shadow-sm" : "text-[var(--daytona-text-muted)] hover:text-[var(--daytona-text)]"}`}
           >
             Admin
           </button>
           <button
             type="button"
             onClick={() => { setMode("member"); setError(""); }}
-            className={`flex-1 rounded-md px-3 py-1.5 text-sm font-medium transition-colors ${mode === "member" ? "bg-primary text-white shadow-sm" : "text-text-muted hover:text-text"}`}
+            className={`flex-1 rounded-md px-3 py-1.5 text-sm font-medium transition-colors ${mode === "member" ? "bg-[var(--daytona-panel-2)] text-[var(--daytona-text)] shadow-sm" : "text-[var(--daytona-text-muted)] hover:text-[var(--daytona-text)]"}`}
           >
             Member
           </button>
@@ -315,7 +323,7 @@ export default function LoginPage() {
                   )}
                   {resetHint && (
                     <p className="text-xs text-text-muted">
-                      Forgot password? Open <code className="bg-sidebar px-1 rounded">9router</code> CLI on the host → <b>Settings</b> → <b>Reset Password to Default</b>.
+                      Forgot password? Open <code className="bg-sidebar px-1 rounded">H-router</code> CLI on the host → <b>Settings</b> → <b>Reset Password to Default</b>.
                     </p>
                   )}
                 </div>

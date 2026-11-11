@@ -443,7 +443,7 @@ export default function GenericCliToolCard({
                 alt={tool.name}
                 width={32}
                 height={32}
-                className="size-8 object-contain rounded-lg"
+                className="size-8 object-contain rounded-md"
                 sizes="32px"
                 onError={(e) => { e.target.style.display = "none"; }}
                 loading="lazy"
@@ -454,7 +454,7 @@ export default function GenericCliToolCard({
                 {tool.icon}
               </span>
             ) : (
-              <span className="material-symbols-outlined text-[28px] text-primary">terminal</span>
+              <span className="material-symbols-outlined text-[28px] text-success">terminal</span>
             )}
           </div>
           <div className="min-w-0">
@@ -495,12 +495,12 @@ export default function GenericCliToolCard({
 
           {!checking && status && !status.installed && (
             <div className="flex flex-col gap-4">
-              <div className="flex flex-col gap-3 p-4 bg-yellow-500/10 border border-yellow-500/30 rounded-lg">
+              <div className="flex flex-col gap-3 p-4 bg-yellow-500/10 border border-yellow-500/30 rounded-md">
                 <div className="flex items-start gap-3">
                   <span className="material-symbols-outlined text-yellow-500">warning</span>
                   <div className="flex-1">
                     <p className="font-medium text-yellow-600 dark:text-yellow-400">{tool.name} not detected locally</p>
-                    <p className="text-sm text-text-muted">Manual configuration is still available if 9router is deployed on a remote server.</p>
+                    <p className="text-sm text-text-muted">Manual configuration is still available if H-router is deployed on a remote server.</p>
                   </div>
                 </div>
                 <div className="flex items-center gap-2 pl-9">
@@ -508,7 +508,7 @@ export default function GenericCliToolCard({
                    
                     size="small"
                     onClick={() => setShowManualConfigModal(true)}
-                    className="!bg-yellow-500/20 !border-yellow-500/40 !text-yellow-700 dark:!text-yellow-300 hover:!bg-yellow-500/30"
+                   
                   >
                     <span className="material-symbols-outlined text-[18px] mr-1">content_copy</span>
                     Manual Config
@@ -520,7 +520,7 @@ export default function GenericCliToolCard({
                 </div>
               </div>
               {showInstallGuide && (
-                <div className="p-4 bg-surface border border-border rounded-lg">
+                <div className="p-4 bg-surface border border-border rounded-md">
                   <h4 className="font-medium mb-3">Installation Guide</h4>
                   <div className="space-y-3 text-sm">
                     <div>
@@ -529,7 +529,7 @@ export default function GenericCliToolCard({
                     </div>
                     {tool.docsUrl && (
                       <p className="text-xs text-text-muted">
-                        Docs: <a href={tool.docsUrl} target="_blank" rel="noreferrer" className="text-primary hover:underline">{tool.docsUrl}</a>
+                        Docs: <a href={tool.docsUrl} target="_blank" rel="noreferrer" className="text-success hover:underline">{tool.docsUrl}</a>
                       </p>
                     )}
                   </div>
@@ -597,7 +597,7 @@ export default function GenericCliToolCard({
                                   value={caps.contextWindow}
                                   onChange={(e) => setModelCap(modelId, "contextWindow", e.target.value)}
                                   title="Context window"
-                                  className="shrink-0 rounded border border-border bg-surface px-1 py-0.5 text-[11px] focus:outline-none focus:ring-1 focus:ring-primary/50"
+                                  className="shrink-0 rounded border border-border bg-surface px-1 py-0.5 text-[11px] focus:outline-none focus:ring-1 focus:ring-success/50"
                                 >
                                   {capOptions(PI_CONTEXT_WINDOWS, caps.contextWindow).map((n) => (
                                     <option key={n} value={n}>{formatTokens(n)} ctx</option>
@@ -607,7 +607,7 @@ export default function GenericCliToolCard({
                                   value={caps.maxTokens}
                                   onChange={(e) => setModelCap(modelId, "maxTokens", e.target.value)}
                                   title="Max output tokens"
-                                  className="rounded border border-border bg-surface px-1 py-0.5 text-[11px] focus:outline-none focus:ring-1 focus:ring-primary/50"
+                                  className="rounded border border-border bg-surface px-1 py-0.5 text-[11px] focus:outline-none focus:ring-1 focus:ring-success/50"
                                 >
                                   {capOptions(PI_MAX_TOKENS, caps.maxTokens).map((n) => (
                                     <option key={n} value={n}>{formatTokens(n)} out</option>
@@ -642,7 +642,7 @@ export default function GenericCliToolCard({
                           type="text"
                           onClick={handleAddAllActiveModels}
                           disabled={addingAll}
-                          className="text-xs text-primary hover:text-primary-hover"
+                          className="text-xs text-success hover:text-success"
                         >
                           {addingAll ? "Adding..." : "+ Add All Active Models"}
                         </Button>
@@ -671,7 +671,7 @@ export default function GenericCliToolCard({
                         value={selectedModel}
                         onChange={(e) => setSelectedModel(e.target.value)}
                         placeholder="provider/model-id"
-                        className="w-full min-w-0 pl-2 pr-7 py-2 bg-surface rounded border border-border text-xs focus:outline-none focus:ring-1 focus:ring-primary/50 sm:py-1.5"
+                        className="w-full min-w-0 pl-2 pr-7 py-2 bg-surface rounded border border-border text-xs focus:outline-none focus:ring-1 focus:ring-success/50 sm:py-1.5"
                       />
                       {selectedModel && (
                         <button
@@ -688,7 +688,7 @@ export default function GenericCliToolCard({
                       disabled={!activeProviders?.length}
                       className={`w-full sm:w-auto rounded border px-2 py-2 text-xs transition-colors sm:py-1.5 whitespace-nowrap sm:shrink-0 ${
                         activeProviders?.length
-                          ? "bg-surface border-border text-text-main hover:border-primary cursor-pointer"
+                          ? "bg-surface border-border text-text-main hover:border-success cursor-pointer"
                           : "opacity-50 cursor-not-allowed border-border"
                       }`}
                     >
@@ -701,7 +701,7 @@ export default function GenericCliToolCard({
               {/* Messages */}
               {message && (
                 <div
-                  className={`p-3 rounded-lg text-sm ${
+                  className={`p-3 rounded-md text-sm ${
                     message.type === "success"
                       ? "bg-green-500/10 text-green-600 dark:text-green-400 border border-green-500/20"
                       : "bg-red-500/10 text-red-600 dark:text-red-400 border border-red-500/20"

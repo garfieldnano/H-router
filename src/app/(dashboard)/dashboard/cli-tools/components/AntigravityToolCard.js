@@ -236,7 +236,7 @@ export default function AntigravityToolCard({
               alt={tool.name}
               width={32}
               height={32}
-              className="size-8 object-contain rounded-lg"
+              className="size-8 object-contain rounded-md"
               sizes="32px"
               onError={(e) => { e.target.style.display = "none"; }}
             loading="lazy"
@@ -272,13 +272,13 @@ export default function AntigravityToolCard({
                 <div key={key} className="flex items-center">
                   <div className="flex items-center gap-1 px-2 py-1 rounded-md">
                     {isLoading ? (
-                      <span className="material-symbols-outlined text-[14px] text-primary animate-spin">progress_activity</span>
+                      <span className="material-symbols-outlined text-[14px] text-success animate-spin">progress_activity</span>
                     ) : (
                       <span className={`material-symbols-outlined text-[14px] ${ok ? "text-green-500" : "text-text-muted"}`}>
                         {ok ? "check_circle" : "radio_button_unchecked"}
                       </span>
                     )}
-                    <span className={`text-xs font-medium ${isLoading ? "text-primary" : ok ? "text-green-500" : "text-text-muted"}`}>
+                    <span className={`text-xs font-medium ${isLoading ? "text-success" : ok ? "text-green-500" : "text-text-muted"}`}>
                       {label}
                     </span>
                   </div>
@@ -294,7 +294,7 @@ export default function AntigravityToolCard({
               <button
                 onClick={handleStop}
                 disabled={loading}
-                className="px-4 py-2 rounded-lg bg-red-500/10 border border-red-500/30 text-red-500 font-medium text-sm flex items-center gap-2 hover:bg-red-500/20 transition-colors disabled:opacity-50"
+                className="px-4 py-2 rounded-md bg-red-500/10 border border-red-500/30 text-red-500 font-medium text-sm flex items-center gap-2 hover:bg-red-500/20 transition-colors disabled:opacity-50"
               >
                 <span className="material-symbols-outlined text-[18px]">stop_circle</span>
                 Stop MITM
@@ -303,7 +303,7 @@ export default function AntigravityToolCard({
               <button
                 onClick={handleStart}
                 disabled={loading || !hasActiveProviders}
-                className="px-4 py-2 rounded-lg bg-primary/10 border border-primary/30 text-primary font-medium text-sm flex items-center gap-2 hover:bg-primary/20 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                className="px-4 py-2 rounded-md bg-success/10 border border-success/30 text-success font-medium text-sm flex items-center gap-2 hover:bg-success/20 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 <span className="material-symbols-outlined text-[18px]">play_circle</span>
                 Start MITM
@@ -328,7 +328,7 @@ export default function AntigravityToolCard({
                   <select
                     value={selectedApiKey}
                     onChange={(e) => setSelectedApiKey(e.target.value)}
-                    className="w-full min-w-0 px-2 py-2 bg-surface rounded text-xs border border-border focus:outline-none focus:ring-1 focus:ring-primary/50 sm:py-1.5"
+                    className="w-full min-w-0 px-2 py-2 bg-surface rounded text-xs border border-border focus:outline-none focus:ring-1 focus:ring-success/50 sm:py-1.5"
                   >
                     {apiKeys.map((key) => <option key={key.id} value={key.key}>{key.key}</option>)}
                   </select>
@@ -349,7 +349,7 @@ export default function AntigravityToolCard({
                       value={modelMappings[model.alias] || ""}
                       onChange={(e) => handleModelMappingChange(model.alias, e.target.value)}
                       placeholder="provider/model-id"
-                      className="w-full min-w-0 pl-2 pr-7 py-2 bg-surface rounded border border-border text-xs focus:outline-none focus:ring-1 focus:ring-primary/50 sm:py-1.5"
+                      className="w-full min-w-0 pl-2 pr-7 py-2 bg-surface rounded border border-border text-xs focus:outline-none focus:ring-1 focus:ring-success/50 sm:py-1.5"
                     />
                     {modelMappings[model.alias] && (
                       <button
@@ -364,7 +364,7 @@ export default function AntigravityToolCard({
                   <button
                     onClick={() => openModelSelector(model.alias)}
                     disabled={!hasActiveProviders}
-                    className={`w-full sm:w-auto rounded border px-2 py-2 text-xs transition-colors sm:py-1.5 whitespace-nowrap sm:shrink-0 ${hasActiveProviders ? "bg-surface border-border text-text-main hover:border-primary cursor-pointer" : "opacity-50 cursor-not-allowed border-border"}`}
+                    className={`w-full sm:w-auto rounded border px-2 py-2 text-xs transition-colors sm:py-1.5 whitespace-nowrap sm:shrink-0 ${hasActiveProviders ? "bg-surface border-border text-text-main hover:border-success cursor-pointer" : "opacity-50 cursor-not-allowed border-border"}`}
                   >
                     Select
                   </button>
@@ -389,7 +389,7 @@ export default function AntigravityToolCard({
           {!isRunning && serverIsWindows && (
             <div className="flex items-center gap-2 px-2 py-1.5 rounded text-xs bg-yellow-500/10 text-yellow-600 border border-yellow-500/20">
               <span className="material-symbols-outlined text-[14px]">warning</span>
-              <span>Windows: Run terminal (9Router) as Administrator to enable MITM</span>
+              <span>Windows: Run terminal (H-router) as Administrator to enable MITM</span>
             </div>
           )}
 
@@ -397,12 +397,12 @@ export default function AntigravityToolCard({
           {!isRunning && (
             <div className="flex flex-col gap-1.5 px-1">
               <p className="text-xs text-text-muted">
-                <span className="font-medium text-text-main">How it works:</span> Intercepts Antigravity traffic via DNS redirect, letting you reroute models through 9Router.
+                <span className="font-medium text-text-main">How it works:</span> Intercepts Antigravity traffic via DNS redirect, letting you reroute models through H-router.
               </p>
               <div className="flex flex-col gap-0.5 text-[11px] text-text-muted">
                 <span>1. Generates SSL cert & adds to system keychain</span>
                 <span>2. Redirects <code className="text-[10px] bg-surface px-1 rounded">daily-cloudcode-pa.googleapis.com</code> → localhost</span>
-                <span>3. Maps Antigravity models to any provider via 9Router</span>
+                <span>3. Maps Antigravity models to any provider via H-router</span>
               </div>
             </div>
           )}
@@ -422,7 +422,7 @@ export default function AntigravityToolCard({
         footer={null}
       >
         <div className="flex flex-col gap-4">
-          <div className="flex items-start gap-3 p-3 bg-yellow-500/10 border border-yellow-500/30 rounded-lg">
+          <div className="flex items-start gap-3 p-3 bg-yellow-500/10 border border-yellow-500/30 rounded-md">
             <span className="material-symbols-outlined text-yellow-500 text-[20px]">warning</span>
             <p className="text-xs text-text-muted">Required for SSL certificate and DNS configuration</p>
           </div>

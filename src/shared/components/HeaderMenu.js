@@ -10,13 +10,13 @@ function MenuItem({ icon, label, onClick, trailing, danger }) {
   return (
     <button
       onClick={onClick}
-      className={`flex items-center gap-3 w-full px-4 py-2.5 text-sm transition-colors ${
+      className={`flex items-center gap-2.5 w-full px-3 py-2 text-[13px] transition-colors ${
         danger
           ? "text-red-500 hover:bg-red-500/10"
-          : "text-text-main hover:bg-black/5 dark:hover:bg-white/5"
+          : "text-[var(--daytona-text)] hover:bg-[var(--daytona-panel-3)]"
       }`}
     >
-      <span className={`material-symbols-outlined text-[20px] ${danger ? "" : "text-text-muted"}`}>
+      <span className={`material-symbols-outlined text-[18px] ${danger ? "" : "text-[var(--daytona-text-muted)]"}`}>
         {icon}
       </span>
       <span className="flex-1 text-left">{label}</span>
@@ -85,14 +85,14 @@ export default function HeaderMenu({ onLogout }) {
       <div className="relative" ref={menuRef}>
         <button
           onClick={() => setIsOpen((v) => !v)}
-          className="flex items-center justify-center p-2 rounded-lg text-text-muted hover:text-text-main hover:bg-black/5 dark:hover:bg-white/5 transition-all"
+          className="flex items-center justify-center size-8 rounded-md text-[var(--daytona-text-muted)] hover:text-[var(--daytona-text)] hover:bg-[var(--daytona-panel-2)] transition-colors"
           title="Menu"
         >
-          <span className="material-symbols-outlined">grid_view</span>
+          <span className="material-symbols-outlined text-[20px]">grid_view</span>
         </button>
 
         {isOpen && (
-          <div className="absolute right-0 top-full mt-2 w-60 bg-surface border border-black/10 dark:border-white/10 rounded-xl shadow-2xl z-50 animate-in fade-in zoom-in-95 duration-150 overflow-hidden py-1">
+          <div className="absolute right-0 top-full mt-2 w-56 bg-[var(--daytona-panel-2)] border border-[var(--daytona-border)] rounded-md z-50 fade-in overflow-hidden py-1">
             <MenuItem
               icon="history"
               label="Change Log"

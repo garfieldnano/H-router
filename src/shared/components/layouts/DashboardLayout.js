@@ -63,7 +63,7 @@ export default function DashboardLayout({ children }) {
           return (
             <div
               key={n.id}
-              className={`rounded-lg border px-3 py-2 shadow-lg backdrop-blur-sm ${style.wrapper}`}
+              className={`rounded-md border px-3 py-2 ${style.wrapper}`}
             >
               <div className="flex items-start gap-2">
                 <span className="material-symbols-outlined text-[18px] leading-5">{style.icon}</span>
@@ -89,7 +89,7 @@ export default function DashboardLayout({ children }) {
       {/* Mobile sidebar overlay */}
       {sidebarOpen && (
         <div
-          className="fixed inset-0 z-40 bg-black/20 lg:hidden"
+          className="fixed inset-0 z-40 bg-black/50 lg:hidden"
           onClick={() => setSidebarOpen(false)}
         />
       )}
@@ -110,10 +110,8 @@ export default function DashboardLayout({ children }) {
 
       {/* Main content */}
       <main className="flex flex-col flex-1 h-full min-w-0 relative transition-colors duration-300 isolate">
-        {/* Faint grid background */}
-        <div className="landing-grid absolute inset-0 pointer-events-none -z-10" aria-hidden="true" />
         <Header key={pathname} onMenuClick={() => setSidebarOpen(true)} />
-        <div className={`flex-1 overflow-y-auto custom-scrollbar ${pathname === "/dashboard/basic-chat" ? "" : "p-6 lg:p-10"} ${pathname === "/dashboard/basic-chat" ? "flex flex-col overflow-hidden" : ""}`}>
+        <div className={`flex-1 overflow-y-auto custom-scrollbar ${pathname === "/dashboard/basic-chat" ? "" : "p-4 lg:p-6"} ${pathname === "/dashboard/basic-chat" ? "flex flex-col overflow-hidden" : ""}`}>
           <div className={`${pathname === "/dashboard/basic-chat" ? "flex-1 w-full h-full flex flex-col" : "max-w-7xl mx-auto"}`}>{children}</div>
         </div>
       </main>

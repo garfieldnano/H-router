@@ -1,6 +1,6 @@
 # Token Saver (RTK) + Toggle Per Model
 
-> RTK sudah ada sejak awal 9router (bukan fitur baru h-router). Yang baru
+> RTK sudah ada sejak awal 9router (bukan fitur baru H-router). Yang baru
 > di G9: **toggle per model**. 15 unit test baru
 > (`tests/unit/rtk-model-overrides.test.js`).
 

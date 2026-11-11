@@ -69,7 +69,17 @@ export default function ConsoleLogClient() {
   }, [logs]);
 
   return (
-    <div className="">
+    <div className="flex flex-col gap-6">
+      <div className="flex flex-wrap items-center justify-between gap-2">
+        <div>
+          <h1 className="text-xl font-semibold tracking-tight text-text-main">Console Log</h1>
+          <p className="text-sm text-text-muted">Live server console output, streamed as it happens.</p>
+        </div>
+        <span className="inline-flex items-center gap-1.5 text-xs text-text-muted">
+          <span className={`size-2 rounded-full ${connected ? "bg-[#05f170]" : "bg-zinc-500"}`} />
+          {connected ? "Live" : "Disconnected"}
+        </span>
+      </div>
       <Card styles={{ body: { padding: 0 } }}>
         <div className="flex items-center justify-end px-4 pt-3 pb-2">
           <Button
@@ -82,7 +92,7 @@ export default function ConsoleLogClient() {
         </div>
         <div
           ref={logRef}
-          className="bg-black rounded-b-lg p-4 text-xs font-mono h-[calc(100vh-220px)] overflow-y-auto"
+          className="bg-black rounded-b-md p-4 text-xs font-mono h-[calc(100vh-220px)] overflow-y-auto"
         >
           {logs.length === 0 ? (
             <span className="text-text-muted">No console logs yet.</span>

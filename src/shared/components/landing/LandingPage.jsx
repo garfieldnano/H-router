@@ -134,8 +134,8 @@ export default function LandingPage() {
       <header className="sticky top-0 z-50 border-b border-zinc-200 bg-white/85 backdrop-blur-md dark:border-zinc-800 dark:bg-zinc-950/85">
         <div className="mx-auto flex h-16 w-full max-w-6xl items-center justify-between gap-4 px-6">
           <a href="/" className="flex items-center gap-2">
-            <img src="/h-router-logo.svg" alt="h-router" className="h-8 w-8" />
-            <span className="text-lg font-extrabold tracking-tight">h-router</span>
+            <img src="/h-router-logo.svg" alt="H-router" className="h-8 w-8" />
+            <span className="text-lg font-extrabold tracking-tight">H-router</span>
           </a>
           <nav className="hidden items-center gap-6 text-sm font-medium text-zinc-600 md:flex dark:text-zinc-300">
             <a href="/dashboard" className="transition-colors hover:text-zinc-900 dark:hover:text-white">Konsol</a>
@@ -171,7 +171,7 @@ export default function LandingPage() {
             icon={<span className="inline-block size-2 rounded-full bg-[#05f170]" />}
             className="!px-3 !py-1 !text-xs !font-semibold"
           >
-            h-router · Gateway LLM
+            H-router · Gateway LLM
           </Tag>
           <Typography.Title
             level={1}
@@ -180,7 +180,7 @@ export default function LandingPage() {
             Satu API key untuk semua model AI.
           </Typography.Title>
           <Typography.Paragraph type="secondary" className="!mx-auto !mt-5 !max-w-2xl !text-lg">
-            h-router merutekan permintaanmu ke puluhan provider — hemat token dengan RTK, atur member dan kunci
+            H-router merutekan permintaanmu ke puluhan provider — hemat token dengan RTK, atur member dan kunci
             dari dashboard, dan beli kunci lewat bot Telegram. Tanpa kartu kredit, tanpa setup aneh.
           </Typography.Paragraph>
           <div className="mt-8 flex flex-col items-center justify-center gap-3 sm:flex-row">
@@ -313,8 +313,8 @@ export default function LandingPage() {
         <div className="mx-auto flex w-full max-w-6xl flex-col gap-6 px-6 py-10 md:flex-row md:items-start md:justify-between">
           <div>
             <div className="flex items-center gap-2">
-              <img src="/h-router-logo.svg" alt="h-router" className="h-7 w-7" />
-              <span className="font-extrabold">h-router</span>
+              <img src="/h-router-logo.svg" alt="H-router" className="h-7 w-7" />
+              <span className="font-extrabold">H-router</span>
             </div>
             <p className="mt-2 max-w-xs text-sm text-zinc-500 dark:text-zinc-400">
               Gateway LLM gratis, dengan alat jualan kunci.
@@ -334,7 +334,7 @@ export default function LandingPage() {
           </nav>
         </div>
         <p className="border-t border-zinc-200 px-6 py-4 text-center text-xs text-zinc-500 dark:border-zinc-800 dark:text-zinc-400">
-          h-router · © 2026
+          H-router · © 2026
         </p>
       </footer>
     </div>

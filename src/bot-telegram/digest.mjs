@@ -39,7 +39,7 @@ export function startDigestScheduler({ bot, api, runtime, log = console.log }) {
         if (!chatId) continue;
         await bot.telegram.sendMessage(
           chatId,
-          "⏰ *Trial kamu sudah berakhir.*\n\nKunci trial dinonaktifkan otomatis. Beli paket berbayar dari menu Beli Kunci untuk lanjut memakai h-router.",
+          "⏰ *Trial kamu sudah berakhir.*\n\nKunci trial dinonaktifkan otomatis. Beli paket berbayar dari menu Beli Kunci untuk lanjut memakai H-router.",
           { parse_mode: "Markdown" }
         ).catch(() => {});
       }

@@ -77,7 +77,7 @@ export default function MembersPage() {
   return (
     <div className="flex flex-col gap-6">
       <div>
-        <h1 className="text-2xl font-bold text-text-main">Members</h1>
+        <h1 className="text-xl font-semibold tracking-tight text-text-main">Members</h1>
         <p className="text-sm text-text-muted">
           Member login dengan API key yang ditetapkan admin. Member hanya bisa melihat usage &amp; kunci API mereka sendiri (read-only).
         </p>
@@ -136,7 +136,7 @@ export default function MembersPage() {
             {/* Assigned keys */}
             <div className="mt-3 flex flex-col gap-2">
               {(m.keys || []).map((k) => (
-                <div key={k.id} className="flex flex-wrap items-center justify-between gap-2 rounded-lg border border-border-subtle bg-bg-subtle px-3 py-2 text-sm">
+                <div key={k.id} className="flex flex-wrap items-center justify-between gap-2 rounded-md border border-border-subtle bg-bg-subtle px-3 py-2 text-sm">
                   <span className="text-text-main">
                     {k.name || "Unnamed key"} · <span className="font-mono text-xs text-text-muted">{k.keyMasked}</span>{" "}
                     <Tag color={k.isActive ? "success" : "error"}>{k.isActive ? "Aktif" : "Nonaktif"}</Tag>

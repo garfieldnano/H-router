@@ -1,7 +1,7 @@
 <div align="center">
-  <img src="./public/h-router-logo.svg" alt="h-router" width="120"/>
+  <img src="./public/h-router-logo.svg" alt="H-router" width="120"/>
 
-  # h-router — FREE AI Router & Token Saver
+  # H-router — FREE AI Router & Token Saver
 
   **Never stop coding. Save 20–40% tokens with RTK + auto-fallback to FREE & cheap AI models.**
 
@@ -16,11 +16,11 @@
 
 ---
 
-## What is h-router?
+## What is H-router?
 
-h-router is a self-hosted AI gateway. Point your coding tools at its OpenAI-compatible `/v1` endpoint and it routes each request to the best provider account: it translates formats between OpenAI, Claude, Gemini and others, compresses tool outputs to save tokens (RTK), tracks quotas, refreshes tokens automatically, and falls back from paid subscriptions to cheap and free models so you never stop mid-task.
+H-router is a self-hosted AI gateway. Point your coding tools at its OpenAI-compatible `/v1` endpoint and it routes each request to the best provider account: it translates formats between OpenAI, Claude, Gemini and others, compresses tool outputs to save tokens (RTK), tracks quotas, refreshes tokens automatically, and falls back from paid subscriptions to cheap and free models so you never stop mid-task.
 
-On top of that, h-router adds a reseller layer: member accounts with their own API keys, a Telegram bot for buying keys and trials, per-key rate limits, downtime compensation, and a Rust relay sidecar that rotates egress when a provider blocks traffic.
+On top of that, H-router adds a reseller layer: member accounts with their own API keys, a Telegram bot for buying keys and trials, per-key rate limits, downtime compensation, and a Rust relay sidecar that rotates egress when a provider blocks traffic.
 
 ## ✨ Features
 
@@ -33,14 +33,14 @@ On top of that, h-router adds a reseller layer: member accounts with their own A
 - **Multi-account** — round-robin across accounts per provider; one key per account, pooled.
 - **Live Traffic & observability** — live request feed, conversation inspector, a Playground to test models through the gateway, and per-key usage breakdowns.
 
-### h-router additions
+### H-router additions
 
 - **Member dashboard** — members log in with their API key and see only their own usage and keys (read-only). Admins create accounts and assign keys; no self-registration. [Docs](docs/h-router/member-dashboard.md)
 - **Telegram bot** — buy keys via manual transfer + admin confirmation, 1-day free trial (once per user), member menu, full admin panel, and a daily usage digest every morning ~08:00 WIB. [Docs](docs/h-router/telegram-bot.md)
 - **RPM limits** — per-key → per-package → trial default 20 → global default 50 requests/minute; over-limit returns 429 + `Retry-After`. [Docs](docs/h-router/rpm.md)
 - **Downtime compensation** — an outage extends affected keys by +1h / +3h / +5h / +8h depending on its length, granted manually by admin. [Docs](docs/h-router/compensation.md)
 - **Rust relay sidecar** — egress proxy (default `127.0.0.1:20129`) that rotates to a healthy relay when a provider answers with abusive-traffic or rate-limit errors. [Docs](docs/h-router/relay.md)
-- **Model rebranding + applyLive** — `/v1/models` shows your h-router brand and hides upstream names; live system prompts (prepend/replace/append) are injected per brand or model and never written to logs. [Docs](docs/h-router/rebrand-applylive.md)
+- **Model rebranding + applyLive** — `/v1/models` shows your H-router brand and hides upstream names; live system prompts (prepend/replace/append) are injected per brand or model and never written to logs. [Docs](docs/h-router/rebrand-applylive.md)
 - **Per-key IP caps + health scanner** — default 3 IPs per key (1–100); the scanner classifies providers Healthy / Limit / Dead / Unknown. [Docs](docs/h-router/ip-cap-scanner.md)
 - **Vision Adapter** — image requests only reach vision-capable models; anything else is rejected with a 400 and up to 5 allowed alternatives. Admin overrides via `/api/vision-overrides`.
 - **Per-model RTK toggles** — `provider/model` overrides on top of the global Token Saver setting. [Docs](docs/h-router/rtk.md)
@@ -103,7 +103,7 @@ docker build -t h-router .
 docker run -p 20128:20128 -v "$HOME/.h-router:/app/data" -e DATA_DIR=/app/data h-router
 ```
 
-There is no published h-router image — build it from this repo.
+There is no published H-router image — build it from this repo.
 
 ## 👥 Members & reselling
 
