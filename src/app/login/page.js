@@ -4,12 +4,19 @@ import { useState, useEffect } from "react";
 import { Card, Button, Input } from "@/shared/components";
 import ThemeToggle from "@/shared/components/ThemeToggle";
 
+// Single login form (privacy): no role tabs, no role wording anywhere.
+// The credential type is auto-detected by format — an API key
+// (h-router-… / sk-…) goes to the member login endpoint, anything else is
+// tried as a password. Error messages stay generic on purpose so a failed
+// attempt never reveals which kind of credential was tried.
+const looksLikeApiKey = (value) => {
+  const v = value.trim();
+  return v.startsWith("h-router-") || v.startsWith("sk-");
+};
+
 export default function LoginPage() {
-  const [password, setPassword] = useState("");
-  const [mode, setMode] = useState("admin");
-  const [apiKey, setApiKey] = useState("");
+  const [credential, setCredential] = useState("");
   const [error, setError] = useState("");
-  const [resetHint, setResetHint] = useState("");
   const [retryAfter, setRetryAfter] = useState(0);
   const [loading, setLoading] = useState(false);
   const [hasPassword, setHasPassword] = useState(null);
@@ -70,59 +77,48 @@ export default function LoginPage() {
     e.preventDefault();
     setLoading(true);
     setError("");
-    setResetHint("");
+
+    const value = credential.trim();
 
     try {
-      const res = await fetch("/api/auth/login", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ password }),
-      });
+      if (looksLikeApiKey(value)) {
+        // API key flow: the key is sent ONCE to obtain a session cookie;
+        // it is not stored in the browser afterwards.
+        const res = await fetch("/api/auth/member-login", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ apiKey: value }),
+        });
 
-      if (res.ok) {
-        const data = await res.json();
-        if (data.mustChangePassword) {
-          setMustChange(true);
-          return;
+        if (res.ok) {
+          window.location.assign("/dashboard/member");
+        } else {
+          const data = await res.json().catch(() => ({}));
+          if (data.retryAfter) setRetryAfter(Number(data.retryAfter));
+          setError("Kredensial salah. Coba lagi.");
         }
-        window.location.assign("/dashboard");
       } else {
-        const data = await res.json();
-        setError(data.error || "Invalid password");
-        if (data.resetHint) setResetHint(data.resetHint);
-        if (data.retryAfter) setRetryAfter(Number(data.retryAfter));
+        const res = await fetch("/api/auth/login", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ password: value }),
+        });
+
+        if (res.ok) {
+          const data = await res.json();
+          if (data.mustChangePassword) {
+            setMustChange(true);
+            return;
+          }
+          window.location.assign("/dashboard");
+        } else {
+          const data = await res.json().catch(() => ({}));
+          if (data.retryAfter) setRetryAfter(Number(data.retryAfter));
+          setError("Kredensial salah. Coba lagi.");
+        }
       }
     } catch (err) {
-      setError("An error occurred. Please try again.");
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  // Member login (v1): the API key is sent ONCE to obtain a session cookie;
-  // it is not stored in the browser afterwards.
-  const handleMemberLogin = async (e) => {
-    e.preventDefault();
-    setLoading(true);
-    setError("");
-    setResetHint("");
-
-    try {
-      const res = await fetch("/api/auth/member-login", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ apiKey }),
-      });
-
-      if (res.ok) {
-        window.location.assign("/dashboard/member");
-      } else {
-        const data = await res.json();
-        setError(data.error || "API key tidak valid");
-        if (data.retryAfter) setRetryAfter(Number(data.retryAfter));
-      }
-    } catch (err) {
-      setError("An error occurred. Please try again.");
+      setError("Terjadi kesalahan. Coba lagi.");
     } finally {
       setLoading(false);
     }
@@ -137,16 +133,16 @@ export default function LoginPage() {
       const res = await fetch("/api/settings", {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ currentPassword: password, newPassword }),
+        body: JSON.stringify({ currentPassword: credential.trim(), newPassword }),
       });
       if (res.ok) {
         window.location.assign("/dashboard");
       } else {
-        const data = await res.json();
-        setError(data.error || "Failed to set password");
+        const data = await res.json().catch(() => ({}));
+        setError("Kredensial salah. Coba lagi.");
       }
     } catch (err) {
-      setError("An error occurred. Please try again.");
+      setError("Terjadi kesalahan. Coba lagi.");
     } finally {
       setLoading(false);
     }
@@ -200,25 +196,8 @@ export default function LoginPage() {
               ? "Sign in with SAML 2.0 Single Sign-On"
               : oidcAvailable
               ? "Sign in with your OIDC provider to access the dashboard"
-              : "Enter your password to access the dashboard"}
+              : "Enter your credentials to access the dashboard"}
           </p>
-        </div>
-
-        <div className="flex rounded-lg border border-[var(--daytona-border)] bg-[var(--daytona-panel)] p-1 mb-4">
-          <button
-            type="button"
-            onClick={() => { setMode("admin"); setError(""); }}
-            className={`flex-1 rounded-md px-3 py-1.5 text-sm font-medium transition-colors ${mode === "admin" ? "bg-[var(--daytona-panel-2)] text-[var(--daytona-text)] shadow-sm" : "text-[var(--daytona-text-muted)] hover:text-[var(--daytona-text)]"}`}
-          >
-            Admin
-          </button>
-          <button
-            type="button"
-            onClick={() => { setMode("member"); setError(""); }}
-            className={`flex-1 rounded-md px-3 py-1.5 text-sm font-medium transition-colors ${mode === "member" ? "bg-[var(--daytona-panel-2)] text-[var(--daytona-text)] shadow-sm" : "text-[var(--daytona-text-muted)] hover:text-[var(--daytona-text)]"}`}
-          >
-            Member
-          </button>
         </div>
 
         <Card>
@@ -243,38 +222,6 @@ export default function LoginPage() {
                 Set password
               </Button>
             </form>
-          ) : mode === "member" ? (
-          <form onSubmit={handleMemberLogin} className="flex flex-col gap-4">
-            <p className="text-xs text-text-muted text-center">
-              Masuk dengan API key yang ditetapkan admin untukmu. Kunci hanya dikirim sekali untuk membuat sesi — tidak disimpan di browser.
-            </p>
-            <div className="flex flex-col gap-2">
-              <label className="text-sm font-medium">API Key</label>
-              <Input
-                type="password"
-                placeholder="h-router-…"
-                value={apiKey}
-                onChange={(e) => setApiKey(e.target.value)}
-                required
-                autoFocus
-              />
-              {error && <p className="text-xs text-red-500">{error}</p>}
-              {retryAfter > 0 && (
-                <p className="text-xs text-amber-600 dark:text-amber-400">
-                  Locked. Retry in <span className="font-mono">{retryAfter}s</span>.
-                </p>
-              )}
-            </div>
-            <Button
-              type="submit"
-              variant="primary"
-              className="w-full"
-              loading={loading}
-              disabled={retryAfter > 0 || !apiKey.trim()}
-            >
-              {retryAfter > 0 ? `Wait ${retryAfter}s` : "Masuk sebagai Member"}
-            </Button>
-          </form>
           ) : (
           <div className="flex flex-col gap-4">
             {samlAvailable && (
@@ -306,12 +253,12 @@ export default function LoginPage() {
                 )}
 
                 <div className="flex flex-col gap-2">
-                  <label className="text-sm font-medium">Password</label>
+                  <label className="text-sm font-medium">Password atau API key</label>
                   <Input
                     type="password"
-                    placeholder="Enter password"
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
+                    placeholder="Masukkan password atau API key"
+                    value={credential}
+                    onChange={(e) => setCredential(e.target.value)}
                     required
                     autoFocus={!oidcAvailable}
                   />
@@ -321,11 +268,9 @@ export default function LoginPage() {
                       Locked. Retry in <span className="font-mono">{retryAfter}s</span>.
                     </p>
                   )}
-                  {resetHint && (
-                    <p className="text-xs text-text-muted">
-                      Forgot password? Open <code className="bg-sidebar px-1 rounded">H-router</code> CLI on the host → <b>Settings</b> → <b>Reset Password to Default</b>.
-                    </p>
-                  )}
+                  <p className="text-xs text-text-muted text-center">
+                    Kredensial hanya dikirim sekali untuk membuat sesi — tidak disimpan di browser.
+                  </p>
                 </div>
 
                 <Button
@@ -333,14 +278,11 @@ export default function LoginPage() {
                   variant="primary"
                   className="w-full"
                   loading={loading}
-                  disabled={retryAfter > 0}
+                  disabled={retryAfter > 0 || !credential.trim()}
                 >
                   {retryAfter > 0 ? `Wait ${retryAfter}s` : "Login"}
                 </Button>
 
-                <p className="text-xs text-center text-text-muted mt-2">
-                  Default password is <code className="bg-sidebar px-1 rounded">123456</code>
-                </p>
                 {hasPassword === false && (
                   <p className="text-xs text-center text-amber-600 dark:text-amber-400">
                     Security risk: no password set. You will be asked to set one when logging in remotely.

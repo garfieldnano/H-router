@@ -5,7 +5,6 @@ import PropTypes from "prop-types";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { cn } from "@/shared/utils/cn";
-import { APP_CONFIG } from "@/shared/constants/config";
 import { MEDIA_PROVIDER_KINDS } from "@/shared/constants/providers";
 import useSettingsStore from "@/store/settingsStore";
 
@@ -158,7 +157,6 @@ export default function Sidebar({ onClose }) {
               <h1 className="text-[15px] font-semibold tracking-tight text-[var(--daytona-text)]">
                 H-router
               </h1>
-              <span className="text-[11px] text-[var(--daytona-text-subtle)]">v{APP_CONFIG.version}</span>
             </div>
           </Link>
           {/* NOTE: the upstream npm updater panel ("Update now" + install command)
