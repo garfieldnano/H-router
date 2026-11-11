@@ -22,7 +22,7 @@ export const dynamic = "force-dynamic";
  * cannot log in as a member — use the admin password login instead.
  */
 export async function POST(request) {
-  const ip = getClientIp(request.headers);
+  const ip = getClientIp(request);
   const lock = checkLock(ip, "member-login");
   if (lock.locked) {
     return NextResponse.json(

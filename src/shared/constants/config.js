@@ -2,23 +2,23 @@ import pkg from "../../../package.json" with { type: "json" };
 
 // App configuration
 export const APP_CONFIG = {
-  name: "9Router Proxy",
+  name: "h-router",
   description: "AI Infrastructure Management",
   version: pkg.version,
 };
 
 // GitHub configuration
 export const GITHUB_CONFIG = {
-  changelogUrl: "https://raw.githubusercontent.com/decolua/9router/refs/heads/master/CHANGELOG.md",
-  donateUrl: "https://9router.com/api/donate",
+  changelogUrl: "https://raw.githubusercontent.com/garfieldnano/H-router/refs/heads/master/CHANGELOG.md",
 };
 
 // Updater configuration
+// NOTE: the dashboard npm-update UI was removed for h-router (updates come
+// via git from garfieldnano/H-router, not npm). installCmd/installCmdLatest
+// are gone; npmPackageName + appPort stay (used by the CLI updater backend
+// and CLI-tools URL presets).
 export const UPDATER_CONFIG = {
   npmPackageName: "9router",
-  installCmd: "npm i -g 9router",
-  installCmdLatest: "npm i -g 9router@latest --prefer-online",
-  shutdownCountdownSec: 3,
   exitDelayMs: 500,
   statusPort: 20129,
   statusPollIntervalMs: 1000,

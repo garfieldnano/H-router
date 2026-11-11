@@ -38,8 +38,22 @@ export default function HeaderMenu({ onLogout }) {
   const [changelogOpen, setChangelogOpen] = useState(false);
   const [shutdownOpen, setShutdownOpen] = useState(false);
   const [isShuttingDown, setIsShuttingDown] = useState(false);
+  const [role, setRole] = useState(null);
   const { toggleTheme, isDark } = useTheme();
   const menuRef = useRef(null);
+
+  // Same role fetch as Sidebar: members must not see Shutdown (their JWTs
+  // are blocked from /api/version/shutdown by dashboardGuard, so the button
+  // would only be a dead button for them). While the role is still loading
+  // (null) Shutdown renders as today — fail-open for admins.
+  useEffect(() => {
+    fetch("/api/auth/status")
+      .then((res) => res.json())
+      .then((data) => { if (data?.role) setRole(data.role); })
+      .catch(() => {});
+  }, []);
+
+  const isMember = role === "member";
 
   const handleShutdown = async () => {
     setIsShuttingDown(true);
@@ -89,12 +103,14 @@ export default function HeaderMenu({ onLogout }) {
               label="Theme"
               onClick={() => { toggleTheme(); close(); }}
             />
-            <MenuItem
-              icon="power_settings_new"
-              label="Shutdown"
-              danger
-              onClick={() => { close(); setShutdownOpen(true); }}
-            />
+            {!isMember && (
+              <MenuItem
+                icon="power_settings_new"
+                label="Shutdown"
+                danger
+                onClick={() => { close(); setShutdownOpen(true); }}
+              />
+            )}
             <MenuItem
               icon="logout"
               label="Logout"
