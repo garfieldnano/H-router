@@ -5,18 +5,25 @@ import ThemeToggle from "@/shared/components/ThemeToggle";
 import { useTheme } from "@/shared/hooks/useTheme";
 import { LANDING_CONFIG, FALLBACK_MODELS } from "@/shared/constants/landing.js";
 import {
+  fetchWithTimeout,
   normalizeModelsResponse,
   resolveCatalogModels,
 } from "@/shared/utils/landing.js";
 import StatusPanel from "./StatusPanel.jsx";
 import ModelCatalog from "./ModelCatalog.jsx";
 import CodeSamples from "./CodeSamples.jsx";
+import FlowAnimation from "./FlowAnimation.jsx";
+import BrandStrip from "./BrandStrip.jsx";
 
 // h-router public landing page. Light mode by default (forced on first
 // visit when no theme is stored yet — the reference design is light;
 // returning visitors keep their stored choice), dark/light toggle in the
 // header. Copy is written fresh for this product; the reference site
 // (h-router.web.id) was used only for structure and visual language.
+// Only user-facing features belong on the public landing page. Admin-only
+// capabilities (RPM limits, compensation, relay, rebrand, IP cap, scanner,
+// observability, Vision Adapter, RTK toggles) live in the admin panel and
+// the repo docs — they are deliberately not advertised here.
 const FEATURES = [
   {
     title: "Dashboard member",
@@ -24,44 +31,27 @@ const FEATURES = [
   },
   {
     title: "Bot Telegram",
-    body: "Beli kunci, klaim trial 1 hari, cek kuota, dan panel admin — semua dari Telegram, tanpa buka browser.",
+    body: "Beli kunci, klaim trial 1 hari, dan cek kuota — semua dari Telegram, tanpa buka browser.",
   },
   {
-    title: "Batas RPM",
-    body: "Tiap kunci punya batas request per menit — per kunci, per paket, atau global. Lebih dari itu dijawab 429.",
+    title: "Satu kunci, banyak model",
+    body: "Satu API key untuk semua model; format OpenAI & Anthropic, streaming asli, dan reasoning effort.",
   },
   {
-    title: "Kompensasi downtime",
-    body: "Kalau gateway sempat down, masa aktif kunci yang terdampak diperpanjang — manual oleh admin, tercatat rapi.",
+    title: "Trial gratis 1 hari",
+    body: "Coba dulu tanpa bayar: klaim trial 1 hari dari bot, kunci langsung aktif.",
   },
   {
-    title: "Relay Rust",
-    body: "Sidecar egress yang pindah jalur sendiri begitu provider memblokir trafik atau membatasi request.",
+    title: "Kuota transparan",
+    body: "Pemakaian dan sisa kuota tercatat dan bisa dicek sendiri kapan saja, di dashboard atau bot.",
   },
   {
-    title: "Rebrand + applyLive",
-    body: "/v1/models tampil dengan merek sendiri dan nama upstream disembunyikan; system prompt live disuntikkan per model.",
-  },
-  {
-    title: "Batas IP + pemindai",
-    body: "Tiap kunci dibatasi jumlah IP yang boleh memakainya; pemindai menandai provider Sehat, Limit, atau Mati.",
-  },
-  {
-    title: "Observabilitas",
-    body: "Trafik live, percakapan, playground untuk mencoba model, dan pemakaian per kunci — semua di panel admin.",
-  },
-  {
-    title: "Vision Adapter",
-    body: "Request bergambar hanya diteruskan ke model yang bisa membaca gambar; yang lain ditolak dengan alternatif yang jelas.",
-  },
-  {
-    title: "RTK per model",
-    body: "Token saver tidak cuma global — tiap model bisa diatur on/off sendiri, di atas pengaturan utama.",
+    title: "Failover otomatis",
+    body: "Kalau satu jalur bermasalah, request otomatis pindah ke jalur lain — tetap jalan tanpa perlu apa-apa.",
   },
 ];
 
 const CORE_CHIPS = [
-  "RTK Token Saver",
   "Dua format API",
   "Streaming SSE",
   "Failover combo",
@@ -106,12 +96,13 @@ export default function LandingPage() {
 
   // One live fetch of the gateway's own model list; the catalog and the
   // code sample share it. Falls back to FALLBACK_MODELS when the gateway
-  // list is unreachable without a key.
+  // list is unreachable without a key. Hard 10s timeout: a hung request
+  // must never leave the catalog on "Memuat model…" forever.
   useEffect(() => {
     let cancelled = false;
     (async () => {
       try {
-        const res = await fetch("/v1/models");
+        const res = await fetchWithTimeout("/v1/models", { timeoutMs: 10000 });
         if (!res.ok) throw new Error(`HTTP ${res.status}`);
         const live = normalizeModelsResponse(await res.json());
         if (!cancelled) {
@@ -224,7 +215,13 @@ export default function LandingPage() {
               <dd className="mt-1 text-sm font-bold">Trial 1 hari · tanpa kartu kredit</dd>
             </div>
           </dl>
+
+          {/* Animated request flow: client -> h-router -> provider */}
+          <FlowAnimation />
         </section>
+
+        {/* LLM brand logos served by this gateway */}
+        <BrandStrip />
 
         {/* ---------------------------------------------------------- status */}
         <StatusPanel modelCount={catalog.loading ? null : catalog.total} modelsSource={catalog.source} />

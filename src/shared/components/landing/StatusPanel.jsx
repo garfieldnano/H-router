@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
-import { formatLatency } from "@/shared/utils/landing.js";
+import { fetchWithTimeout, formatLatency } from "@/shared/utils/landing.js";
 import { LANDING_CONFIG } from "@/shared/constants/landing.js";
 
 // Live status panel. Shows ONLY real data, measured here:
@@ -12,10 +12,13 @@ import { LANDING_CONFIG } from "@/shared/constants/landing.js";
 export default function StatusPanel({ modelCount, modelsSource }) {
   const [health, setHealth] = useState({ status: "checking", latencyMs: null, updatedAt: null });
 
+  // Hard 10s timeout: a hung health check must never leave the panel on
+  // "Memeriksa…" forever — on timeout it renders Offline and retries on
+  // the next 30s tick.
   const check = useCallback(async () => {
     const t0 = performance.now();
     try {
-      const res = await fetch("/api/health");
+      const res = await fetchWithTimeout("/api/health", { timeoutMs: 10000 });
       const ms = performance.now() - t0;
       const json = await res.json().catch(() => ({}));
       setHealth({

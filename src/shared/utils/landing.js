@@ -1,5 +1,20 @@
 // Pure helpers for the h-router landing page (no DOM, no DB — unit-tested).
 
+// Fetch with a hard timeout. A hung request must never leave the landing
+// page stuck on "Memuat…" forever: callers treat a timeout like any other
+// failure (fallback catalog / offline status). `fetchFn` is injectable for
+// tests and defaults to the global fetch; the timeout's AbortSignal wins
+// over any caller-supplied signal.
+export async function fetchWithTimeout(url, { timeoutMs = 10000, fetchFn = fetch, ...options } = {}) {
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), timeoutMs);
+  try {
+    return await fetchFn(url, { ...options, signal: controller.signal });
+  } finally {
+    clearTimeout(timer);
+  }
+}
+
 // Normalize a GET /v1/models response body into [{ id, name, ownedBy }].
 // Anything malformed yields [] (the caller falls back to FALLBACK_MODELS).
 export function normalizeModelsResponse(json) {

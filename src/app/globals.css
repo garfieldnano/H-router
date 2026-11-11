@@ -535,6 +535,28 @@ button:disabled,
   animation: topology-edge-dash 0.18s linear infinite, topology-edge-flicker 0.22s steps(3) infinite;
 }
 
+/* h-router landing hero animation (FlowAnimation). Scoped keyframes; the
+   prefers-reduced-motion rule below stops all motion inside .landing-anim
+   for users who asked for it. */
+@keyframes landing-flow-dash {
+  to { stroke-dashoffset: -20; }
+}
+@keyframes landing-float {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-6px); }
+}
+@keyframes landing-dot-travel {
+  0% { left: 0; opacity: 0; }
+  15% { opacity: 1; }
+  85% { opacity: 1; }
+  100% { left: calc(100% - 8px); opacity: 0; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .landing-anim, .landing-anim * {
+    animation: none !important;
+  }
+}
+
 /* React Flow controls: match app theme */
 .react-flow-controls-custom {
   background: var(--color-surface);

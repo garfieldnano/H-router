@@ -1,12 +1,19 @@
 import { describe, it, expect } from "vitest";
+import { existsSync, readFileSync } from "node:fs";
+import { resolve, dirname } from "node:path";
+import { fileURLToPath } from "node:url";
 
 import {
+  fetchWithTimeout,
   normalizeModelsResponse,
   resolveCatalogModels,
   formatLatency,
   buildCodeSamples,
 } from "@/shared/utils/landing.js";
-import { LANDING_CONFIG, FALLBACK_MODELS } from "@/shared/constants/landing.js";
+import { LANDING_CONFIG, FALLBACK_MODELS, LANDING_BRANDS } from "@/shared/constants/landing.js";
+
+// Public dir for the vendored brand logos (public/brands/*.svg).
+const PUBLIC_DIR = resolve(dirname(fileURLToPath(import.meta.url)), "../../public");
 
 // ---------------------------------------------------------------- config
 describe("LANDING_CONFIG", () => {
@@ -21,9 +28,80 @@ describe("LANDING_CONFIG", () => {
     expect(LANDING_CONFIG.telegramUrl).toBe("https://t.me/routermm_bot");
   });
 
-  it("ships an empty, editable fallback catalog (live data is the source of truth)", () => {
+  it("ships a curated fallback catalog from this gateway's own live list", () => {
     expect(Array.isArray(FALLBACK_MODELS)).toBe(true);
-    expect(FALLBACK_MODELS).toHaveLength(0);
+    expect(FALLBACK_MODELS.length).toBeGreaterThan(0);
+    // Every entry is a real model id from our gateway (id + display name +
+    // owning brand); ids are unique; no tier is invented — the gateway does
+    // not publish tiers.
+    const ids = new Set();
+    for (const m of FALLBACK_MODELS) {
+      expect(typeof m.id).toBe("string");
+      expect(m.id).toContain("/");
+      expect(ids.has(m.id)).toBe(false);
+      ids.add(m.id);
+      expect(typeof m.name).toBe("string");
+      expect(m.name.length).toBeGreaterThan(0);
+      expect(typeof m.ownedBy).toBe("string");
+      expect(m.tier).toBeUndefined();
+    }
+  });
+
+  it("ships a static brand list for the logo strip (12 brands)", () => {
+    expect(LANDING_BRANDS).toHaveLength(12);
+    const names = new Set();
+    for (const b of LANDING_BRANDS) {
+      expect(typeof b.name).toBe("string");
+      expect(b.name.length).toBeGreaterThan(0);
+      expect(names.has(b.name)).toBe(false);
+      names.add(b.name);
+      expect(b.logo === null || (typeof b.logo === "string" && b.logo.startsWith("/brands/") && /\.(svg|png)$/.test(b.logo))).toBe(true);
+    }
+    // Every brand now has a real vendored logo (Kimi: Moonshot AI mark,
+    // GLM: Z.ai mark — both LobeHub mono SVG; xAI: official Grok logomark).
+    // No brand falls back to a text badge anymore.
+    expect(LANDING_BRANDS.filter((b) => b.logo === null).map((b) => b.name).sort()).toEqual([]);
+  });
+
+  it("vendors every brand logo as a valid image on disk", () => {
+    for (const b of LANDING_BRANDS) {
+      if (b.logo === null) continue;
+      const file = resolve(PUBLIC_DIR, b.logo.replace(/^\//, ""));
+      expect(existsSync(file)).toBe(true);
+      if (file.endsWith(".png")) {
+        const buf = readFileSync(file);
+        expect(buf.subarray(0, 8).toString("hex")).toBe("89504e470d0a1a0a");
+        continue;
+      }
+      const svg = readFileSync(file, "utf8");
+      expect(svg).toMatch(/<svg[\s>]/);
+      expect(svg).toContain("</svg>");
+      expect(svg).toContain("<title>");
+    }
+  });
+});
+
+// ---------------------------------------------------------------- fetchWithTimeout
+describe("fetchWithTimeout", () => {
+  it("resolves when the fetch is fast and passes a signal through", async () => {
+    let seen;
+    const fast = async (url, { signal } = {}) => {
+      seen = signal;
+      return { ok: true };
+    };
+    const res = await fetchWithTimeout("/x", { timeoutMs: 1000, fetchFn: fast });
+    expect(res.ok).toBe(true);
+    expect(seen).toBeInstanceOf(AbortSignal);
+  });
+
+  it("aborts a hung fetch after the timeout instead of hanging forever", async () => {
+    const never = (url, { signal } = {}) =>
+      new Promise((_, reject) => {
+        signal?.addEventListener("abort", () => reject(new DOMException("Aborted", "AbortError")));
+      });
+    const t0 = Date.now();
+    await expect(fetchWithTimeout("/x", { timeoutMs: 20, fetchFn: never })).rejects.toThrow();
+    expect(Date.now() - t0).toBeLessThan(2000);
   });
 });
 
