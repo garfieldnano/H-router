@@ -2,14 +2,14 @@
 
 import { useState } from "react";
 import PropTypes from "prop-types";
-import { Button } from "@/shared/components";
+import { Alert, Button, Input, Tooltip, Typography } from "antd";
 import { getProviderCustomModelRows } from "@/shared/utils/providerCustomModels";
 function CompatibleModelRow({ modelId, fullModel, copied, onCopy, onDeleteAlias, onTest, testStatus, isTesting }) {
   const borderColor = testStatus === "ok"
-    ? "border-green-500/40"
+    ? "#05f170"
     : testStatus === "error"
-    ? "border-red-500/40"
-    : "border-border";
+    ? "#ef4444"
+    : undefined;
 
   const iconColor = testStatus === "ok"
     ? "#22c55e"
@@ -18,7 +18,10 @@ function CompatibleModelRow({ modelId, fullModel, copied, onCopy, onDeleteAlias,
     : undefined;
 
   return (
-    <div className={`flex items-center gap-3 p-3 rounded-lg border ${borderColor} hover:bg-sidebar/50`}>
+    <div
+      className="hcard-panel flex items-center gap-3 p-3"
+      style={borderColor ? { borderColor } : undefined}
+    >
       <span
         className="material-symbols-outlined text-base text-text-muted"
         style={iconColor ? { color: iconColor } : undefined}
@@ -28,45 +31,45 @@ function CompatibleModelRow({ modelId, fullModel, copied, onCopy, onDeleteAlias,
       <div className="flex-1 min-w-0">
         <p className="text-sm font-medium truncate">{modelId}</p>
         <div className="flex items-center gap-1 mt-1">
-          <code className="text-xs text-text-muted font-mono bg-sidebar px-1.5 py-0.5 rounded">{fullModel}</code>
-          <div className="relative group/btn">
-            <button
+          <code className="hcard-mono text-xs text-text-muted bg-sidebar px-1.5 py-0.5 rounded">{fullModel}</code>
+          <Tooltip title={copied === `model-${modelId}` ? "Copied!" : "Copy"}>
+            <Button
+              type="text"
+              size="small"
               onClick={() => onCopy(fullModel, `model-${modelId}`)}
-              className="p-0.5 hover:bg-sidebar rounded text-text-muted hover:text-primary"
-            >
-              <span className="material-symbols-outlined text-sm">
-                {copied === `model-${modelId}` ? "check" : "content_copy"}
-              </span>
-            </button>
-            <span className="pointer-events-none absolute top-5 left-1/2 -translate-x-1/2 text-[10px] text-text-muted whitespace-nowrap opacity-0 group-hover/btn:opacity-100 transition-opacity">
-              {copied === `model-${modelId}` ? "Copied!" : "Copy"}
-            </span>
-          </div>
+              icon={
+                <span className="material-symbols-outlined text-sm">
+                  {copied === `model-${modelId}` ? "check" : "content_copy"}
+                </span>
+              }
+            />
+          </Tooltip>
           {onTest && (
-            <div className="relative group/btn">
-              <button
+            <Tooltip title={isTesting ? "Testing..." : "Test"}>
+              <Button
+                type="text"
+                size="small"
                 onClick={onTest}
                 disabled={isTesting}
-                className="p-0.5 hover:bg-sidebar rounded text-text-muted hover:text-primary transition-colors"
-              >
-                <span className="material-symbols-outlined text-sm" style={isTesting ? { animation: "spin 1s linear infinite" } : undefined}>
-                  {isTesting ? "progress_activity" : "science"}
-                </span>
-              </button>
-              <span className="pointer-events-none absolute top-5 left-1/2 -translate-x-1/2 text-[10px] text-text-muted whitespace-nowrap opacity-0 group-hover/btn:opacity-100 transition-opacity">
-                {isTesting ? "Testing..." : "Test"}
-              </span>
-            </div>
+                icon={
+                  <span className="material-symbols-outlined text-sm" style={isTesting ? { animation: "spin 1s linear infinite" } : undefined}>
+                    {isTesting ? "progress_activity" : "science"}
+                  </span>
+                }
+              />
+            </Tooltip>
           )}
         </div>
       </div>
-      <button
-        onClick={onDeleteAlias}
-        className="p-1 hover:bg-red-50 rounded text-red-500"
-        title="Remove model"
-      >
-        <span className="material-symbols-outlined text-sm">delete</span>
-      </button>
+      <Tooltip title="Remove model">
+        <Button
+          type="text"
+          size="small"
+          danger
+          onClick={onDeleteAlias}
+          icon={<span className="material-symbols-outlined text-sm">delete</span>}
+        />
+      </Tooltip>
     </div>
   );
 }
@@ -162,35 +165,46 @@ export default function CompatibleModelsSection({ providerStorageAlias, provider
 
   return (
     <div className="flex flex-col gap-4">
-      <p className="text-sm text-text-muted">
+      <Typography.Text type="secondary" className="text-sm">
         Add {isAnthropic ? "Anthropic" : "OpenAI"}-compatible models manually or import them from the /models endpoint.
-      </p>
+      </Typography.Text>
 
       <div className="flex items-end gap-2 flex-wrap">
         <div className="flex-1 min-w-[240px]">
           <label htmlFor="new-compatible-model-input" className="text-xs text-text-muted mb-1 block">Model ID</label>
-          <input
+          <Input
             id="new-compatible-model-input"
-            type="text"
             value={newModel}
             onChange={(e) => setNewModel(e.target.value)}
-            onKeyDown={(e) => e.key === "Enter" && handleAdd()}
+            onPressEnter={handleAdd}
             placeholder={isAnthropic ? "claude-3-opus-20240229" : "gpt-4o"}
-            className="w-full px-3 py-2 text-sm border border-border rounded-lg bg-background focus:outline-none focus:border-primary"
           />
         </div>
-        <Button size="sm" icon="add" onClick={handleAdd} disabled={!newModel.trim() || adding}>
+        <Button
+          type="primary"
+          loading={adding}
+          disabled={!newModel.trim() || adding}
+          icon={<span className="material-symbols-outlined text-[14px]">add</span>}
+          onClick={handleAdd}
+        >
           {adding ? "Adding..." : "Add"}
         </Button>
-        <Button size="sm" variant="secondary" icon="download" onClick={handleImport} disabled={!canImport || importing}>
+        <Button
+          loading={importing}
+          disabled={!canImport || importing}
+          icon={<span className="material-symbols-outlined text-[14px]">download</span>}
+          onClick={handleImport}
+        >
           {importing ? "Importing..." : "Import from /models"}
         </Button>
       </div>
 
       {!canImport && (
-        <p className="text-xs text-text-muted">
-          Add a connection to enable importing models.
-        </p>
+        <Alert
+          type="info"
+          showIcon={false}
+          message="Add a connection to enable importing models."
+        />
       )}
 
       {allModels.length > 0 && (

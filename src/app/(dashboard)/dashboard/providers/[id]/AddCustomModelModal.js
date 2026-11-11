@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import PropTypes from "prop-types";
-import { Button, Modal, Select, Toggle } from "@/shared/components";
+import { Alert, Button, Form, Input, Modal, Select, Switch } from "antd";
 import { CAPACITY_META, STT_TRANSPORT_META, STT_TRANSPORTS } from "@/shared/constants/models";
 
 const defaultCaps = () => Object.fromEntries(Object.keys(CAPACITY_META).map((key) => [key, false]));
@@ -65,23 +65,24 @@ export default function AddCustomModelModal({ isOpen, providerAlias, providerDis
   };
 
   return (
-    <Modal isOpen={isOpen} onClose={onClose} title="Add Custom Model">
-      <div className="flex flex-col gap-4">
-        <div>
-          <label className="text-sm font-medium mb-1.5 block">Model ID</label>
+    <Modal
+      open={isOpen}
+      onCancel={onClose}
+      title="Add Custom Model"
+      footer={null}
+    >
+      <Form layout="vertical">
+        <Form.Item label="Model ID" style={{ marginBottom: 12 }}>
           <div className="flex gap-2">
-            <input
-              type="text"
+            <Input
               value={modelId}
               onChange={(e) => { setModelId(e.target.value); setTestStatus(null); setTestError(""); }}
               onKeyDown={handleKeyDown}
               placeholder="e.g. claude-opus-4-5"
-              className="flex-1 px-3 py-2 text-sm border border-border rounded-lg bg-background focus:outline-none focus:border-primary"
+              className="hcard-mono flex-1"
               autoFocus
             />
             <Button
-              variant="secondary"
-              icon="science"
               loading={testStatus === "testing"}
               onClick={handleTest}
               disabled={!modelId.trim() || testStatus === "testing"}
@@ -90,78 +91,83 @@ export default function AddCustomModelModal({ isOpen, providerAlias, providerDis
             </Button>
           </div>
           <p className="text-xs text-text-muted mt-1">
-            Sent to provider as: <code className="font-mono bg-sidebar px-1 rounded">{stripAlias(modelId.trim()) || "model-id"}</code>
+            Sent to provider as: <code className="hcard-mono bg-sidebar px-1 rounded">{stripAlias(modelId.trim()) || "model-id"}</code>
           </p>
-        </div>
+        </Form.Item>
 
-        <div>
-          <label className="text-sm font-medium mb-1.5 block">Capabilities</label>
-          <div className="flex flex-wrap gap-4">
+        <Form.Item label="Capabilities" style={{ marginBottom: 12 }}>
+          <div className="flex flex-wrap gap-x-6 gap-y-3">
             {Object.entries(CAPACITY_META).map(([key, meta]) => (
-              <Toggle
-                key={key}
-                checked={!!caps[key]}
-                onChange={(v) => setCaps((prev) => ({ ...prev, [key]: v }))}
-                label={meta.label}
-                description={meta.desc}
-                size="sm"
-              />
+              <span key={key} className="flex items-center gap-2">
+                <Switch
+                  size="small"
+                  checked={!!caps[key]}
+                  onChange={(v) => setCaps((prev) => ({ ...prev, [key]: v }))}
+                />
+                <span>
+                  <span className="block text-sm">{meta.label}</span>
+                  <span className="block text-xs text-text-muted">{meta.desc}</span>
+                </span>
+              </span>
             ))}
           </div>
-        </div>
+        </Form.Item>
 
         {/* STT is a model TYPE, not a chat capability: the save flow turns this
             flag into type "stt" (the API honours a transport only on stt
             records). The select pins the realtime dispatch marker persisted
             with the model; the whitelist is the shared STT_TRANSPORT_META. */}
-        <div>
-          <Toggle
-            checked={!!caps.stt}
-            onChange={(v) => { setCaps((prev) => ({ ...prev, stt: v })); if (!v) setTransport(""); }}
-            label="Speech to text"
-            description="Transcribes audio via /v1/audio/transcriptions"
-            size="sm"
-          />
+        <Form.Item style={{ marginBottom: 12 }}>
+          <span className="flex items-center gap-2">
+            <Switch
+              size="small"
+              checked={!!caps.stt}
+              onChange={(v) => { setCaps((prev) => ({ ...prev, stt: v })); if (!v) setTransport(""); }}
+            />
+            <span>
+              <span className="block text-sm">Speech to text</span>
+              <span className="block text-xs text-text-muted">Transcribes audio via /v1/audio/transcriptions</span>
+            </span>
+          </span>
           {caps.stt && (
             <div className="mt-3">
-              <Select
+              <Form.Item
                 label="Transport"
-                value={transport}
-                onChange={(e) => setTransport(e.target.value)}
-                placeholder="Provider default (REST)"
-                options={STT_TRANSPORTS.map((t) => ({ value: t, label: STT_TRANSPORT_META[t].label }))}
-                hint="Realtime transport marker for the STT dispatcher. Empty keeps the provider's REST format."
-              />
+                help="Realtime transport marker for the STT dispatcher. Empty keeps the provider's REST format."
+                style={{ marginBottom: 0 }}
+              >
+                <Select
+                  value={transport}
+                  onChange={(v) => setTransport(v)}
+                  placeholder="Provider default (REST)"
+                  options={STT_TRANSPORTS.map((t) => ({ value: t, label: STT_TRANSPORT_META[t].label }))}
+                />
+              </Form.Item>
             </div>
           )}
-        </div>
+        </Form.Item>
 
         {/* Test result */}
         {testStatus === "ok" && (
-          <div className="flex items-center gap-2 text-sm text-green-600">
-            <span className="material-symbols-outlined text-base">check_circle</span>
-            Model is reachable
-          </div>
+          <Alert type="success" showIcon message="Model is reachable" className="mb-3" />
         )}
         {testStatus === "error" && (
-          <div className="flex items-start gap-2 text-sm text-red-500">
-            <span className="material-symbols-outlined text-base shrink-0">cancel</span>
-            <span>{testError || "Model not reachable"}</span>
-          </div>
+          <Alert type="error" showIcon message={testError || "Model not reachable"} className="mb-3" />
         )}
 
         <div className="flex gap-2 pt-1">
-          <Button onClick={onClose} variant="ghost" fullWidth size="sm">Cancel</Button>
+          <Button onClick={onClose} block>Cancel</Button>
           <Button
+            type="primary"
             onClick={handleSave}
-            fullWidth
-            size="sm"
+            block
+            loading={saving}
             disabled={!modelId.trim() || saving}
           >
             {saving ? "Adding..." : "Add Model"}
           </Button>
         </div>
-      </div>
+      </Form>
     </Modal>
   );
 }

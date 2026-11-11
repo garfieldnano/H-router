@@ -1,18 +1,21 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
-import { createPortal } from "react-dom";
+import { useState, useEffect } from "react";
+import { Button, Dropdown, Switch, Tag, Tooltip } from "antd";
 import { getStatusVariant as getConnectionStatusVariant } from "@/shared/utils/connectionStatus";
 import PropTypes from "prop-types";
-import { Badge, Toggle, Tooltip } from "@/shared/components";
 import CooldownTimer from "./CooldownTimer";
 
+// Shared Badge variants -> antd Tag colors.
+const TAG_COLORS = {
+  default: "default",
+  success: "success",
+  error: "error",
+  primary: "processing",
+};
+
 export default function ConnectionRow({ connection, proxyPools, isOAuth, isFirst, isLast, onMoveUp, onMoveDown, onToggleActive, onUpdateProxy, onEdit, onDelete, oneByOneStatus = null, autoPing = null }) {
-  const [showProxyDropdown, setShowProxyDropdown] = useState(false);
   const [updatingProxy, setUpdatingProxy] = useState(false);
-  const proxyDropdownRef = useRef(null);
-  const proxyBtnRef = useRef(null);
-  const [proxyDropdownStyle, setProxyDropdownStyle] = useState(null);
 
   const proxyPoolMap = new Map((proxyPools || []).map((pool) => [pool.id, pool]));
   const boundProxyPoolId = connection.providerSpecificData?.proxyPoolId || null;
@@ -59,61 +62,21 @@ export default function ConnectionRow({ connection, proxyPools, isOAuth, isFirst
     proxyBadgeVariant = "error";
   }
 
-  // Render via portal + fixed positioning so ancestor overflow (scrollable
-  // connections list) can't clip the dropdown
-  const toggleProxyDropdown = () => {
-    if (showProxyDropdown) {
-      setShowProxyDropdown(false);
-      return;
-    }
-    const rect = proxyBtnRef.current?.getBoundingClientRect();
-    if (!rect) {
-      setShowProxyDropdown(true);
-      return;
-    }
-    const estimatedHeight = ((proxyPools?.length || 0) + 1) * 34 + 8;
-    const spaceBelow = window.innerHeight - rect.bottom;
-    const flipUp = spaceBelow < estimatedHeight && rect.top > spaceBelow;
-    setProxyDropdownStyle({
-      position: "fixed",
-      right: window.innerWidth - rect.right,
-      ...(flipUp
-        ? { bottom: window.innerHeight - rect.top + 4, maxHeight: Math.max(rect.top - 8, 120) }
-        : { top: rect.bottom + 4, maxHeight: Math.max(spaceBelow - 8, 120) }),
-    });
-    setShowProxyDropdown(true);
-  };
-
-  // Close dropdown when clicking outside, scrolling, or resizing
-  useEffect(() => {
-    if (!showProxyDropdown) return;
-    const handleClick = (e) => {
-      if (
-        proxyDropdownRef.current?.contains(e.target) ||
-        proxyBtnRef.current?.contains(e.target)
-      ) return;
-      setShowProxyDropdown(false);
-    };
-    const close = () => setShowProxyDropdown(false);
-    document.addEventListener("mousedown", handleClick);
-    window.addEventListener("resize", close);
-    document.addEventListener("scroll", close, true);
-    return () => {
-      document.removeEventListener("mousedown", handleClick);
-      window.removeEventListener("resize", close);
-      document.removeEventListener("scroll", close, true);
-    };
-  }, [showProxyDropdown]);
-
   const handleSelectProxy = async (poolId) => {
     setUpdatingProxy(true);
     try {
       await onUpdateProxy(poolId === "__none__" ? null : poolId);
     } finally {
       setUpdatingProxy(false);
-      setShowProxyDropdown(false);
     }
   };
+
+  // antd Dropdown replaces the hand-rolled portal dropdown (fixed
+  // positioning + outside-click/scroll listeners) with the same menu.
+  const proxyMenuItems = [
+    { key: "__none__", label: "None" },
+    ...(proxyPools || []).map((pool) => ({ key: pool.id, label: pool.name })),
+  ];
 
   const rowAuthType = connection.authType || (isOAuth ? "oauth" : "apikey");
   const isOAuthConnection = rowAuthType === "oauth";
@@ -160,7 +123,7 @@ export default function ConnectionRow({ connection, proxyPools, isOAuth, isFirst
 
   // Determine effective status (override unavailable if cooldown expired)
   const effectiveStatus = (connection.testStatus === "unavailable" && !isCooldown)
-    ? "active"  // Cooldown expired u2192 treat as active
+    ? "active"  // Cooldown expired → treat as active
     : connection.testStatus;
 
   const getStatusVariant = () => getConnectionStatusVariant(connection.isActive, effectiveStatus);
@@ -182,25 +145,37 @@ export default function ConnectionRow({ connection, proxyPools, isOAuth, isFirst
     return null;
   };
 
+  // Stacked icon + label content for the small row action buttons.
+  const actionContent = (icon, label) => (
+    <span className="flex flex-col items-center leading-tight">
+      <span className="material-symbols-outlined text-[18px]">{icon}</span>
+      <span className="text-[10px]">{label}</span>
+    </span>
+  );
+
   return (
     <div className={`group flex min-w-0 flex-col gap-3 rounded-lg p-2 transition-colors hover:bg-black/[0.02] dark:hover:bg-white/[0.02] sm:flex-row sm:items-center sm:justify-between ${connection.isActive === false ? "opacity-60" : ""}`}>
       <div className="flex min-w-0 flex-1 items-start gap-2 sm:items-center sm:gap-3">
         {/* Priority arrows */}
         <div className="flex shrink-0 flex-col">
-          <button
+          <Button
+            type="text"
+            size="small"
             onClick={onMoveUp}
             disabled={isFirst}
-            className={`p-0.5 rounded ${isFirst ? "text-text-muted/30 cursor-not-allowed" : "hover:bg-sidebar text-text-muted hover:text-primary"}`}
+            aria-label="Move up"
           >
             <span className="material-symbols-outlined text-sm">keyboard_arrow_up</span>
-          </button>
-          <button
+          </Button>
+          <Button
+            type="text"
+            size="small"
             onClick={onMoveDown}
             disabled={isLast}
-            className={`p-0.5 rounded ${isLast ? "text-text-muted/30 cursor-not-allowed" : "hover:bg-sidebar text-text-muted hover:text-primary"}`}
+            aria-label="Move down"
           >
             <span className="material-symbols-outlined text-sm">keyboard_arrow_down</span>
-          </button>
+          </Button>
         </div>
         <span className="material-symbols-outlined shrink-0 text-base text-text-muted">
           {authIcon}
@@ -211,16 +186,16 @@ export default function ConnectionRow({ connection, proxyPools, isOAuth, isFirst
             <p className="text-xs text-text-muted truncate">{secondaryDisplayName}</p>
           )}
           <div className="mt-1 flex min-w-0 flex-wrap items-center gap-1.5 sm:gap-2">
-            <Badge variant={getStatusVariant()} size="sm" dot>
+            <Tag color={TAG_COLORS[getStatusVariant()] || "default"}>
               {connection.isActive === false ? "disabled" : (effectiveStatus || "Unknown")}
-            </Badge>
-            <Badge variant="default" size="sm">
+            </Tag>
+            <Tag color="default">
               {authLabel}
-            </Badge>
+            </Tag>
             {hasAnyProxy && (
-              <Badge variant={proxyBadgeVariant} size="sm">
+              <Tag color={TAG_COLORS[proxyBadgeVariant] || "default"}>
                 Proxy
-              </Badge>
+              </Tag>
             )}
             {isCooldown && connection.isActive !== false && <CooldownTimer until={modelLockUntil} />}
             {connection.lastError && connection.isActive !== false && (
@@ -233,9 +208,9 @@ export default function ConnectionRow({ connection, proxyPools, isOAuth, isFirst
               <span className="text-xs text-text-muted">Auto: {connection.globalPriority}</span>
             )}
             {getOneByOneLabel() && (
-              <Badge variant={getOneByOneVariant()} size="sm">
+              <Tag color={TAG_COLORS[getOneByOneVariant()] || "default"}>
                 {getOneByOneLabel()}
-              </Badge>
+              </Tag>
             )}
           </div>
           {hasAnyProxy && (
@@ -244,7 +219,7 @@ export default function ConnectionRow({ connection, proxyPools, isOAuth, isFirst
                 {proxyDisplayText}
               </span>
               {maskedProxyUrl && (
-                <code className="max-w-full truncate rounded bg-black/5 px-1 py-0.5 font-mono text-[10px] text-text-muted dark:bg-white/5 sm:max-w-[260px]">
+                <code className="hcard-mono max-w-full truncate rounded bg-black/5 px-1 py-0.5 text-[10px] text-text-muted dark:bg-white/5 sm:max-w-[260px]">
                   {maskedProxyUrl}
                 </code>
               )}
@@ -259,72 +234,53 @@ export default function ConnectionRow({ connection, proxyPools, isOAuth, isFirst
       </div>
       <div className="flex w-full items-center justify-between gap-2 sm:w-auto sm:justify-end">
         <div className="grid flex-1 grid-cols-3 gap-1 sm:flex sm:flex-none">
-          {/* Proxy button with inline dropdown */}
+          {/* Proxy button with antd Dropdown (replaces the portal dropdown) */}
           {(proxyPools || []).length > 0 && (
-            <div>
-              <button
-                ref={proxyBtnRef}
-                onClick={toggleProxyDropdown}
-                className={`flex w-full flex-col items-center rounded px-2 py-1 transition-colors hover:bg-black/5 dark:hover:bg-white/5 ${hasAnyProxy ? "text-primary" : "text-text-muted hover:text-primary"}`}
-                disabled={updatingProxy}
+            <Dropdown
+              menu={{
+                items: proxyMenuItems,
+                selectedKeys: boundProxyPoolId ? [boundProxyPoolId] : ["__none__"],
+                onClick: ({ key }) => handleSelectProxy(key),
+              }}
+              trigger={["click"]}
+              disabled={updatingProxy}
+            >
+              <Button
+                type="text"
+                size="small"
+                loading={updatingProxy}
+                className={hasAnyProxy ? "text-primary!" : ""}
               >
-                <span className="material-symbols-outlined text-[18px]">
-                  {updatingProxy ? "progress_activity" : "lan"}
-                </span>
-                <span className="text-[10px] leading-tight">Proxy</span>
-              </button>
-              {showProxyDropdown && createPortal(
-                <div
-                  ref={proxyDropdownRef}
-                  style={proxyDropdownStyle}
-                  className="z-50 max-w-[78vw] min-w-[160px] overflow-y-auto rounded-lg border border-border bg-bg py-1 shadow-lg"
-                >
-                  <button
-                    onClick={() => handleSelectProxy("__none__")}
-                    className={`w-full text-left px-3 py-1.5 text-sm hover:bg-black/5 dark:hover:bg-white/5 ${!boundProxyPoolId ? "text-primary font-medium" : "text-text-main"}`}
-                  >
-                    None
-                  </button>
-                  {(proxyPools || []).map((pool) => (
-                    <button
-                      key={pool.id}
-                      onClick={() => handleSelectProxy(pool.id)}
-                      className={`w-full text-left px-3 py-1.5 text-sm hover:bg-black/5 dark:hover:bg-white/5 ${boundProxyPoolId === pool.id ? "text-primary font-medium" : "text-text-main"}`}
-                    >
-                      {pool.name}
-                    </button>
-                  ))}
-                </div>,
-                document.body
-              )}
-            </div>
+                {actionContent(updatingProxy ? "progress_activity" : "lan", "Proxy")}
+              </Button>
+            </Dropdown>
           )}
           {autoPing && (
-            <Tooltip text={autoPingTooltip}>
-              <button
+            <Tooltip title={autoPingTooltip}>
+              <Button
+                type="text"
+                size="small"
                 onClick={autoPing.onConfigure}
-                className={`flex w-full flex-col items-center rounded px-2 py-1 transition-colors hover:bg-black/5 dark:hover:bg-white/5 ${autoPing.isActive ? "text-primary" : "text-text-muted hover:text-primary"}`}
+                className={autoPing.isActive ? "text-primary!" : ""}
               >
-                <span className="material-symbols-outlined text-[18px]">bolt</span>
-                <span className="text-[10px] leading-tight">Auto-ping</span>
-              </button>
+                {actionContent("bolt", "Auto-ping")}
+              </Button>
             </Tooltip>
           )}
-          <button onClick={onEdit} className="flex flex-col items-center rounded px-2 py-1 text-text-muted hover:bg-black/5 hover:text-primary dark:hover:bg-white/5">
-            <span className="material-symbols-outlined text-[18px]">edit</span>
-            <span className="text-[10px] leading-tight">Edit</span>
-          </button>
-          <button onClick={onDelete} className="flex flex-col items-center rounded px-2 py-1 text-red-500 hover:bg-red-500/10">
-            <span className="material-symbols-outlined text-[18px]">delete</span>
-            <span className="text-[10px] leading-tight">Delete</span>
-          </button>
+          <Button type="text" size="small" onClick={onEdit}>
+            {actionContent("edit", "Edit")}
+          </Button>
+          <Button type="text" size="small" danger onClick={onDelete}>
+            {actionContent("delete", "Delete")}
+          </Button>
         </div>
-        <Toggle
-          size="sm"
-          checked={connection.isActive ?? true}
-          onChange={onToggleActive}
-          title={(connection.isActive ?? true) ? "Disable connection" : "Enable connection"}
-        />
+        <Tooltip title={(connection.isActive ?? true) ? "Disable connection" : "Enable connection"}>
+          <Switch
+            size="small"
+            checked={connection.isActive ?? true}
+            onChange={onToggleActive}
+          />
+        </Tooltip>
       </div>
     </div>
   );

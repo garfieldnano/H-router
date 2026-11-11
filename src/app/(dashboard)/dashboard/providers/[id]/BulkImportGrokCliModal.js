@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useRef } from "react";
-import { Modal, Button } from "@/shared/components";
+import { Alert, Button, Input, Modal, Tag } from "antd";
 import { translate } from "@/i18n/runtime";
 
 const PLACEHOLDER = `[
@@ -178,7 +178,12 @@ export default function BulkImportGrokCliModal({ isOpen, onClose, onSuccess }) {
   const failedItems = result?.results?.filter((r) => !r.ok) || [];
 
   return (
-    <Modal isOpen={isOpen} title={translate("Bulk Add Grok CLI Accounts")} onClose={handleClose}>
+    <Modal
+      open={isOpen}
+      title={translate("Bulk Add Grok CLI Accounts")}
+      onCancel={handleClose}
+      footer={null}
+    >
       <div className="flex flex-col gap-4">
         <div className="flex flex-wrap items-center justify-between gap-2">
           <p className="text-xs text-text-muted">
@@ -194,12 +199,11 @@ export default function BulkImportGrokCliModal({ isOpen, onClose, onSuccess }) {
           />
           <Button
             type="button"
-            size="sm"
-            variant="secondary"
-            icon="upload_file"
+            size="small"
             onClick={() => fileInputRef.current?.click()}
             disabled={submitting}
           >
+            <span className="material-symbols-outlined text-base">upload_file</span>
             {translate("Upload JSON Files")}
           </Button>
         </div>
@@ -214,8 +218,9 @@ export default function BulkImportGrokCliModal({ isOpen, onClose, onSuccess }) {
               : "border-accent/30 bg-sidebar"
           }`}
         >
-          <textarea
-            className="w-full rounded bg-transparent p-2.5 text-sm font-mono resize-y min-h-[240px] focus:outline-none focus:ring-1 focus:ring-primary"
+          <Input.TextArea
+            rows={10}
+            className="hcard-mono"
             placeholder={PLACEHOLDER}
             value={jsonText}
             onChange={(e) => {
@@ -223,6 +228,7 @@ export default function BulkImportGrokCliModal({ isOpen, onClose, onSuccess }) {
               setFileCountInfo(null);
             }}
             disabled={submitting}
+            variant="borderless"
           />
 
           {isDragging && (
@@ -236,26 +242,24 @@ export default function BulkImportGrokCliModal({ isOpen, onClose, onSuccess }) {
         </div>
 
         {fileCountInfo && (
-          <div className="flex items-center gap-1.5 text-xs text-green-400 font-medium bg-green-500/10 border border-green-500/20 px-2.5 py-1.5 rounded">
-            <span className="material-symbols-outlined text-sm">check_circle</span>
-            <span>
-              {translate("Loaded")} {fileCountInfo.accountsCount} {translate("account(s) from")}{" "}
-              {fileCountInfo.filesCount} {translate("file(s)")}
-            </span>
-          </div>
+          <Alert
+            type="success"
+            showIcon
+            message={`${translate("Loaded")} ${fileCountInfo.accountsCount} ${translate("account(s) from")} ${fileCountInfo.filesCount} ${translate("file(s)")}`}
+          />
         )}
 
         {parseError && (
-          <p className="text-xs text-red-500 break-words">{parseError}</p>
+          <Alert type="error" showIcon message={parseError} />
         )}
 
         {result && result.failed > 0 && (
           <div className="flex flex-col gap-2">
-            <div className="text-sm font-medium text-yellow-400">
+            <Tag color="warning">
               ✗ {result.failed} {translate("failed")}
-            </div>
+            </Tag>
             {failedItems.length > 0 && (
-              <ul className="rounded border border-accent/20 bg-sidebar/50 p-2 text-xs font-mono max-h-40 overflow-y-auto">
+              <ul className="hcard-panel hcard-mono p-2 text-xs max-h-40 overflow-y-auto">
                 {failedItems.map((item) => (
                   <li key={item.index} className="text-red-400">
                     [{item.index}] {item.error}
@@ -268,13 +272,15 @@ export default function BulkImportGrokCliModal({ isOpen, onClose, onSuccess }) {
 
         <div className="flex gap-2">
           <Button
+            type="primary"
             onClick={handleSubmit}
-            fullWidth
+            block
+            loading={submitting}
             disabled={submitting || !jsonText.trim()}
           >
             {submitting ? translate("Importing...") : translate("Import All")}
           </Button>
-          <Button onClick={handleClose} variant="ghost" fullWidth disabled={submitting}>
+          <Button onClick={handleClose} block disabled={submitting}>
             {translate("Close")}
           </Button>
         </div>

@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import PropTypes from "prop-types";
-import { Button, Badge, Input, Modal, Select } from "@/shared/components";
+import { Button, Form, Input, Modal, Select, Tag } from "antd";
 
 export default function EditCompatibleNodeModal({ isOpen, node, onSave, onClose, isAnthropic }) {
   const [formData, setFormData] = useState({
@@ -73,75 +73,105 @@ export default function EditCompatibleNodeModal({ isOpen, node, onSave, onClose,
     }
   };
 
+  // Modal-crash guard: antd evaluates Modal title + children on every
+  // render even while closed, and the title dereferences `isAnthropic`
+  // only — but the body below reads `node`-derived form state, so bail
+  // out entirely while there is no node, exactly as before.
   if (!node) return null;
 
   return (
-    <Modal isOpen={isOpen} title={`Edit ${isAnthropic ? "Anthropic" : "OpenAI"} Compatible`} onClose={onClose}>
-      <div className="flex flex-col gap-4">
-        <Input
+    <Modal
+      open={isOpen}
+      title={`Edit ${isAnthropic ? "Anthropic" : "OpenAI"} Compatible`}
+      onCancel={onClose}
+      footer={null}
+    >
+      <Form layout="vertical">
+        <Form.Item
           label="Name"
-          value={formData.name}
-          onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-          placeholder={`${isAnthropic ? "Anthropic" : "OpenAI"} Compatible (Prod)`}
-          hint="Required. A friendly label for this node."
-        />
-        <Input
-          label="Prefix"
-          value={formData.prefix}
-          onChange={(e) => setFormData({ ...formData, prefix: e.target.value })}
-          placeholder={isAnthropic ? "ac-prod" : "oc-prod"}
-          hint="Required. Used as the provider prefix for model IDs."
-        />
-        {!isAnthropic && (
-          <Select
-            label="API Type"
-            options={apiTypeOptions}
-            value={formData.apiType}
-            onChange={(e) => setFormData({ ...formData, apiType: e.target.value })}
-          />
-        )}
-        <Input
-          label="Base URL"
-          value={formData.baseUrl}
-          onChange={(e) => setFormData({ ...formData, baseUrl: e.target.value })}
-          placeholder={isAnthropic ? "https://api.anthropic.com/v1" : "https://api.openai.com/v1"}
-          hint={`Use the base URL (ending in /v1) for your ${isAnthropic ? "Anthropic" : "OpenAI"}-compatible API.`}
-        />
-        <div className="flex gap-2">
+          help="Required. A friendly label for this node."
+          style={{ marginBottom: 12 }}
+        >
           <Input
-            label="API Key (for Check)"
-            type="password"
-            value={checkKey}
-            onChange={(e) => setCheckKey(e.target.value)}
-            className="flex-1"
+            value={formData.name}
+            onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+            placeholder={`${isAnthropic ? "Anthropic" : "OpenAI"} Compatible (Prod)`}
           />
-          <div className="pt-6">
-            <Button onClick={handleValidate} disabled={!checkKey || validating || !formData.baseUrl.trim()} variant="secondary">
+        </Form.Item>
+        <Form.Item
+          label="Prefix"
+          help="Required. Used as the provider prefix for model IDs."
+          style={{ marginBottom: 12 }}
+        >
+          <Input
+            value={formData.prefix}
+            onChange={(e) => setFormData({ ...formData, prefix: e.target.value })}
+            placeholder={isAnthropic ? "ac-prod" : "oc-prod"}
+            className="hcard-mono"
+          />
+        </Form.Item>
+        {!isAnthropic && (
+          <Form.Item label="API Type" style={{ marginBottom: 12 }}>
+            <Select
+              options={apiTypeOptions}
+              value={formData.apiType}
+              onChange={(v) => setFormData({ ...formData, apiType: v })}
+            />
+          </Form.Item>
+        )}
+        <Form.Item
+          label="Base URL"
+          help={`Use the base URL (ending in /v1) for your ${isAnthropic ? "Anthropic" : "OpenAI"}-compatible API.`}
+          style={{ marginBottom: 12 }}
+        >
+          <Input
+            value={formData.baseUrl}
+            onChange={(e) => setFormData({ ...formData, baseUrl: e.target.value })}
+            placeholder={isAnthropic ? "https://api.anthropic.com/v1" : "https://api.openai.com/v1"}
+            className="hcard-mono"
+          />
+        </Form.Item>
+        <div className="flex gap-2 items-end">
+          <Form.Item label="API Key (for Check)" className="flex-1" style={{ marginBottom: 12 }}>
+            <Input.Password
+              value={checkKey}
+              onChange={(e) => setCheckKey(e.target.value)}
+            />
+          </Form.Item>
+          <div className="pb-3">
+            <Button onClick={handleValidate} disabled={!checkKey || validating || !formData.baseUrl.trim()} loading={validating}>
               {validating ? "Checking..." : "Check"}
             </Button>
           </div>
         </div>
-        <Input
+        <Form.Item
           label="Model ID (optional)"
-          value={checkModelId}
-          onChange={(e) => setCheckModelId(e.target.value)}
-          placeholder="e.g. my-model-id"
-          hint="If provider lacks /models endpoint, enter a model ID to validate via chat/completions instead."
-        />
+          help="If provider lacks /models endpoint, enter a model ID to validate via chat/completions instead."
+          style={{ marginBottom: 12 }}
+        >
+          <Input
+            value={checkModelId}
+            onChange={(e) => setCheckModelId(e.target.value)}
+            placeholder="e.g. my-model-id"
+            className="hcard-mono"
+          />
+        </Form.Item>
         {validationResult && (
-          <Badge variant={validationResult === "success" ? "success" : "error"}>
-            {validationResult === "success" ? "Valid" : "Invalid"}
-          </Badge>
+          <div className="mb-3">
+            <Tag color={validationResult === "success" ? "success" : "error"}>
+              {validationResult === "success" ? "Valid" : "Invalid"}
+            </Tag>
+          </div>
         )}
         <div className="flex gap-2">
-          <Button onClick={handleSubmit} fullWidth disabled={!formData.name.trim() || !formData.prefix.trim() || !formData.baseUrl.trim() || saving}>
+          <Button type="primary" onClick={handleSubmit} block loading={saving} disabled={!formData.name.trim() || !formData.prefix.trim() || !formData.baseUrl.trim() || saving}>
             {saving ? "Saving..." : "Save"}
           </Button>
-          <Button onClick={onClose} variant="ghost" fullWidth>
+          <Button onClick={onClose} block>
             Cancel
           </Button>
         </div>
-      </div>
+      </Form>
     </Modal>
   );
 }

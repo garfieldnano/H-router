@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import PropTypes from "prop-types";
-import { Button, Badge, Input, Modal, Select } from "@/shared/components";
+import { Alert, Button, Form, Input, Modal, Segmented, Select, Tag } from "antd";
 import { AI_PROVIDERS } from "@/shared/constants/providers";
 import { planBulkAdd } from "@/shared/utils/bulkAdd";
 
@@ -243,102 +243,139 @@ export default function AddApiKeyModal({ isOpen, provider, providerName, isCompa
     if (success > 0 && onBulkDone) onBulkDone();
   };
 
+  // Modal-crash guard: antd evaluates Modal title + children on every
+  // render even while closed. The title dereferences `providerName` /
+  // `provider` / `credentialLabel` (all derived from props, safe once
+  // provider is truthy) — bail out entirely while there is no provider,
+  // exactly as before.
   if (!provider) return null;
 
+  const saveDisabled = saving
+    || (!isOllamaLocal && (!formData.name || !apiKeySatisfied()))
+    || (isCompatible && !formData.defaultModel.trim())
+    || (isAzure && (!azureData.azureEndpoint || !azureData.deployment || !azureData.organization))
+    || (isCloudflareAi && !cloudflareData.accountId);
+
+  const credentialInput = isCookie
+    ? (
+      <Input
+        value={formData.apiKey}
+        onChange={(e) => setFormData({ ...formData, apiKey: e.target.value })}
+        placeholder={credentialPlaceholder}
+        className="hcard-mono"
+      />
+    )
+    : (
+      <Input.Password
+        value={formData.apiKey}
+        onChange={(e) => setFormData({ ...formData, apiKey: e.target.value })}
+        placeholder={credentialPlaceholder}
+        className="hcard-mono"
+      />
+    );
+
   return (
-    <Modal isOpen={isOpen} title={`Add ${providerName || provider} ${credentialLabel}`} onClose={onClose}>
+    <Modal
+      open={isOpen}
+      title={`Add ${providerName || provider} ${credentialLabel}`}
+      onCancel={onClose}
+      footer={null}
+      width={600}
+    >
       <div className="flex flex-col gap-4">
         {/* Mode switcher. Hidden for AWS credentials: bulk lines carry only a key, so a
             Bedrock entry would be saved with no access key id or profile and never work. */}
         {!usesAwsCredentialForm && (
-          <div className="flex gap-2">
-            <Button size="sm" variant={mode === "single" ? "primary" : "ghost"} onClick={() => { setMode("single"); setBulkResult(null); }}>Single</Button>
-            <Button size="sm" variant={mode === "bulk" ? "primary" : "ghost"} onClick={() => { setMode("bulk"); setBulkResult(null); }}>Bulk Add</Button>
-          </div>
+          <Segmented
+            options={[
+              { value: "single", label: "Single" },
+              { value: "bulk", label: "Bulk Add" },
+            ]}
+            value={mode}
+            onChange={(v) => { setMode(v); setBulkResult(null); }}
+          />
         )}
 
         {mode === "bulk" && (
           <div className="flex flex-col gap-3">
             <p className="text-xs text-text-muted">
               {isCloudflareAi
-                ? <>One key per line. Format: <code>name|apiKey|accountId</code> or just <code>apiKey</code> (auto-named by index).</>
+                ? <>One key per line. Format: <code className="hcard-mono">name|apiKey|accountId</code> or just <code className="hcard-mono">apiKey</code> (auto-named by index).</>
                 : provider === "qoder" || provider === "qoder-cn"
-                  ? <>One PAT per line. Format: <code>name|pt-...</code> or just <code>pt-...</code> (auto-named by index).</>
-                  : <>One key per line. Format: <code>name|apiKey</code> or just <code>apiKey</code> (auto-named by index).</>
+                  ? <>One PAT per line. Format: <code className="hcard-mono">name|pt-...</code> or just <code className="hcard-mono">pt-...</code> (auto-named by index).</>
+                  : <>One key per line. Format: <code className="hcard-mono">name|apiKey</code> or just <code className="hcard-mono">apiKey</code> (auto-named by index).</>
               }
             </p>
-            <textarea
-              className="w-full rounded border border-accent/30 bg-sidebar p-2 text-sm font-mono resize-y min-h-[140px] focus:outline-none focus:ring-1 focus:ring-primary"
+            <Input.TextArea
+              rows={6}
+              className="hcard-mono"
               placeholder={bulkPlaceholder}
               value={bulkText}
               onChange={(e) => setBulkText(e.target.value)}
             />
             {bulkResult && (
-              <div className={`text-sm font-medium ${bulkResult.failed > 0 ? "text-yellow-400" : "text-green-400"}`}>
+              <Tag color={bulkResult.failed > 0 ? "warning" : "success"}>
                 ✓ {bulkResult.success} added{bulkResult.failed > 0 ? `, ✗ ${bulkResult.failed} failed` : ""}
-              </div>
+              </Tag>
             )}
             <div className="flex gap-2">
-              <Button onClick={handleBulkSubmit} fullWidth disabled={saving || !bulkText.trim()}>
+              <Button type="primary" onClick={handleBulkSubmit} block loading={saving} disabled={saving || !bulkText.trim()}>
                 {saving ? "Adding..." : "Add All Keys"}
               </Button>
-              <Button onClick={onClose} variant="ghost" fullWidth>Cancel</Button>
+              <Button onClick={onClose} block>Cancel</Button>
             </div>
           </div>
         )}
 
-        {mode === "single" && (<>
-        <Input
-          label="Name"
-          value={formData.name}
-          onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-          placeholder={isOllamaLocal ? "Ollama Local" : "Production Key"}
-        />
+        {mode === "single" && (
+        <Form layout="vertical">
+        <Form.Item label="Name" style={{ marginBottom: 12 }}>
+          <Input
+            value={formData.name}
+            onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+            placeholder={isOllamaLocal ? "Ollama Local" : "Production Key"}
+          />
+        </Form.Item>
         {isOllamaLocal && (
-          <div className="flex gap-2">
-            <Input
-              label="Ollama Host URL"
-              value={formData.ollamaHostUrl}
-              onChange={(e) => setFormData({ ...formData, ollamaHostUrl: e.target.value })}
-              placeholder="http://localhost:11434"
-              className="flex-1"
-            />
-            <div className="pt-6">
-              <Button onClick={handleValidate} disabled={validating || saving} variant="secondary">
+          <div className="flex gap-2 items-end">
+            <Form.Item label="Ollama Host URL" className="flex-1" style={{ marginBottom: 12 }}>
+              <Input
+                value={formData.ollamaHostUrl}
+                onChange={(e) => setFormData({ ...formData, ollamaHostUrl: e.target.value })}
+                placeholder="http://localhost:11434"
+                className="hcard-mono"
+              />
+            </Form.Item>
+            <div className="pb-3">
+              <Button onClick={handleValidate} disabled={validating || saving} loading={validating}>
                 {validating ? "Checking..." : "Check"}
               </Button>
             </div>
           </div>
         )}
         {provider === "commandcode" && (
-          <div className="flex items-center justify-between p-3 rounded bg-accent/10 border border-accent/20">
+          <div className="hcard-panel flex items-center justify-between gap-3">
             <div>
               <div className="text-xs font-medium text-text">Command Code CLI detected?</div>
               <div className="text-xs text-text-muted">Import API key directly from ~/.commandcode/auth.json</div>
               {cliDetectError && <div className="text-xs text-red-400 mt-1">{cliDetectError}</div>}
             </div>
             <Button
-              size="sm"
-              variant="secondary"
               onClick={handleCommandCodeAutoImport}
               disabled={cliDetecting || saving}
+              loading={cliDetecting}
             >
               {cliDetecting ? "Importing..." : "Import from CLI"}
             </Button>
           </div>
         )}
         {!isOllamaLocal && (
-          <div className="flex gap-2">
-            <Input
-              label={credentialLabel}
-              type={isCookie ? "text" : "password"}
-              value={formData.apiKey}
-              onChange={(e) => setFormData({ ...formData, apiKey: e.target.value })}
-              placeholder={credentialPlaceholder}
-              className="flex-1"
-            />
-            <div className="pt-6">
-              <Button onClick={handleValidate} disabled={!apiKeySatisfied() || validating || saving} variant="secondary">
+          <div className="flex gap-2 items-end">
+            <Form.Item label={credentialLabel} className="flex-1" style={{ marginBottom: 12 }}>
+              {credentialInput}
+            </Form.Item>
+            <div className="pb-3">
+              <Button onClick={handleValidate} disabled={!apiKeySatisfied() || validating || saving} loading={validating}>
                 {validating ? "Checking..." : "Check"}
               </Button>
             </div>
@@ -363,33 +400,38 @@ export default function AddApiKeyModal({ isOpen, provider, providerName, isCompa
           </p>
         )}
         {providerRegions && (
-          <Select
-            label="Region"
-            value={region}
-            onChange={(e) => setRegion(e.target.value)}
-            options={providerRegions.map((r) => ({ value: r.id, label: r.label }))}
-          />
+          <Form.Item label="Region" style={{ marginBottom: 12 }}>
+            <Select
+              value={region}
+              onChange={(v) => setRegion(v)}
+              options={providerRegions.map((r) => ({ value: r.id, label: r.label }))}
+            />
+          </Form.Item>
         )}
         {isCompatible && (
-          <Input
-            label="Default Model"
-            value={formData.defaultModel}
-            onChange={(e) => setFormData({ ...formData, defaultModel: e.target.value })}
-            placeholder={isAnthropic ? "claude-3-5-sonnet-latest" : "gpt-4o-mini"}
-          />
+          <Form.Item label="Default Model" style={{ marginBottom: 12 }}>
+            <Input
+              value={formData.defaultModel}
+              onChange={(e) => setFormData({ ...formData, defaultModel: e.target.value })}
+              placeholder={isAnthropic ? "claude-3-5-sonnet-latest" : "gpt-4o-mini"}
+              className="hcard-mono"
+            />
+          </Form.Item>
         )}
         {isOllamaLocal && (
           <p className="text-xs text-text-muted">
-            Leave blank to use <code>http://localhost:11434</code>. For remote Ollama, enter the full host URL (e.g. <code>http://192.168.1.10:11434</code>).
+            Leave blank to use <code className="hcard-mono">http://localhost:11434</code>. For remote Ollama, enter the full host URL (e.g. <code className="hcard-mono">http://192.168.1.10:11434</code>).
           </p>
         )}
         {validationResult && (
-          <Badge variant={validationResult === "success" ? "success" : "error"}>
-            {validationResult === "success" ? "Valid" : "Invalid"}
-          </Badge>
+          <div className="mb-3">
+            <Tag color={validationResult === "success" ? "success" : "error"}>
+              {validationResult === "success" ? "Valid" : "Invalid"}
+            </Tag>
+          </div>
         )}
         {error && (
-          <p className="text-xs text-red-500 break-words">{error}</p>
+          <Alert type="error" showIcon message={error} className="mb-3" />
         )}
         {isCompatible && (
           <p className="text-xs text-text-muted">
@@ -397,55 +439,64 @@ export default function AddApiKeyModal({ isOpen, provider, providerName, isCompa
           </p>
         )}
         {isCloudflareAi && (
-          <div className="bg-sidebar/50 p-4 rounded-lg border border-accent/20">
+          <div className="hcard-panel">
             <h3 className="font-semibold mb-3 text-sm">Cloudflare Workers AI</h3>
-            <Input
-              label="Account ID"
-              value={cloudflareData.accountId}
-              onChange={(e) => setCloudflareData({ ...cloudflareData, accountId: e.target.value })}
-              placeholder="abc123def456..."
-            />
+            <Form.Item label="Account ID" style={{ marginBottom: 12 }}>
+              <Input
+                value={cloudflareData.accountId}
+                onChange={(e) => setCloudflareData({ ...cloudflareData, accountId: e.target.value })}
+                placeholder="abc123def456..."
+                className="hcard-mono"
+              />
+            </Form.Item>
             <p className="text-xs text-text-muted mt-2">
               Find your Account ID in the right sidebar of <a href="https://dash.cloudflare.com" target="_blank" rel="noopener noreferrer" className="text-primary underline">dash.cloudflare.com</a>
             </p>
           </div>
         )}
         {usesAwsCredentialForm && (
-          <div className="bg-sidebar/50 p-4 rounded-lg border border-accent/20">
+          <div className="hcard-panel">
             <h3 className="font-semibold mb-3 text-sm">AWS Bedrock Credentials</h3>
             <div className="flex flex-col gap-3">
-              <Input
-                label="AWS Profile (SSO — recommended)"
-                value={bedrockData.profile}
-                onChange={(e) => setBedrockData({ ...bedrockData, profile: e.target.value })}
-                placeholder="my-sso-profile"
-              />
-              <Input
-                label="Region"
-                value={bedrockData.region}
-                onChange={(e) => setBedrockData({ ...bedrockData, region: e.target.value })}
-                placeholder="us-east-1"
-              />
+              <Form.Item label="AWS Profile (SSO — recommended)" style={{ marginBottom: 0 }}>
+                <Input
+                  value={bedrockData.profile}
+                  onChange={(e) => setBedrockData({ ...bedrockData, profile: e.target.value })}
+                  placeholder="my-sso-profile"
+                  className="hcard-mono"
+                />
+              </Form.Item>
+              <Form.Item label="Region" style={{ marginBottom: 0 }}>
+                <Input
+                  value={bedrockData.region}
+                  onChange={(e) => setBedrockData({ ...bedrockData, region: e.target.value })}
+                  placeholder="us-east-1"
+                  className="hcard-mono"
+                />
+              </Form.Item>
             </div>
             <p className="text-xs text-text-muted mt-2">
-              Set a profile from <code>~/.aws/config</code> and leave the API key empty, then run
-              {" "}<code>aws sso login --profile {bedrockData.profile || "my-sso-profile"}</code>.
+              Set a profile from <code className="hcard-mono">~/.aws/config</code> and leave the API key empty, then run
+              {" "}<code className="hcard-mono">aws sso login --profile {bedrockData.profile || "my-sso-profile"}</code>.
               Credentials refresh automatically.
             </p>
             <div className="flex flex-col gap-3 mt-4">
-              <Input
-                label="Access Key ID (only for static keys)"
-                value={bedrockData.accessKeyId}
-                onChange={(e) => setBedrockData({ ...bedrockData, accessKeyId: e.target.value })}
-                placeholder="AKIA..."
-              />
-              <Input
-                label="Session Token (only for temporary ASIA… keys)"
-                type="password"
-                value={bedrockData.sessionToken}
-                onChange={(e) => setBedrockData({ ...bedrockData, sessionToken: e.target.value })}
-                placeholder="FwoGZXIvYXdz..."
-              />
+              <Form.Item label="Access Key ID (only for static keys)" style={{ marginBottom: 0 }}>
+                <Input
+                  value={bedrockData.accessKeyId}
+                  onChange={(e) => setBedrockData({ ...bedrockData, accessKeyId: e.target.value })}
+                  placeholder="AKIA..."
+                  className="hcard-mono"
+                />
+              </Form.Item>
+              <Form.Item label="Session Token (only for temporary ASIA… keys)" style={{ marginBottom: 0 }}>
+                <Input.Password
+                  value={bedrockData.sessionToken}
+                  onChange={(e) => setBedrockData({ ...bedrockData, sessionToken: e.target.value })}
+                  placeholder="FwoGZXIvYXdz..."
+                  className="hcard-mono"
+                />
+              </Form.Item>
             </div>
             <p className="text-xs text-text-muted mt-2">
               For static keys instead: put the AWS <strong>secret</strong> access key in the API Key
@@ -454,54 +505,63 @@ export default function AddApiKeyModal({ isOpen, provider, providerName, isCompa
           </div>
         )}
         {isAzure && (
-          <div className="bg-sidebar/50 p-4 rounded-lg border border-accent/20">
+          <div className="hcard-panel">
             <h3 className="font-semibold mb-3 text-sm">Azure OpenAI Configuration</h3>
             <div className="flex flex-col gap-3">
-              <Input
-                label="Azure Endpoint"
-                value={azureData.azureEndpoint}
-                onChange={(e) => setAzureData({ ...azureData, azureEndpoint: e.target.value })}
-                placeholder="https://your-resource.openai.azure.com"
-              />
-              <Input
-                label="Deployment Name"
-                value={azureData.deployment}
-                onChange={(e) => setAzureData({ ...azureData, deployment: e.target.value })}
-                placeholder="gpt-4"
-              />
-              <Input
-                label="API Version"
-                value={azureData.apiVersion}
-                onChange={(e) => setAzureData({ ...azureData, apiVersion: e.target.value })}
-                placeholder="2024-10-01-preview"
-              />
-              <Input
-                label="Organization"
-                value={azureData.organization}
-                onChange={(e) => setAzureData({ ...azureData, organization: e.target.value })}
-                placeholder="Organization ID"
-              />
+              <Form.Item label="Azure Endpoint" style={{ marginBottom: 0 }}>
+                <Input
+                  value={azureData.azureEndpoint}
+                  onChange={(e) => setAzureData({ ...azureData, azureEndpoint: e.target.value })}
+                  placeholder="https://your-resource.openai.azure.com"
+                  className="hcard-mono"
+                />
+              </Form.Item>
+              <Form.Item label="Deployment Name" style={{ marginBottom: 0 }}>
+                <Input
+                  value={azureData.deployment}
+                  onChange={(e) => setAzureData({ ...azureData, deployment: e.target.value })}
+                  placeholder="gpt-4"
+                  className="hcard-mono"
+                />
+              </Form.Item>
+              <Form.Item label="API Version" style={{ marginBottom: 0 }}>
+                <Input
+                  value={azureData.apiVersion}
+                  onChange={(e) => setAzureData({ ...azureData, apiVersion: e.target.value })}
+                  placeholder="2024-10-01-preview"
+                  className="hcard-mono"
+                />
+              </Form.Item>
+              <Form.Item label="Organization" style={{ marginBottom: 0 }}>
+                <Input
+                  value={azureData.organization}
+                  onChange={(e) => setAzureData({ ...azureData, organization: e.target.value })}
+                  placeholder="Organization ID"
+                />
+              </Form.Item>
             </div>
           </div>
         )}
 
-        <Input
-          label="Priority"
-          type="number"
-          value={formData.priority}
-          onChange={(e) => setFormData({ ...formData, priority: Number.parseInt(e.target.value) || 1 })}
-        />
+        <Form.Item label="Priority" style={{ marginBottom: 12 }}>
+          <Input
+            type="number"
+            value={formData.priority}
+            onChange={(e) => setFormData({ ...formData, priority: Number.parseInt(e.target.value) || 1 })}
+          />
+        </Form.Item>
 
-        <Select
-          label="Proxy Pool"
-          value={formData.proxyPoolId}
-          onChange={(e) => setFormData({ ...formData, proxyPoolId: e.target.value })}
-          options={[
-            { value: NONE_PROXY_POOL_VALUE, label: "None" },
-            ...(proxyPools || []).map((pool) => ({ value: pool.id, label: pool.name })),
-          ]}
-          placeholder="None"
-        />
+        <Form.Item label="Proxy Pool" style={{ marginBottom: 12 }}>
+          <Select
+            value={formData.proxyPoolId}
+            onChange={(v) => setFormData({ ...formData, proxyPoolId: v })}
+            options={[
+              { value: NONE_PROXY_POOL_VALUE, label: "None" },
+              ...(proxyPools || []).map((pool) => ({ value: pool.id, label: pool.name })),
+            ]}
+            placeholder="None"
+          />
+        </Form.Item>
 
         {(proxyPools || []).length === 0 && (
           <p className="text-xs text-text-muted">
@@ -514,14 +574,15 @@ export default function AddApiKeyModal({ isOpen, provider, providerName, isCompa
         </p>
 
         <div className="flex gap-2">
-          <Button onClick={handleSubmit} fullWidth disabled={saving || (!isOllamaLocal && (!formData.name || !apiKeySatisfied())) || (isCompatible && !formData.defaultModel.trim()) || (isAzure && (!azureData.azureEndpoint || !azureData.deployment || !azureData.organization)) || (isCloudflareAi && !cloudflareData.accountId)}>
+          <Button type="primary" onClick={handleSubmit} block loading={saving} disabled={saveDisabled}>
             {saving ? "Saving..." : "Save"}
           </Button>
-          <Button onClick={onClose} variant="ghost" fullWidth>
+          <Button onClick={onClose} block>
             Cancel
           </Button>
         </div>
-        </>)}
+        </Form>
+        )}
       </div>
     </Modal>
   );

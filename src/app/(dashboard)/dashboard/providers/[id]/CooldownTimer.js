@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { Tag } from "antd";
 import PropTypes from "prop-types";
 
 export default function CooldownTimer({ until }) {
@@ -31,9 +32,9 @@ export default function CooldownTimer({ until }) {
   if (!remaining) return null;
 
   return (
-    <span className="text-xs text-orange-500 font-mono">
+    <Tag color="warning" className="hcard-mono">
       ⏱ {remaining}
-    </span>
+    </Tag>
   );
 }
 

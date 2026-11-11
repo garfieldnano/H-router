@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import PropTypes from "prop-types";
-import { Button, Modal } from "@/shared/components";
+import { Alert, Button, Input, Modal, Tag } from "antd";
 import { translate } from "@/i18n/runtime";
 
 const PLACEHOLDER = `[
@@ -84,7 +84,12 @@ export default function BulkImportCodexModal({ isOpen, onClose, onSuccess }) {
   const failedItems = result?.results?.filter((r) => !r.ok) || [];
 
   return (
-    <Modal isOpen={isOpen} title={translate("Bulk Add Codex Accounts")} onClose={handleClose}>
+    <Modal
+      open={isOpen}
+      title={translate("Bulk Add Codex Accounts")}
+      onCancel={handleClose}
+      footer={null}
+    >
       <div className="flex flex-col gap-4">
         <p className="text-xs text-text-muted">
           {translate(
@@ -92,8 +97,9 @@ export default function BulkImportCodexModal({ isOpen, onClose, onSuccess }) {
           )}
         </p>
 
-        <textarea
-          className="w-full rounded border border-accent/30 bg-sidebar p-2 text-sm font-mono resize-y min-h-[240px] focus:outline-none focus:ring-1 focus:ring-primary"
+        <Input.TextArea
+          rows={10}
+          className="hcard-mono"
           placeholder={PLACEHOLDER}
           value={jsonText}
           onChange={(e) => setJsonText(e.target.value)}
@@ -101,21 +107,17 @@ export default function BulkImportCodexModal({ isOpen, onClose, onSuccess }) {
         />
 
         {parseError && (
-          <p className="text-xs text-red-500 break-words">{parseError}</p>
+          <Alert type="error" showIcon message={parseError} />
         )}
 
         {result && (
           <div className="flex flex-col gap-2">
-            <div
-              className={`text-sm font-medium ${
-                result.failed > 0 ? "text-yellow-400" : "text-green-400"
-              }`}
-            >
+            <Tag color={result.failed > 0 ? "warning" : "success"}>
               ✓ {result.success} {translate("added")}
               {result.failed > 0 ? `, ✗ ${result.failed} ${translate("failed")}` : ""}
-            </div>
+            </Tag>
             {failedItems.length > 0 && (
-              <ul className="rounded border border-accent/20 bg-sidebar/50 p-2 text-xs font-mono max-h-40 overflow-y-auto">
+              <ul className="hcard-panel hcard-mono p-2 text-xs max-h-40 overflow-y-auto">
                 {failedItems.map((item) => (
                   <li key={item.index} className="text-red-400">
                     [{item.index}] {item.error}
@@ -128,13 +130,15 @@ export default function BulkImportCodexModal({ isOpen, onClose, onSuccess }) {
 
         <div className="flex gap-2">
           <Button
+            type="primary"
             onClick={handleSubmit}
-            fullWidth
+            block
+            loading={submitting}
             disabled={submitting || !jsonText.trim()}
           >
             {submitting ? translate("Importing...") : translate("Import All")}
           </Button>
-          <Button onClick={handleClose} variant="ghost" fullWidth disabled={submitting}>
+          <Button onClick={handleClose} block disabled={submitting}>
             {translate("Close")}
           </Button>
         </div>

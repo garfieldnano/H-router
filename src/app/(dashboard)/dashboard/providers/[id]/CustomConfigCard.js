@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useState } from "react";
 import PropTypes from "prop-types";
-import { Card, Badge } from "@/shared/components";
+import { Button, Card, Input, Tag, Tooltip } from "antd";
 import { useNotificationStore } from "@/store/notificationStore";
 
 // Mirrors the server-side gate in /api/providers/[id]/overrides — client check is UX only
@@ -87,7 +87,10 @@ export default function CustomConfigCard({ providerId }) {
   if (Object.keys(builtin).length === 0 && !hasOverride) return null;
 
   return (
-    <Card padding="xs">
+    <Card
+      className="hcard"
+      styles={{ body: { padding: 12 } }}
+    >
       <button
         type="button"
         onClick={() => setExpanded((v) => !v)}
@@ -97,7 +100,7 @@ export default function CustomConfigCard({ providerId }) {
           <span className="material-symbols-outlined text-primary text-[20px]">tune</span>
           <span className="text-sm font-semibold">Custom Headers</span>
           {hasOverride && (
-            <Badge variant="success" size="sm">Active</Badge>
+            <Tag color="success">Active</Tag>
           )}
         </div>
         <span className="material-symbols-outlined text-text-muted">
@@ -112,62 +115,63 @@ export default function CustomConfigCard({ providerId }) {
               const overridden = row.name.trim() in builtin && row.value !== builtin[row.name.trim()];
               return (
                 <div key={i} className="flex items-center gap-2">
-                  <input
+                  <Input
                     value={row.name}
                     onChange={(e) => setRow(i, "name", e.target.value)}
                     placeholder="Header-Name"
                     spellCheck={false}
-                    className="w-44 rounded-md border border-border bg-background px-2 py-1.5 text-sm focus:border-primary focus:outline-none"
+                    className="hcard-mono"
+                    style={{ width: 176 }}
                   />
-                  <input
+                  <Input
                     value={row.value}
                     onChange={(e) => setRow(i, "value", e.target.value)}
                     placeholder="Value"
                     spellCheck={false}
                     title={overridden ? "Overridden" : row.name.trim() in builtin ? "Registry default" : ""}
-                    className={`min-w-0 flex-1 rounded-md border bg-background px-2 py-1.5 text-sm focus:border-primary focus:outline-none ${
-                      overridden ? "border-amber-400/60" : "border-border"
-                    }`}
+                    className="hcard-mono min-w-0 flex-1"
+                    style={overridden ? { borderColor: "rgba(251, 191, 36, 0.6)" } : undefined}
                   />
-                  <button
-                    type="button"
-                    title="Remove header"
-                    onClick={() => setRows((prev) => (prev.length > 1 ? prev.filter((_, idx) => idx !== i) : [{ name: "", value: "" }]))}
-                    className="shrink-0 text-text-muted hover:text-red-500"
-                  >
-                    <span className="material-symbols-outlined text-[18px]">delete</span>
-                  </button>
+                  <Tooltip title="Remove header">
+                    <Button
+                      type="text"
+                      size="small"
+                      danger
+                      onClick={() => setRows((prev) => (prev.length > 1 ? prev.filter((_, idx) => idx !== i) : [{ name: "", value: "" }]))}
+                      icon={<span className="material-symbols-outlined text-[18px]">delete</span>}
+                    />
+                  </Tooltip>
                 </div>
               );
             })}
           </div>
 
           <div className="mt-3 flex items-center justify-between gap-2">
-            <button
-              type="button"
+            <Button
+              type="link"
+              size="small"
               onClick={() => setRows((prev) => [...prev, { name: "", value: "" }])}
-              className="flex items-center gap-1 text-xs text-primary hover:underline"
+              icon={<span className="material-symbols-outlined text-[16px]">add</span>}
             >
-              <span className="material-symbols-outlined text-[16px]">add</span>
               Add header
-            </button>
+            </Button>
             <div className="flex gap-2">
-              <button
-                type="button"
+              <Button
+                size="small"
                 disabled={saving}
                 onClick={resetToBuiltin}
-                className="rounded-md border border-border px-3 py-1.5 text-xs hover:bg-black/[0.03] dark:hover:bg-white/[0.03] disabled:opacity-50"
               >
                 Reset
-              </button>
-              <button
-                type="button"
+              </Button>
+              <Button
+                type="primary"
+                size="small"
+                loading={saving}
                 disabled={saving}
                 onClick={save}
-                className="rounded-md bg-primary px-3 py-1.5 text-xs font-medium text-white hover:opacity-90 disabled:opacity-50"
               >
                 {saving ? "Saving..." : "Save"}
-              </button>
+              </Button>
             </div>
           </div>
         </div>
