@@ -1,0 +1,37 @@
+# h-router-relay example config (TOML; JSON also accepted with a .json suffix).
+# Copy to /etc/h-router/relay.toml (or anywhere) and pass --config <path>.
+# Secrets here are placeholders — put real values in this file (0600) or in
+# the systemd EnvironmentFile / HROUTER_RELAY_* env vars. Never commit a
+# filled-in copy.
+#
+# Precedence: --listen/--profile flags > HROUTER_RELAY_* env vars > this file.
+
+# Listen address. Default: 127.0.0.1:20129
+listen = "127.0.0.1:20129"
+
+# Header profile: codebuddy | kimi | minimax | muse | cline | kilocode | none
+# Default: none
+profile = "none"
+
+# App version stamped into Kimi (X-Msh-Version) and Cline
+# (User-Agent / X-CLIENT-VERSION) headers. JS uses the 9router package.json
+# version; default 0.5.116. Bump when the fork version moves.
+app_version = "0.5.116"
+
+# Kimi device id — must stay stable per connection for the whole OAuth
+# session. If omitted, the relay falls back to `kimi-<millis>` (as the JS
+# reference does) — stable only for that process run.
+# kimi_device_id = "kimi-0123456789abcdef"
+
+# Cline API key (clp_...) or OAuth access token (JWT). api_key wins if both
+# are set. JWTs get a `workos:` prefix automatically; `clp_` keys are sent
+# verbatim.
+# cline_api_key = "clp_..."
+# cline_access_token = "eyJ..."
+
+# KiloCode organization id.
+# kilocode_org_id = "org-..."
+
+# Muse: true = subscription (minted key) mode -> send `x-api-version: 1.0.0`.
+# False (default) = plain Model API key, no extra header.
+muse_subscription = false

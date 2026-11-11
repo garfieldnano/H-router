@@ -3,7 +3,7 @@ import { cookies } from "next/headers";
 import { getSettings } from "@/lib/localDb";
 import { isOidcConfigured } from "@/lib/auth/oidc";
 import { isSamlConfigured } from "@/lib/auth/saml.js";
-import { getDashboardAuthSession } from "@/lib/auth/dashboardSession";
+import { getDashboardAuthSession, getSessionRole } from "@/lib/auth/dashboardSession";
 
 export async function GET() {
   try {
@@ -39,6 +39,10 @@ export async function GET() {
       displayName,
       loginMethod,
       authenticated: !!session,
+      // Member dashboard (v1): role + member identity for the UI.
+      role: getSessionRole(session),
+      memberId: session?.memberId || null,
+      memberName: session?.memberName || null,
       oidcName: oidcName || null,
       oidcEmail: oidcEmail || null,
       oidcLogin: !!session?.oidc,
@@ -59,6 +63,9 @@ export async function GET() {
       displayName: "Password user",
       loginMethod: "Password",
       authenticated: false,
+      role: null,
+      memberId: null,
+      memberName: null,
       oidcName: null,
       oidcEmail: null,
       oidcLogin: false,

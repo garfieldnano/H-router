@@ -50,6 +50,15 @@ const DEFAULT_SETTINGS = {
   mitmRouterBaseUrl: DEFAULT_MITM_ROUTER_BASE,
   dnsToolEnabled: {},
   rtkEnabled: true,
+  // Per-model RTK overrides (plan G9): { "provider/model": true|false }.
+  // A boolean entry wins over the global rtkEnabled above; no entry means
+  // the global setting applies (existing behavior unchanged).
+  rtkModelOverrides: {},
+  // Per-model vision overrides (plan G10): { "provider/model": true|false,
+  // "brand-model-id": true|false }. A boolean entry wins over the
+  // capability tables; no entry means the tables decide (existing
+  // behavior unchanged). Brand ids win over provider/model keys.
+  visionOverrides: {},
   headroomEnabled: false,
   headroomUrl: DEFAULT_HEADROOM_URL,
   headroomCompressUserMessages: false,
@@ -67,6 +76,26 @@ const DEFAULT_SETTINGS = {
   pxpipeTimeoutMs: 15000,
   // Per-provider user header overrides applied at dispatch: { [providerId]: { headers: {..} } }
   providerOverrides: {},
+  // RPM (schema v5): global default requests-per-minute for keys with no
+  // per-key and no per-package limit. There is no unlimited tier; 50 is the
+  // top-tier default (user decision 2026-11-10).
+  defaultRpmLimit: 50,
+  // Telegram bot (v1): botUsername + owner chat id + manual-transfer payment
+  // details. Token lives ONLY in env (TELEGRAM_BOT_TOKEN), never here.
+  // Owner chat id may also come from env (TELEGRAM_OWNER_CHAT_ID), which
+  // takes precedence over this setting.
+  telegramBot: {
+    ownerChatId: "",
+    botUsername: "",
+    payment: {
+      bankName: "",
+      accountNumber: "",
+      accountName: "",
+      ewalletName: "",
+      ewalletNumber: "",
+      notes: "",
+    },
+  },
 };
 
 async function readRaw() {

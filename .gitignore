@@ -51,6 +51,8 @@ source/*
 .cursor/*
 docs/*
 !docs/ARCHITECTURE.md
+!docs/h-router/
+!docs/h-router/**
 test/*
 open-sse/test/*
 RM.vn.md
@@ -67,6 +69,7 @@ package-lock.json
 .github/instructions/codacy.instructions.md
 README1.md
 deploy*.sh
+!relay/deploy.sh
 ecosystem.config.*
 
 scripts/agSniffer/*
@@ -102,3 +105,4 @@ graphify-out/*
 start-dev-silent.cjs
 debug.log
 .scratch/
+relay/target

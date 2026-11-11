@@ -25,6 +25,10 @@ export default {
     forceStream: true,
     // CodeBuddy intl speaks the same unified OpenAI reasoning_effort shape as CN.
     thinkingFormat: "openai",
+    // Header hooks (plan #1): channel check requires the plugin's
+    // request/conversation ids — without them upstream rejects with
+    // 400 / 11128 "request illegal".
+    headerHooks: ["codebuddyHeaders"],
     headers: {
       "User-Agent": "IDE/2.108.1 CodeBuddy/2.108.1",
       "X-Product": "SaaS",
@@ -37,9 +41,6 @@ export default {
       combined: true,
       header: "Authorization",
       scheme: "bearer",
-      // Channel check requires the plugin's request/conversation ids — without
-      // them upstream rejects with 400 / 11128 "request illegal".
-      hooks: ["codebuddyHeaders"],
     },
     // Intl billing endpoint mirrors CN shape (data.Response.Data.Accounts[]).
     usage: {

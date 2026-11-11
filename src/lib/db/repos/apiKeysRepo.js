@@ -10,8 +10,20 @@ function rowToKey(row) {
     key: row.key,
     name: row.name,
     machineId: row.machineId,
+    memberId: row.memberId || null,
     isActive: row.isActive === 1 || row.isActive === true,
     createdAt: row.createdAt,
+    // Optional expiry (ISO timestamp). NULL = never expires. Set for trial
+    // keys issued by the Telegram bot; validateApiKey() rejects expired keys.
+    expiresAt: row.expiresAt || null,
+    // RPM (schema v5): per-key requests-per-minute. NULL = inherit from the
+    // key's package, then the global default. No unlimited tier.
+    rpmLimit: row.rpmLimit ?? null,
+    // Active IP cap (schema v9, plan #5): max distinct client IPs in the
+    // 10-minute window. NULL = the global default (3).
+    maxIps: row.maxIps ?? null,
+    // Package this key was issued from (schema v5). NULL = no package.
+    packageId: row.packageId || null,
     access: keyAccessFromColumns(row.accessRestricted, row.accessAllow),
   };
 }
@@ -58,6 +70,20 @@ export async function createApiKey(name, machineId) {
   return apiKey;
 }
 
+export async function getApiKeysByMemberId(memberId) {
+  if (!memberId) return [];
+  const db = await getAdapter();
+  const rows = db.all(`SELECT * FROM apiKeys WHERE memberId = ? ORDER BY createdAt ASC`, [memberId]);
+  return rows.map(rowToKey);
+}
+
+// Assign (or unassign with null) an API key to a member. Admin-only callers.
+export async function setApiKeyMember(id, memberId) {
+  const db = await getAdapter();
+  const res = db.run(`UPDATE apiKeys SET memberId = ? WHERE id = ?`, [memberId || null, id]);
+  return (res?.changes ?? 0) > 0;
+}
+
 export async function updateApiKey(id, data) {
   const db = await getAdapter();
   let result = null;
@@ -67,12 +93,27 @@ export async function updateApiKey(id, data) {
     const merged = { ...rowToKey(row), ...data };
     const cols = keyAccessToColumns(merged.access);
     db.run(
-      `UPDATE apiKeys SET key = ?, name = ?, machineId = ?, isActive = ?, accessRestricted = ?, accessAllow = ? WHERE id = ?`,
-      [merged.key, merged.name, merged.machineId, merged.isActive ? 1 : 0, cols.accessRestricted, cols.accessAllow, id]
+      `UPDATE apiKeys SET key = ?, name = ?, machineId = ?, memberId = ?, isActive = ?, expiresAt = ?, rpmLimit = ?, maxIps = ?, packageId = ?, accessRestricted = ?, accessAllow = ? WHERE id = ?`,
+      [merged.key, merged.name, merged.machineId, merged.memberId || null, merged.isActive ? 1 : 0, merged.expiresAt || null, merged.rpmLimit ?? null, merged.maxIps ?? null, merged.packageId || null, cols.accessRestricted, cols.accessAllow, id]
     );
     result = rowToKey(db.get(`SELECT * FROM apiKeys WHERE id = ?`, [id]));
   });
   return result;
+}
+
+// Set (or clear with null) the package a key was issued from. Used at
+// issuance (bot order confirm / trial claim) and by the RPM resolver's lazy
+// backfill for keys issued before apiKeys.packageId existed.
+export async function setApiKeyPackage(id, packageId) {
+  const db = await getAdapter();
+  const res = db.run(`UPDATE apiKeys SET packageId = ? WHERE id = ?`, [packageId || null, id]);
+  return (res?.changes ?? 0) > 0;
+}
+
+export async function setApiKeyExpiry(id, expiresAt) {
+  const db = await getAdapter();
+  const res = db.run(`UPDATE apiKeys SET expiresAt = ? WHERE id = ?`, [expiresAt || null, id]);
+  return (res?.changes ?? 0) > 0;
 }
 
 export async function deleteApiKey(id) {
@@ -83,7 +124,11 @@ export async function deleteApiKey(id) {
 
 export async function validateApiKey(key) {
   const db = await getAdapter();
-  const row = db.get(`SELECT isActive FROM apiKeys WHERE key = ?`, [key]);
+  const row = db.get(`SELECT isActive, expiresAt FROM apiKeys WHERE key = ?`, [key]);
   if (!row) return false;
-  return row.isActive === 1 || row.isActive === true;
+  if (!(row.isActive === 1 || row.isActive === true)) return false;
+  // Expired keys are rejected everywhere (member login, /v1 auth, guard).
+  // NULL expiresAt = never expires (all pre-existing keys).
+  if (row.expiresAt && new Date(row.expiresAt).getTime() <= Date.now()) return false;
+  return true;
 }

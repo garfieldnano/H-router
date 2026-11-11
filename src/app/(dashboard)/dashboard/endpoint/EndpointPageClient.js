@@ -694,6 +694,50 @@ export default function APIPageClient({ machineId }) {
     }
   };
 
+  // RPM (schema v5): per-key override. Empty value clears the override
+  // (key inherits its package / the global default). 1–10000, no unlimited.
+  const [rpmEditing, setRpmEditing] = useState({});
+  const handleUpdateKeyRpm = async (id, rpmValue) => {
+    try {
+      const res = await fetch(`/api/keys/${id}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ rpmLimit: rpmValue === "" ? null : Number(rpmValue) }),
+      });
+      const data = await res.json().catch(() => ({}));
+      if (res.ok && data.key) {
+        setKeys(prev => prev.map(k => k.id === id ? { ...k, rpmLimit: data.key.rpmLimit, rate: data.key.rate } : k));
+        setRpmEditing(prev => { const next = { ...prev }; delete next[id]; return next; });
+      } else {
+        console.log("Error updating key RPM:", data.error || res.status);
+      }
+    } catch (error) {
+      console.log("Error updating key RPM:", error);
+    }
+  };
+
+  // IP cap (schema v9, plan #5): per-key override. Empty value clears the
+  // override (key falls back to the default 3). 1–100, no unlimited.
+  const [ipEditing, setIpEditing] = useState({});
+  const handleUpdateKeyMaxIps = async (id, ipsValue) => {
+    try {
+      const res = await fetch(`/api/keys/${id}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ maxIps: ipsValue === "" ? null : Number(ipsValue) }),
+      });
+      const data = await res.json().catch(() => ({}));
+      if (res.ok && data.key) {
+        setKeys(prev => prev.map(k => k.id === id ? { ...k, maxIps: data.key.maxIps, ip: data.key.ip } : k));
+        setIpEditing(prev => { const next = { ...prev }; delete next[id]; return next; });
+      } else {
+        console.log("Error updating key IP cap:", data.error || res.status);
+      }
+    } catch (error) {
+      console.log("Error updating key IP cap:", error);
+    }
+  };
+
   const maskKey = (fullKey) => {
     if (!fullKey || fullKey.length <= 10) return fullKey || "";
     return fullKey.slice(0, 6) + "•".repeat(fullKey.length - 10) + fullKey.slice(-4);
@@ -1053,6 +1097,76 @@ export default function APIPageClient({ machineId }) {
                   <p className="text-xs text-text-muted mt-1">
                     Created {new Date(key.createdAt).toLocaleDateString()}
                   </p>
+                  <p className="text-xs text-text-muted mt-1">
+                    RPM: {key.rate ? `${key.rate.used}/${key.rate.limit} per menit` : "…"}
+                    {key.rate?.source ? ` · batas ${key.rate.source === "key" ? "per kunci" : key.rate.source === "package" ? `paket${key.rate.packageName ? ` (${key.rate.packageName})` : ""}` : key.rate.source === "trial-default" ? "default trial" : "global"}` : ""}
+                    {key.rpmLimit != null ? ` · override ${key.rpmLimit}` : ""}
+                  </p>
+                  <p className="text-xs text-text-muted mt-1">
+                    IP aktif: {key.ip ? `${key.ip.activeCount}/${key.ip.cap} dalam 10 mnt` : "…"}
+                    {key.ip?.source === "key" ? " · batas per kunci" : " · default 3"}
+                    {key.maxIps != null ? ` · override ${key.maxIps}` : ""}
+                  </p>
+                  {rpmEditing[key.id] !== undefined ? (
+                    <span className="inline-flex items-center gap-1 mt-1">
+                      <input
+                        type="number" min="1" max="10000"
+                        value={rpmEditing[key.id]}
+                        onChange={(e) => setRpmEditing(prev => ({ ...prev, [key.id]: e.target.value }))}
+                        placeholder="kosong = ikut default"
+                        className="w-28 rounded border border-border-subtle bg-surface px-2 py-1 text-xs text-text-main"
+                      />
+                      <button
+                        onClick={() => handleUpdateKeyRpm(key.id, rpmEditing[key.id])}
+                        className="rounded border border-border-subtle bg-surface px-2 py-1 text-xs text-text-main hover:bg-bg-hover"
+                      >
+                        Simpan
+                      </button>
+                      <button
+                        onClick={() => setRpmEditing(prev => { const next = { ...prev }; delete next[key.id]; return next; })}
+                        className="rounded border border-border-subtle bg-surface px-2 py-1 text-xs text-text-main hover:bg-bg-hover"
+                      >
+                        Batal
+                      </button>
+                    </span>
+                  ) : (
+                    <button
+                      onClick={() => setRpmEditing(prev => ({ ...prev, [key.id]: key.rpmLimit != null ? String(key.rpmLimit) : "" }))}
+                      className="mt-1 text-xs text-primary hover:underline"
+                    >
+                      Ubah RPM
+                    </button>
+                  )}
+                  {ipEditing[key.id] !== undefined ? (
+                    <span className="inline-flex items-center gap-1 mt-1">
+                      <input
+                        type="number" min="1" max="100"
+                        value={ipEditing[key.id]}
+                        onChange={(e) => setIpEditing(prev => ({ ...prev, [key.id]: e.target.value }))}
+                        placeholder="kosong = default 3"
+                        className="w-28 rounded border border-border-subtle bg-surface px-2 py-1 text-xs text-text-main"
+                      />
+                      <button
+                        onClick={() => handleUpdateKeyMaxIps(key.id, ipEditing[key.id])}
+                        className="rounded border border-border-subtle bg-surface px-2 py-1 text-xs text-text-main hover:bg-bg-hover"
+                      >
+                        Simpan
+                      </button>
+                      <button
+                        onClick={() => setIpEditing(prev => { const next = { ...prev }; delete next[key.id]; return next; })}
+                        className="rounded border border-border-subtle bg-surface px-2 py-1 text-xs text-text-main hover:bg-bg-hover"
+                      >
+                        Batal
+                      </button>
+                    </span>
+                  ) : (
+                    <button
+                      onClick={() => setIpEditing(prev => ({ ...prev, [key.id]: key.maxIps != null ? String(key.maxIps) : "" }))}
+                      className="mt-1 ml-2 text-xs text-primary hover:underline"
+                    >
+                      Ubah batas IP
+                    </button>
+                  )}
                   {key.isActive === false && (
                     <p className="text-xs text-orange-500 mt-1">Paused</p>
                   )}

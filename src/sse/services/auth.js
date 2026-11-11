@@ -1,4 +1,4 @@
-import { getProviderConnections, validateApiKey, updateProviderConnection, getSettings, getProxyPools } from "@/lib/localDb";
+import { getProviderConnections, validateApiKey, updateProviderConnection, getSettings, getProxyPools, getBannedRelayPoolIds } from "@/lib/localDb";
 import { resolveConnectionProxyConfig, pickProxyPoolId } from "@/lib/network/connectionProxy";
 import { formatRetryAfter, checkFallbackError, isModelLockActive, buildModelLockUpdate, getEarliestModelLockUntil } from "open-sse/services/accountFallback.js";
 import { MAX_RATE_LIMIT_COOLDOWN_MS } from "open-sse/config/errorConfig.js";
@@ -48,11 +48,18 @@ export async function getProviderCredentials(provider, excludeConnectionIds = nu
       const settings = await getSettings();
       const override = (settings.providerStrategies || {})[providerId] || {};
       const strategy = override.rotateStrategy || "none";
-      let pickedId = override.proxyPoolId || null;
-      if (strategy !== "none") {
+      // Egress relay rotation (plan #1): an explicit pool override (from the
+      // chat loop's rotate-relay branch) wins over the strategy pick — the
+      // request stays on the same virtual account, only the egress changes.
+      // Otherwise, skip pools the rotator has banned (if every pool is
+      // banned, pickedId stays null and the request goes direct).
+      let pickedId = options?.proxyPoolOverride || override.proxyPoolId || null;
+      if (!options?.proxyPoolOverride && strategy !== "none") {
         const allPools = await getProxyPools({ isActive: true });
         const poolIds = allPools.filter(p => p.proxyUrl).map(p => p.id);
-        pickedId = pickProxyPoolId(poolIds, strategy, providerId);
+        const banned = new Set(await getBannedRelayPoolIds(poolIds));
+        const available = poolIds.filter((id) => !banned.has(id));
+        pickedId = pickProxyPoolId(available, strategy, providerId);
       }
       const resolvedProxy = await resolveConnectionProxyConfig({ proxyPoolId: pickedId || "" });
       return {
@@ -199,7 +206,14 @@ export async function getProviderCredentials(provider, excludeConnectionIds = nu
       connection = availableConnections[0];
     }
 
-    const resolvedProxy = await resolveConnectionProxyConfig(connection.providerSpecificData || {});
+    const resolvedProxy = await resolveConnectionProxyConfig(
+      // Egress relay rotation (plan #1): an explicit pool override replaces
+      // the connection's bound pool for this request only — the account
+      // stays the same, only the egress changes. Nothing is persisted.
+      options?.proxyPoolOverride
+        ? { ...(connection.providerSpecificData || {}), proxyPoolId: options.proxyPoolOverride }
+        : connection.providerSpecificData || {}
+    );
 
     return {
       authType: connection.authType,

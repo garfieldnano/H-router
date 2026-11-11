@@ -1,0 +1,37 @@
+[package]
+name = "h-router-relay"
+version = "0.1.0"
+edition = "2021"
+description = "Rust relay sidecar for h-router: standard HTTP proxy (absolute-form + CONNECT) and x-relay-target relay, with per-provider header profiles and ban reporting"
+license = "MIT"
+
+[[bin]]
+name = "h-router-relay"
+path = "src/main.rs"
+
+[lib]
+name = "h_router_relay"
+path = "src/lib.rs"
+
+[dependencies]
+tokio = { version = "1", features = ["full"] }
+hyper = { version = "1", features = ["server", "http1"] }
+hyper-util = { version = "0.1", features = ["tokio", "server-auto"] }
+http-body-util = "0.1"
+bytes = "1"
+futures-util = "0.3"
+reqwest = { version = "0.12", default-features = false, features = ["stream", "rustls-tls", "http2"] }
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+toml = "0.8"
+uuid = { version = "1", features = ["v4"] }
+chrono = { version = "0.4", default-features = false, features = ["clock", "std"] }
+hostname = "0.4"
+clap = { version = "4", features = ["derive"] }
+
+[dev-dependencies]
+axum = "0.8"
+futures-util = "0.3"
+tokio = { version = "1", features = ["full"] }
+reqwest = { version = "0.12", default-features = false, features = ["stream", "rustls-tls", "json"] }
+serde_json = "1"

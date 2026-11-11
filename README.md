@@ -1555,6 +1555,22 @@ Huge thanks to these authors — without their work, 9Router's token-saving feat
 
 ---
 
+## 🏷️ h-router (fork additions)
+
+This fork adds reseller/member features on top of 9Router — member
+dashboard (API-key login, read-only own usage/keys), Telegram bot (buy,
+trial, admin panel, daily digest), RPM limits, downtime compensation,
+Rust relay sidecar + egress rotator, model rebranding + live system
+prompts (applyLive), per-key IP caps + provider health scanner,
+observability pages (Live Traffic, Conversations, Playground, per-key
+usage), and per-model RTK toggles.
+
+Operator docs (Indonesian): **[docs/h-router/README.md](docs/h-router/README.md)**
+— includes the go-live checklist. Build logs for every feature:
+`~/workspace/analysis/9router-*-build.md`.
+
+---
+
 ## 📄 License
 
 MIT License - see [LICENSE](LICENSE) for details.

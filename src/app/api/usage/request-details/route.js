@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { getRequestDetails } from "@/lib/usageDb";
+import { getRequestDetails, isObservabilityEnabled } from "@/lib/usageDb";
 
 /**
  * GET /api/usage/request-details
@@ -47,6 +47,9 @@ export async function GET(request) {
     if (endDate) filter.endDate = endDate;
     
     const result = await getRequestDetails(filter);
+    // G7 Conversations: the page shows a different empty state when
+    // recording is off (observability disabled) instead of looking broken.
+    const observabilityEnabled = await isObservabilityEnabled().catch(() => true);
 
     // Redact conversation payloads: the stored details include full request
     // bodies (user prompts, tool calls) and provider responses. Returning them
@@ -63,7 +66,7 @@ export async function GET(request) {
       return redacted;
     });
 
-    return NextResponse.json({ ...result, details: redactedDetails });
+    return NextResponse.json({ ...result, details: redactedDetails, observabilityEnabled });
   } catch (error) {
     console.error("[API] Failed to get request details:", error);
     return NextResponse.json(

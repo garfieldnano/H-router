@@ -8,6 +8,8 @@ import {
 import { getSettings, getProviderConnectionById } from "@/lib/localDb";
 import { getModelInfo } from "../services/model.js";
 import { getKeyAccessContext, enforceKeyAccessResolved } from "../services/keyAccess.js";
+import { enforceKeyRateLimit } from "../services/keyRateLimit.js";
+import { enforceKeyIpCap } from "../services/keyIpCap.js";
 import { handleVideoProxyCore, getVideoConfig, sanitizeSecrets } from "open-sse/handlers/videoCore.js";
 import { errorResponse, unavailableResponse } from "open-sse/utils/error.js";
 import { HTTP_STATUS } from "open-sse/config/runtimeConfig.js";
@@ -126,6 +128,15 @@ export async function handleVideoCreate(request, action) {
     await getKeyAccessContext(request), bodyInfo.parsed?.model ? String(bodyInfo.parsed.model) : "", provider, model
   );
   if (keyAccessDenied) return keyAccessDenied;
+
+  // Active IP cap (plan #5): over the cap → 429 + Retry-After. Runs
+  // before the RPM check so a rejected request does not consume an RPM slot.
+  const ipCapLimited = await enforceKeyIpCap(request);
+  if (ipCapLimited) return ipCapLimited;
+
+  // RPM limit (plan §0c): over the limit → 429 + Retry-After.
+  const rateLimited = await enforceKeyRateLimit(request);
+  if (rateLimited) return rateLimited;
 
   // Strip the provider prefix (e.g. "xai/grok-imagine-video") before forwarding;
   // otherwise forward the original bytes untouched.

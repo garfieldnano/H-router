@@ -14,6 +14,8 @@ import * as log from "../utils/logger.js";
 import { updateProviderCredentials, checkAndRefreshToken } from "../services/tokenRefresh.js";
 import { handleComboChat, getComboModelsFromData } from "open-sse/services/combo.js";
 import { getKeyAccessContext, enforceKeyAccessProvider } from "../services/keyAccess.js";
+import { enforceKeyRateLimit } from "../services/keyRateLimit.js";
+import { enforceKeyIpCap } from "../services/keyIpCap.js";
 
 /**
  * Handle web search request for the SSE/Next.js server.
@@ -77,6 +79,15 @@ export async function handleSearch(request) {
   // restricted key needs the provider id (or the combo) on its list.
   const keyAccessDenied = await enforceKeyAccessProvider(await getKeyAccessContext(request), providerInput, comboModels);
   if (keyAccessDenied) return keyAccessDenied;
+
+  // Active IP cap (plan #5): over the cap → 429 + Retry-After. Runs
+  // before the RPM check so a rejected request does not consume an RPM slot.
+  const ipCapLimited = await enforceKeyIpCap(request);
+  if (ipCapLimited) return ipCapLimited;
+
+  // RPM limit (plan §0c): over the limit → 429 + Retry-After.
+  const rateLimited = await enforceKeyRateLimit(request);
+  if (rateLimited) return rateLimited;
   if (comboModels) {
     const comboStrategies = settings.comboStrategies || {};
     const comboStrategy = comboStrategies[providerInput]?.fallbackStrategy || settings.comboStrategy || "fallback";

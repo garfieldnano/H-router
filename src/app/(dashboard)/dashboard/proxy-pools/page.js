@@ -53,6 +53,12 @@ export default function ProxyPoolsPage() {
   const [healthProgress, setHealthProgress] = useState({ current: 0, total: 0 });
   const [bulkBusy, setBulkBusy] = useState(false);
   const [confirmState, setConfirmState] = useState(null);
+  // Egress relay rotation (plan #1): per-pool ban state + per-provider
+  // auto-rotate switches.
+  const [egressById, setEgressById] = useState({});
+  const [autoRotateProviders, setAutoRotateProviders] = useState([]);
+  const [providerStrategies, setProviderStrategies] = useState({});
+  const [autoRotateSaving, setAutoRotateSaving] = useState(null);
   const relayMenuRef = useRef(null);
   const notify = useNotificationStore();
 
@@ -85,6 +91,97 @@ export default function ProxyPoolsPage() {
   useEffect(() => {
     fetchProxyPools();
   }, [fetchProxyPools]);
+
+  const fetchEgress = useCallback(async () => {
+    try {
+      const res = await fetch("/api/proxy-pools/egress", { cache: "no-store" });
+      const data = await res.json();
+      if (res.ok) {
+        const map = {};
+        for (const r of data.relays || []) map[r.id] = r;
+        setEgressById(map);
+      }
+    } catch (error) {
+      console.log("Error fetching egress relay status:", error);
+    }
+  }, []);
+
+  const fetchAutoRotate = useCallback(async () => {
+    try {
+      const [connRes, settingsRes] = await Promise.all([
+        fetch("/api/providers", { cache: "no-store" }),
+        fetch("/api/settings", { cache: "no-store" }),
+      ]);
+      const connData = connRes.ok ? await connRes.json() : {};
+      const settingsData = settingsRes.ok ? await settingsRes.json() : {};
+      setProviderStrategies(settingsData.providerStrategies || {});
+      const byProvider = new Map();
+      for (const c of connData.connections || []) {
+        const poolId = c?.providerSpecificData?.proxyPoolId;
+        if (!poolId) continue;
+        const entry = byProvider.get(c.provider) || { providerId: c.provider, poolIds: new Set() };
+        entry.poolIds.add(poolId);
+        byProvider.set(c.provider, entry);
+      }
+      setAutoRotateProviders(
+        [...byProvider.values()]
+          .map((e) => ({ providerId: e.providerId, poolCount: e.poolIds.size }))
+          .sort((a, b) => a.providerId.localeCompare(b.providerId))
+      );
+    } catch (error) {
+      console.log("Error fetching auto-rotate providers:", error);
+    }
+  }, []);
+
+  useEffect(() => {
+    fetchEgress();
+    fetchAutoRotate();
+    const timer = setInterval(fetchEgress, 30000);
+    return () => clearInterval(timer);
+  }, [fetchEgress, fetchAutoRotate]);
+
+  const handleClearBan = async (poolId) => {
+    try {
+      const res = await fetch("/api/proxy-pools/egress", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ poolId, action: "clear" }),
+      });
+      if (res.ok) {
+        await fetchEgress();
+        notify.success("Relay ban cleared");
+      } else {
+        notify.error("Failed to clear relay ban");
+      }
+    } catch (error) {
+      console.log("Error clearing relay ban:", error);
+      notify.error("Failed to clear relay ban");
+    }
+  };
+
+  const handleToggleAutoRotate = async (providerId, next) => {
+    setAutoRotateSaving(providerId);
+    const prev = providerStrategies;
+    const updated = { ...prev, [providerId]: { ...(prev[providerId] || {}), autoRotate: next } };
+    setProviderStrategies(updated);
+    try {
+      const res = await fetch("/api/settings", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ providerStrategies: updated }),
+      });
+      if (!res.ok) {
+        setProviderStrategies(prev);
+        notify.error("Failed to update auto-rotate");
+      }
+    } catch (error) {
+      console.log("Error updating auto-rotate:", error);
+      setProviderStrategies(prev);
+      notify.error("Failed to update auto-rotate");
+    } finally {
+      setAutoRotateSaving(null);
+    }
+  };
 
   const resetForm = () => {
     setEditingProxyPool(null);
@@ -778,6 +875,27 @@ export default function ProxyPoolsPage() {
                     <Badge variant="default" size="sm">
                       {pool.boundConnectionCount || 0} bound
                     </Badge>
+                    {(() => {
+                      const relay = egressById[pool.id];
+                      if (!relay) return null;
+                      if (relay.status === "banned") {
+                        return (
+                          <>
+                            <Badge variant="error" size="sm">
+                              relay banned{relay.bannedUntil ? ` until ${new Date(relay.bannedUntil).toLocaleTimeString()}` : ""}
+                            </Badge>
+                            <button
+                              onClick={() => handleClearBan(pool.id)}
+                              className="text-[11px] font-medium text-primary hover:underline"
+                            >
+                              Clear ban
+                            </button>
+                          </>
+                        );
+                      }
+                      if (relay.status === "cooldown") return <Badge variant="warning" size="sm">relay cooldown</Badge>;
+                      return <Badge variant="success" size="sm">relay healthy</Badge>;
+                    })()}
                   </div>
                   <p className="text-xs text-text-muted truncate mt-1">{pool.proxyUrl}</p>
                   {pool.noProxy ? (
@@ -829,6 +947,49 @@ export default function ProxyPoolsPage() {
             ))}
           </div>
         )}
+      </Card>
+
+      <Card>
+        <div className="mb-2">
+          <h2 className="text-base font-semibold">Egress Auto-Rotate</h2>
+          <p className="text-xs text-text-muted mt-1">
+            When upstream answers 403 Abusive Traffic, the request retries through the next relay for the same provider instead of burning the account. 429 keeps the existing account rotation; 400/11128 never rotates.
+          </p>
+        </div>
+        {autoRotateProviders.length === 0 ? (
+          <p className="text-sm text-text-muted py-2">
+            No provider has a connection bound to a proxy pool yet — bind a pool to a connection to enable rotation for that provider.
+          </p>
+        ) : (
+          <div className="flex flex-col divide-y divide-black/[0.04] dark:divide-white/[0.05]">
+            {autoRotateProviders.map(({ providerId, poolCount }) => {
+              const enabled = (providerStrategies[providerId] || {}).autoRotate !== false;
+              return (
+                <div key={providerId} className="flex flex-col gap-2 py-3 sm:flex-row sm:items-center sm:justify-between">
+                  <div>
+                    <p className="text-sm font-medium">{providerId}</p>
+                    <p className="text-xs text-text-muted">
+                      {poolCount} pool{poolCount === 1 ? "" : "s"} bound{poolCount < 2 ? " — rotation needs at least 2 pools" : ""}
+                    </p>
+                  </div>
+                  <Toggle
+                    size="sm"
+                    checked={enabled}
+                    onChange={() => handleToggleAutoRotate(providerId, !enabled)}
+                    disabled={autoRotateSaving === providerId}
+                    title={enabled ? "Disable auto-rotate" : "Enable auto-rotate"}
+                  />
+                </div>
+              );
+            })}
+          </div>
+        )}
+        <div className="mt-3 rounded-lg border border-black/10 bg-black/[0.03] p-3 dark:border-white/10 dark:bg-white/5">
+          <p className="text-sm font-medium">Rust Relay Sidecar</p>
+          <p className="text-xs text-text-muted mt-1">
+            Self-hosted relay (<code className="text-text-main">relay/target/release/h-router-relay</code>, default listen <code className="text-text-main">127.0.0.1:20129</code>). Supports both contracts: standard HTTP proxy and <code className="text-text-main">x-relay-target</code> mode. Register it as a pool of type <code className="text-text-main">http</code> with its URL to use it as an egress relay. See <code className="text-text-main">relay/README.md</code> for build, systemd, and update steps.
+          </p>
+        </div>
       </Card>
 
       <Modal

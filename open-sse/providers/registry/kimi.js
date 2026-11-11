@@ -31,11 +31,13 @@ export default {
     clientId: "17e5f671-d194-4dfb-9706-5516cb48c098",
     tokenUrl: "https://auth.kimi.com/api/oauth/token",
     refreshUrl: "https://auth.kimi.com/api/oauth/token",
+    // Header hooks (plan #1): provider-specific header auto-patch, declared
+    // in the registry — a new free-tier provider adds its hook name here.
+    headerHooks: ["kimiHeaders"],
     auth: {
       combined: true,
       header: "x-api-key",
       scheme: "raw",
-      hooks: ["kimiHeaders"],
     },
   },
   // Multi-endpoint: pick the transport matching client sourceFormat to skip translation.
@@ -43,20 +45,20 @@ export default {
     {
       format: "openai",
       baseUrl: "https://api.kimi.com/coding/v1/chat/completions",
-      auth: { combined: true, header: "Authorization", scheme: "bearer", hooks: ["kimiHeaders"] },
+      auth: { combined: true, header: "Authorization", scheme: "bearer" },
     },
     {
       format: "claude",
       baseUrl: "https://api.kimi.com/coding/v1/messages",
       urlSuffix: "?beta=true",
       headers: { ...CLAUDE_API_HEADERS },
-      auth: { combined: true, header: "x-api-key", scheme: "raw", hooks: ["kimiHeaders"] },
+      auth: { combined: true, header: "x-api-key", scheme: "raw" },
     },
     // Kimi Code natively serves the OpenAI Responses API (Codex wire_api = "responses").
     {
       format: "openai-responses",
       baseUrl: "https://api.kimi.com/coding/v1/responses",
-      auth: { combined: true, header: "Authorization", scheme: "bearer", hooks: ["kimiHeaders"] },
+      auth: { combined: true, header: "Authorization", scheme: "bearer" },
     },
   ],
   models: [

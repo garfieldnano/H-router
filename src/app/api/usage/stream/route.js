@@ -1,8 +1,21 @@
-import { getUsageStats, statsEmitter, getActiveRequests } from "@/lib/usageDb";
+import { getUsageStats, statsEmitter, getActiveRequests, sanitizeUsageStatsForBrowser } from "@/lib/usageDb";
 
 export const dynamic = "force-dynamic";
 
-export async function GET() {
+// Same periods as /api/usage/stats. The G7 Live Traffic page passes
+// ?period=today for "requests today" totals; existing callers (UsageStats)
+// send no period and keep the old "all" behavior.
+const VALID_PERIODS = new Set(["today", "24h", "7d", "30d", "60d", "all"]);
+
+export async function GET(request) {
+  const period = request?.nextUrl?.searchParams?.get("period") || new URL(request.url).searchParams.get("period") || "all";
+  if (!VALID_PERIODS.has(period)) {
+    return new Response(JSON.stringify({ error: "Invalid period" }), {
+      status: 400,
+      headers: { "Content-Type": "application/json" },
+    });
+  }
+
   const encoder = new TextEncoder();
   const state = { closed: false, keepalive: null, send: null, sendPending: null, cachedStats: null };
 
@@ -18,8 +31,12 @@ export async function GET() {
             const quickStats = { ...state.cachedStats, activeRequests, recentRequests, errorProvider };
             controller.enqueue(encoder.encode(`data: ${JSON.stringify(quickStats)}\n\n`));
           }
-          // Then do full recalc and update cache
-          const stats = await getUsageStats();
+          // Then do full recalc and update cache.
+          // Sanitize before sending: getUsageStats() keys byApiKey by the
+          // RAW apiKey composite — full key values must never reach the
+          // browser (G7). recentRequests / activeRequests already carry
+          // masked keys only.
+          const stats = sanitizeUsageStatsForBrowser(await getUsageStats(period));
           state.cachedStats = stats;
           controller.enqueue(encoder.encode(`data: ${JSON.stringify(stats)}\n\n`));
         } catch {

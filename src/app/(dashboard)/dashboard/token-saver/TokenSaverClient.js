@@ -4,6 +4,7 @@ import { useState, useEffect, useCallback, useRef } from "react";
 import { Card, Button, Input, Modal, Toggle, ConfirmModal } from "@/shared/components";
 import { useCopyToClipboard } from "@/shared/hooks/useCopyToClipboard";
 import { getCurrentLocale, onLocaleChange } from "@/i18n/runtime";
+import { normalizeRtkModelOverrides, rtkModelKey } from "@/shared/utils/rtkModel.js";
 import {
   WENYAN_LOCALES,
   CAVEMAN_LEVELS,
@@ -12,6 +13,12 @@ import {
 
 export default function TokenSaverClient() {
   const [rtkEnabled, setRtkEnabledState] = useState(true);
+  // RTK per-model overrides (plan G9): { "provider/model": true|false }.
+  // A boolean entry wins over the global switch; no entry = global applies.
+  const [rtkModelOverrides, setRtkModelOverrides] = useState({});
+  const [rtkModels, setRtkModels] = useState([]);
+  const [rtkNewModel, setRtkNewModel] = useState("");
+  const [rtkOverrideError, setRtkOverrideError] = useState("");
   const [headroomEnabled, setHeadroomEnabled] = useState(false);
   const [headroomUrl, setHeadroomUrl] = useState("http://localhost:8787");
   const [headroomTimeoutMs, setHeadroomTimeoutMs] = useState(3000);
@@ -105,6 +112,38 @@ export default function TokenSaverClient() {
     } catch (error) {
       console.log("Error updating rtkEnabled:", error);
     }
+  };
+
+  const saveRtkModelOverrides = async (next) => {
+    const clean = normalizeRtkModelOverrides(next);
+    setRtkModelOverrides(clean);
+    await patchSetting({ rtkModelOverrides: clean });
+  };
+
+  const handleRtkOverrideToggle = (key) => {
+    saveRtkModelOverrides({ ...rtkModelOverrides, [key]: !rtkModelOverrides[key] });
+  };
+
+  const handleRtkOverrideRemove = (key) => {
+    const next = { ...rtkModelOverrides };
+    delete next[key];
+    saveRtkModelOverrides(next);
+  };
+
+  const handleRtkOverrideAdd = (enabled) => {
+    const parts = rtkNewModel.trim().split("/");
+    const key = parts.length === 2 ? rtkModelKey(parts[0], parts[1]) : null;
+    if (!key) {
+      setRtkOverrideError("Use provider/model, e.g. kimi/k2");
+      return;
+    }
+    if (key in rtkModelOverrides) {
+      setRtkOverrideError(`${key} already has an override — toggle it in the list below.`);
+      return;
+    }
+    setRtkOverrideError("");
+    setRtkNewModel("");
+    saveRtkModelOverrides({ ...rtkModelOverrides, [key]: enabled });
   };
 
   const handleCavemanEnabled = (value) => {
@@ -432,6 +471,18 @@ export default function TokenSaverClient() {
         if (res.ok) {
           const data = await res.json();
           setRtkEnabledState(data.rtkEnabled !== false);
+          setRtkModelOverrides(normalizeRtkModelOverrides(data.rtkModelOverrides));
+          // Model list for the per-model override picker (best effort).
+          fetch("/api/models")
+            .then((r) => (r.ok ? r.json() : null))
+            .then((d) => {
+              if (d?.models) {
+                setRtkModels(
+                  d.models.map((m) => m.fullModel).filter(Boolean).sort()
+                );
+              }
+            })
+            .catch(() => {});
           setHeadroomEnabled(!!data.headroomEnabled);
           setHeadroomUrl(data.headroomUrl || "http://localhost:8787");
           if (typeof data.headroomTimeoutMs === "number") setHeadroomTimeoutMs(data.headroomTimeoutMs);
@@ -518,6 +569,80 @@ export default function TokenSaverClient() {
             checked={rtkEnabled}
             onChange={() => handleRtkEnabled(!rtkEnabled)}
           />
+        </div>
+        <div className="py-4 border-b border-border">
+          <p className="font-medium">Per-model overrides</p>
+          <p className="text-sm text-text-muted mt-1">
+            Override the global RTK switch for one model. Key format:
+            provider/model (e.g. kimi/k2). No entry = the global switch above
+            applies.
+          </p>
+          {Object.keys(rtkModelOverrides).length === 0 ? (
+            <p className="text-sm text-text-muted mt-3">
+              No per-model overrides — every model follows the global switch.
+            </p>
+          ) : (
+            <div className="mt-3 space-y-2">
+              {Object.entries(rtkModelOverrides)
+                .sort(([a], [b]) => a.localeCompare(b))
+                .map(([key, enabled]) => (
+                  <div
+                    key={key}
+                    className="flex items-center justify-between gap-4"
+                  >
+                    <code className="text-sm break-all">{key}</code>
+                    <div className="flex items-center gap-3 shrink-0">
+                      <span className="text-xs text-text-muted">
+                        {enabled ? "On" : "Off"}
+                        {enabled === rtkEnabled ? " (same as global)" : ""}
+                      </span>
+                      <Toggle
+                        checked={enabled}
+                        onChange={() => handleRtkOverrideToggle(key)}
+                      />
+                      <button
+                        type="button"
+                        onClick={() => handleRtkOverrideRemove(key)}
+                        className="text-xs text-red-500 underline hover:opacity-80"
+                      >
+                        Remove
+                      </button>
+                    </div>
+                  </div>
+                ))}
+            </div>
+          )}
+          <div className="flex items-center gap-2 mt-3 flex-wrap">
+            <Input
+              list="rtk-model-list"
+              value={rtkNewModel}
+              onChange={(e) => setRtkNewModel(e.target.value)}
+              placeholder="provider/model, e.g. kimi/k2"
+              className="flex-1 min-w-[220px]"
+            />
+            <datalist id="rtk-model-list">
+              {rtkModels.map((m) => (
+                <option key={m} value={m} />
+              ))}
+            </datalist>
+            <Button
+              variant="secondary"
+              size="sm"
+              onClick={() => handleRtkOverrideAdd(true)}
+            >
+              Add: On
+            </Button>
+            <Button
+              variant="secondary"
+              size="sm"
+              onClick={() => handleRtkOverrideAdd(false)}
+            >
+              Add: Off
+            </Button>
+          </div>
+          {rtkOverrideError && (
+            <p className="text-sm text-red-500 mt-2">{rtkOverrideError}</p>
+          )}
         </div>
         <div className="flex items-center justify-between py-4 gap-4 flex-wrap">
           <div className="min-w-0 flex-1">

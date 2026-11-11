@@ -19,6 +19,10 @@ export default {
     },
     forceStream: true,
     noAuth: true,
+    // Canonical tool-schema injection (plan #1): the free lane validates
+    // tools strictly — chatCore normalizes them to the canonical OpenAI
+    // function-calling shape before dispatch (OpenAI targets only).
+    canonicalTools: true,
     // Zen reasoning models reject multi-turn history whose assistant messages
     // carry no reasoning_content (400 missing_required_parameter), and the
     // response pipeline strips the field before it reaches the client, so the

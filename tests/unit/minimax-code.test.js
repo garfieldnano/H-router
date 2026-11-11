@@ -38,7 +38,8 @@ describe("minimax-code registry wiring", () => {
     expect(t.baseUrl).toBe("https://agent.minimax.cn/mavis/api/v1/llm/v1/messages");
     expect(t.auth.combined).toBe(true);
     expect(t.auth.scheme).toBe("bearer");
-    expect(t.auth.hooks).toContain("minimaxHeaders");
+    // Plan #1: hook selection moved from auth.hooks to transport.headerHooks.
+    expect(t.headerHooks).toContain("minimaxHeaders");
     expect(t.auth.anthropicVersion).toBe(true);
     expect(t.headers["User-Agent"]).toBe("MiniMaxAgent");
     expect(t.headers["X-Mavis-Agent-Id"]).toBe("main");

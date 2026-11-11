@@ -5,6 +5,8 @@ import { Card, Button, Input } from "@/shared/components";
 
 export default function LoginPage() {
   const [password, setPassword] = useState("");
+  const [mode, setMode] = useState("admin");
+  const [apiKey, setApiKey] = useState("");
   const [error, setError] = useState("");
   const [resetHint, setResetHint] = useState("");
   const [retryAfter, setRetryAfter] = useState(0);
@@ -41,7 +43,7 @@ export default function LoginPage() {
         if (res.ok) {
           const data = await res.json();
           if (data.authenticated === true || data.requireLogin === false) {
-            window.location.assign("/dashboard");
+            window.location.assign(data.role === "member" ? "/dashboard/member" : "/dashboard");
             return;
           }
           setHasPassword(!!data.hasPassword);
@@ -87,6 +89,35 @@ export default function LoginPage() {
         const data = await res.json();
         setError(data.error || "Invalid password");
         if (data.resetHint) setResetHint(data.resetHint);
+        if (data.retryAfter) setRetryAfter(Number(data.retryAfter));
+      }
+    } catch (err) {
+      setError("An error occurred. Please try again.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Member login (v1): the API key is sent ONCE to obtain a session cookie;
+  // it is not stored in the browser afterwards.
+  const handleMemberLogin = async (e) => {
+    e.preventDefault();
+    setLoading(true);
+    setError("");
+    setResetHint("");
+
+    try {
+      const res = await fetch("/api/auth/member-login", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ apiKey }),
+      });
+
+      if (res.ok) {
+        window.location.assign("/dashboard/member");
+      } else {
+        const data = await res.json();
+        setError(data.error || "API key tidak valid");
         if (data.retryAfter) setRetryAfter(Number(data.retryAfter));
       }
     } catch (err) {
@@ -165,6 +196,23 @@ export default function LoginPage() {
           </p>
         </div>
 
+        <div className="flex rounded-lg border border-border bg-bg-subtle p-1 mb-4">
+          <button
+            type="button"
+            onClick={() => { setMode("admin"); setError(""); }}
+            className={`flex-1 rounded-md px-3 py-1.5 text-sm font-medium transition-colors ${mode === "admin" ? "bg-primary text-white shadow-sm" : "text-text-muted hover:text-text"}`}
+          >
+            Admin
+          </button>
+          <button
+            type="button"
+            onClick={() => { setMode("member"); setError(""); }}
+            className={`flex-1 rounded-md px-3 py-1.5 text-sm font-medium transition-colors ${mode === "member" ? "bg-primary text-white shadow-sm" : "text-text-muted hover:text-text"}`}
+          >
+            Member
+          </button>
+        </div>
+
         <Card>
           {mustChange ? (
             <form onSubmit={handleSetNewPassword} className="flex flex-col gap-4">
@@ -187,6 +235,38 @@ export default function LoginPage() {
                 Set password
               </Button>
             </form>
+          ) : mode === "member" ? (
+          <form onSubmit={handleMemberLogin} className="flex flex-col gap-4">
+            <p className="text-xs text-text-muted text-center">
+              Masuk dengan API key yang ditetapkan admin untukmu. Kunci hanya dikirim sekali untuk membuat sesi — tidak disimpan di browser.
+            </p>
+            <div className="flex flex-col gap-2">
+              <label className="text-sm font-medium">API Key</label>
+              <Input
+                type="password"
+                placeholder="h-router-…"
+                value={apiKey}
+                onChange={(e) => setApiKey(e.target.value)}
+                required
+                autoFocus
+              />
+              {error && <p className="text-xs text-red-500">{error}</p>}
+              {retryAfter > 0 && (
+                <p className="text-xs text-amber-600 dark:text-amber-400">
+                  Locked. Retry in <span className="font-mono">{retryAfter}s</span>.
+                </p>
+              )}
+            </div>
+            <Button
+              type="submit"
+              variant="primary"
+              className="w-full"
+              loading={loading}
+              disabled={retryAfter > 0 || !apiKey.trim()}
+            >
+              {retryAfter > 0 ? `Wait ${retryAfter}s` : "Masuk sebagai Member"}
+            </Button>
+          </form>
           ) : (
           <div className="flex flex-col gap-4">
             {samlAvailable && (

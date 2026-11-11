@@ -10,6 +10,8 @@ import { PROVIDER_MODELS } from "@/shared/constants/models";
 import { GEMINI_NATIVE_TTS_FETCH_TIMEOUT_MS } from "open-sse/config/runtimeConfig.js";
 import { initTranslators } from "open-sse/translator/index.js";
 import { getKeyAccessContext, enforceKeyAccessResolved } from "@/sse/services/keyAccess.js";
+import { enforceKeyRateLimit } from "@/sse/services/keyRateLimit.js";
+import { enforceKeyIpCap } from "@/sse/services/keyIpCap.js";
 
 let initialized = false;
 const GEMINI_NATIVE_BASE_URL = "https://generativelanguage.googleapis.com/v1beta/models";
@@ -249,6 +251,15 @@ async function forwardGeminiNativeRequest(request, body, model, action) {
   // so restricted keys are checked here, before any credential lookup.
   const keyAccessDenied = await enforceKeyAccessResolved(await getKeyAccessContext(request), model, "gemini", modelId);
   if (keyAccessDenied) return keyAccessDenied;
+
+  // Active IP cap (plan #5): over the cap → 429 + Retry-After. Runs
+  // before the RPM check so a rejected request does not consume an RPM slot.
+  const ipCapLimited = await enforceKeyIpCap(request);
+  if (ipCapLimited) return ipCapLimited;
+
+  // RPM limit (plan §0c): over the limit → 429 + Retry-After.
+  const rateLimited = await enforceKeyRateLimit(request);
+  if (rateLimited) return rateLimited;
   const excludeConnectionIds = new Set();
   const bodyText = JSON.stringify(body);
   let lastError = null;

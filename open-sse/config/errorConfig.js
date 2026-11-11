@@ -47,6 +47,36 @@ const COOLDOWN = {
   short: 5 * 1000,
 };
 
+// Egress relay rotation (plan #1, G1 taxonomy). A banned relay is cooled
+// down for this long before the rotator considers it again; a request tries
+// at most this many relays before giving up and falling back to account
+// rotation / the upstream error.
+export const EGRESS_BAN_COOLDOWN_MS = 5 * 60 * 1000;
+export const EGRESS_ROTATE_MAX_ATTEMPTS = 3;
+
+// Upstream code for CodeBuddy "request illegal" (channel verification).
+// A 400 carrying this code means the REQUEST is at fault — auto-patch
+// headers already ran — so neither the relay nor the account is blamed.
+export const UPSTREAM_CODE_REQUEST_ILLEGAL = 11128;
+
+// Substrings (case-insensitive) that mark a 403 as an egress/IP ban
+// ("Abusive Traffic") rather than an account problem. Matched against the
+// upstream error text.
+export const ABUSIVE_TRAFFIC_PATTERNS = [
+  "abusive",
+  "unusual traffic",
+  "suspicious traffic",
+  "too many requests from this ip",
+  "too many requests from your ip",
+  "ip banned",
+  "ip blocked",
+  "ip address banned",
+  "ip address blocked",
+  "your ip has been",
+  "traffic from your network",
+];
+
+
 /**
  * Unified error classification rules.
  * Checked top-to-bottom: text rules first (by order), then status rules.

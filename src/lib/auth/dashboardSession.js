@@ -58,6 +58,18 @@ export async function getDashboardAuthSession(token) {
   }
 }
 
+// Roles for the member dashboard (v1). Tokens issued before roles existed
+// (and OIDC/SAML tokens, which carry no role claim) are admin sessions.
+export function getSessionRole(session) {
+  if (!session) return null;
+  if (session.role === "member") return "member";
+  return "admin";
+}
+
+export async function getDashboardSessionRole(token) {
+  return getSessionRole(await getDashboardAuthSession(token));
+}
+
 export async function setDashboardAuthCookie(cookieStore, request, claims = {}) {
   const token = await createDashboardAuthToken(claims);
   cookieStore.set("auth_token", token, {

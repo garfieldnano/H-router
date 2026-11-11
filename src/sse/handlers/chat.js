@@ -26,8 +26,17 @@ import * as log from "../utils/logger.js";
 import { updateProviderCredentials, checkAndRefreshToken } from "../services/tokenRefresh.js";
 import { getProjectIdForConnection } from "open-sse/services/projectId.js";
 import { stripModelContextMarker } from "open-sse/utils/modelMarkers.js";
+import { resolveRtkEnabled } from "@/shared/utils/rtkModel.js";
+import { resolveBrandModel, findLivePromptForRequest } from "@/lib/db/repos/modelBrandsRepo.js";
+import { applyLivePromptToBody } from "@/shared/utils/brandModel.js";
+import { detectFormat } from "open-sse/services/provider.js";
 import { getKeyAccessContext, enforceKeyAccess, filterAdapterModels } from "../services/keyAccess.js";
+import { enforceKeyRateLimit } from "../services/keyRateLimit.js";
+import { enforceKeyIpCap } from "../services/keyIpCap.js";
 import { resolveSmartChoice } from "../services/systemoneRouter.js";
+import { classifyEgressError, EGRESS_ACTIONS, EGRESS_ROTATE_MAX_ATTEMPTS } from "open-sse/services/egressRotator.js";
+import { pickNextRelayPool, markRelayBanned, recordRelaySuccess, isEgressAutoRotateEnabled } from "../services/egressRelay.js";
+import { enforceVisionGate } from "../services/visionGate.js";
 
 /**
  * Handle chat completion request
@@ -55,8 +64,29 @@ export async function handleChat(request, clientRawRequest = null) {
   // Claude Code marks a 1M-context request as `<model>[1m]`; the marker matches
   // no combo, alias or provider/model pair, so it must not reach resolution.
   // The capability travels in the anthropic-beta header, forwarded as-is.
-  const { model: modelStr, contextMarker } = stripModelContextMarker(body.model);
-  if (contextMarker) body.model = modelStr;
+  const { model: requestedModelStr, contextMarker } = stripModelContextMarker(body.model);
+  if (contextMarker) body.model = requestedModelStr;
+  let modelStr = requestedModelStr;
+
+  // Model rebranding (plan #2): a brand id (e.g. "h-router/ultra-pro")
+  // resolves to its upstream provider/model BEFORE any access check,
+  // combo expansion or credential lookup, so a restricted key's allow
+  // list is evaluated on the upstream target. The brand id is remembered
+  // for the live-prompt lookup in handleSingleModelChat.
+  let brandModelId = null;
+  try {
+    const brand = await resolveBrandModel(modelStr);
+    if (brand) {
+      brandModelId = brand.brand.brandModelId;
+      modelStr = `${brand.provider}/${brand.model}`;
+      // NOTE: body.model is deliberately NOT rewritten — the raw-request
+      // log keeps the brand the client actually asked for; the resolved
+      // model travels via modelStr and is stamped into the handleChatCore
+      // body downstream.
+    }
+  } catch (e) {
+    log?.warn?.("BRAND", `brand resolution failed (fail-open): ${e?.message || e}`);
+  }
 
   const session = resolveSessionIdentity({ headers: clientRawRequest?.headers, body });
   const sessionId = session?.sessionId || null;
@@ -99,6 +129,16 @@ export async function handleChat(request, clientRawRequest = null) {
   const keyAccessDenied = await enforceKeyAccess(keyAccess, modelStr);
   if (keyAccessDenied) return keyAccessDenied;
 
+  // Active IP cap (plan #5): over the cap → 429 + Retry-After. Runs
+  // before the RPM check so a rejected request does not consume an RPM slot.
+  const ipCapLimited = await enforceKeyIpCap(request);
+  if (ipCapLimited) return ipCapLimited;
+
+  // RPM limit (plan §0c): one client request counts once per key per minute,
+  // before bypass/combo/credential lookup. Over the limit → 429 + Retry-After.
+  const rateLimited = await enforceKeyRateLimit(request);
+  if (rateLimited) return rateLimited;
+
   // Bypass naming/warmup requests before combo rotation to avoid wasting rotation slots
   const userAgent = request?.headers?.get("user-agent") || "";
   const bypassResponse = handleBypassRequest(body, modelStr, userAgent, !!settings.ccFilterNaming);
@@ -108,6 +148,23 @@ export async function handleChat(request, clientRawRequest = null) {
 
   // Check if model is a combo (has multiple models with fallback)
   const comboModels = await getComboModels(modelStr);
+
+  // Vision Adapter (plan G10): an image request to a model that cannot read
+  // images is rejected with a clear 400 naming the model + vision-capable
+  // alternatives (or redirected by the capacity adapter when a vision pool
+  // is configured) — never silently stripped. Runs after brand resolution
+  // (modelStr is upstream) and after the key-access / IP-cap / RPM gates,
+  // before combo expansion. Text-only requests pass through untouched.
+  const visionDenied = await enforceVisionGate({
+    modelStr,
+    brandModelId,
+    comboModels,
+    settings,
+    keyAccess,
+    requiredCapabilities,
+  });
+  if (visionDenied) return visionDenied;
+
   if (comboModels) {
     // Check for combo-specific strategy first, fallback to global
     const comboStrategies = settings.comboStrategies || {};
@@ -127,7 +184,7 @@ export async function handleChat(request, clientRawRequest = null) {
             const { tools, tool_choice, ...cleanBody } = clientRawRequest.body || {};
             cleanRawReq = { ...clientRawRequest, body: cleanBody };
           }
-          return handleSingleModelChat(b, m, cleanRawReq, request, apiKey);
+          return handleSingleModelChat(b, m, cleanRawReq, request, apiKey, null, brandModelId);
         },
         log,
         comboName: modelStr,
@@ -143,7 +200,7 @@ export async function handleChat(request, clientRawRequest = null) {
       body,
       models: augmentedModels,
       handleSingleModel: withCapacityAdapterStripping(
-        (b, m) => handleSingleModelChat(b, m, clientRawRequest, request, apiKey),
+        (b, m) => handleSingleModelChat(b, m, clientRawRequest, request, apiKey, null, brandModelId),
         adapterAdded
       ),
       log,
@@ -175,7 +232,7 @@ export async function handleChat(request, clientRawRequest = null) {
       body,
       models: soloAugmented,
       handleSingleModel: withCapacityAdapterStripping(
-        (b, m) => handleSingleModelChat(b, m, clientRawRequest, request, apiKey),
+        (b, m) => handleSingleModelChat(b, m, clientRawRequest, request, apiKey, null, brandModelId),
         adapterAdded
       ),
       log,
@@ -184,13 +241,13 @@ export async function handleChat(request, clientRawRequest = null) {
     });
   }
 
-  return handleSingleModelChat(body, modelStr, clientRawRequest, request, apiKey, contextMarker ? `${modelStr.slice(modelStr.indexOf("/") + 1)}[${contextMarker}]` : null);
+  return handleSingleModelChat(body, modelStr, clientRawRequest, request, apiKey, contextMarker ? `${modelStr.slice(modelStr.indexOf("/") + 1)}[${contextMarker}]` : null, brandModelId);
 }
 
 /**
  * Handle single model chat request
  */
-async function handleSingleModelChat(body, modelStr, clientRawRequest = null, request = null, apiKey = null, requestedModel = null) {
+async function handleSingleModelChat(body, modelStr, clientRawRequest = null, request = null, apiKey = null, requestedModel = null, brandModelId = null) {
   const modelInfo = await getModelInfo(modelStr);
 
   // If provider is null, this might be a combo name - check and handle
@@ -220,7 +277,7 @@ async function handleSingleModelChat(body, modelStr, clientRawRequest = null, re
               const { tools, tool_choice, ...cleanBody } = clientRawRequest.body || {};
               cleanRawReq = { ...clientRawRequest, body: cleanBody };
             }
-            return handleSingleModelChat(b, m, cleanRawReq, request, apiKey);
+            return handleSingleModelChat(b, m, cleanRawReq, request, apiKey, null, brandModelId);
           },
           log,
           comboName: modelStr,
@@ -238,7 +295,7 @@ async function handleSingleModelChat(body, modelStr, clientRawRequest = null, re
         body,
         models: augmentedModels,
         handleSingleModel: withCapacityAdapterStripping(
-          (b, m) => handleSingleModelChat(b, m, clientRawRequest, request, apiKey),
+          (b, m) => handleSingleModelChat(b, m, clientRawRequest, request, apiKey, null, brandModelId),
           adapterAdded
         ),
         log,
@@ -265,6 +322,37 @@ async function handleSingleModelChat(body, modelStr, clientRawRequest = null, re
 
   const { provider, model } = modelInfo;
 
+  // applyLive (plan #2): resolve the live system prompt for this request
+  // (brand → exact provider+model → whole provider) and inject it into a
+  // COPY of the body. This runs before handleChatCore, i.e. before RTK
+  // and before translation, so the injected prompt is translated to the
+  // provider's format like any client system message. The shared `body`
+  // stays untouched: combo members reuse it across attempts, and the
+  // clientRawRequest log keeps the client's original request.
+  let livePromptText = null;
+  let chatBody = body;
+  try {
+    const livePrompt = await findLivePromptForRequest({ brandModelId, provider, model });
+    if (livePrompt) {
+      let sourceFormat = null;
+      try {
+        sourceFormat = (request?.url
+          ? detectFormatByEndpoint(new URL(request.url).pathname, body)
+          : null) || detectFormat(body);
+      } catch {
+        sourceFormat = null;
+      }
+      const applied = applyLivePromptToBody(body, sourceFormat, livePrompt.systemPrompt, livePrompt.mode);
+      if (applied.injected) {
+        chatBody = applied.body;
+        livePromptText = livePrompt.systemPrompt;
+        log.info("LIVE", `applyLive ${livePrompt.mode} for ${brandModelId || `${provider}/${model}`}`);
+      }
+    }
+  } catch (e) {
+    log?.warn?.("LIVE", `applyLive failed (fail-open, no injection): ${e?.message || e}`);
+  }
+
   // Routing shown in the unified "▶" line (client model → provider/model)
 
   // Extract userAgent from request
@@ -276,8 +364,21 @@ async function handleSingleModelChat(body, modelStr, clientRawRequest = null, re
   let lastStatus = null;
   let lastHeaders = null;
 
+  // Egress relay rotation state (plan #1): when a 403 Abusive Traffic
+  // blames the egress, the loop retries the SAME account through the next
+  // relay — the pin + pool override below carry that across iterations.
+  // The state is per-request (declared inside handleChat) and is cleared
+  // the moment account fallback excludes the pinned connection.
+  let relayOverridePoolId = null;
+  let relayPinnedConnectionId = null;
+  let relayAttempts = 0;
+  let relayTriedPoolIds = new Set();
+
   while (true) {
-    const credentials = await getProviderCredentials(provider, excludeConnectionIds, model, { requestedModel: requestedModel || model });
+    const credentials = await getProviderCredentials(provider, excludeConnectionIds, model, {
+      requestedModel: requestedModel || model,
+      ...(relayOverridePoolId ? { preferredConnectionId: relayPinnedConnectionId, proxyPoolOverride: relayOverridePoolId } : {}),
+    });
 
     // All accounts unavailable
     if (!credentials || credentials.allRateLimited) {
@@ -293,6 +394,15 @@ async function handleSingleModelChat(body, modelStr, clientRawRequest = null, re
       }
       log.warn("CHAT", "No more accounts available", { provider });
       return errorResponse(lastStatus || HTTP_STATUS.SERVICE_UNAVAILABLE, lastError || "All accounts unavailable", lastHeaders);
+    }
+
+    // Relay pin lost (pinned account excluded or model-locked) → the next
+    // account starts with its own pool and a fresh relay state.
+    if (relayPinnedConnectionId && credentials.connectionId !== relayPinnedConnectionId) {
+      relayOverridePoolId = null;
+      relayPinnedConnectionId = null;
+      relayAttempts = 0;
+      relayTriedPoolIds = new Set();
     }
 
     // Account selection shown in the unified "▶" line (acc:...)
@@ -312,7 +422,7 @@ async function handleSingleModelChat(body, modelStr, clientRawRequest = null, re
     const chatSettings = await getSettings();
     const providerThinking = (chatSettings.providerThinking || {})[provider] || null;
     const result = await handleChatCore({
-      body: { ...body, model: `${provider}/${model}` },
+      body: { ...chatBody, model: `${provider}/${model}` },
       modelInfo: { provider, model },
       credentials: refreshedCredentials,
       log,
@@ -320,8 +430,15 @@ async function handleSingleModelChat(body, modelStr, clientRawRequest = null, re
       connectionId: credentials.connectionId,
       userAgent,
       apiKey,
+      // Live-prompt text (plan #2): only used to redact the injected
+      // prompt out of request details and request logs — the text itself
+      // never leaves this process in a stored record.
+      livePromptText,
       ccFilterNaming: !!chatSettings.ccFilterNaming,
-      rtkEnabled: !!chatSettings.rtkEnabled,
+      // RTK per-model override (plan G9): a boolean entry for this exact
+      // "provider/model" in settings.rtkModelOverrides wins over the global
+      // rtkEnabled; no entry = global behavior (unchanged).
+      rtkEnabled: resolveRtkEnabled(chatSettings, provider, model),
       headroomEnabled: !!chatSettings.headroomEnabled,
       headroomUrl: chatSettings.headroomUrl || DEFAULT_HEADROOM_URL,
       headroomCompressUserMessages: !!chatSettings.headroomCompressUserMessages,
@@ -357,7 +474,45 @@ async function handleSingleModelChat(body, modelStr, clientRawRequest = null, re
       }
     });
 
-    if (result.success) return result.response;
+    if (result.success) {
+      // A request that went through a relay clears that relay's fail streak
+      // (best-effort bookkeeping; never breaks the response path).
+      const okPoolId = refreshedCredentials?.providerSpecificData?.connectionProxyPoolId;
+      if (okPoolId) recordRelaySuccess(okPoolId).catch(() => {});
+      return result.response;
+    }
+
+    // Egress relay rotation (plan #1, G1 taxonomy): a 403 Abusive Traffic
+    // blames the EGRESS, not the account — ban the pool and retry the SAME
+    // account via the next relay for this provider. A 400/11128 blames the
+    // REQUEST (auto-patch headers already ran) — return it without touching
+    // relay or account state. 429 stays on the existing account-fallback
+    // path below (per-account quota — rotating the relay would not help).
+    {
+      const egress = classifyEgressError(result.status, result.error);
+      if (egress.action === EGRESS_ACTIONS.REQUEST_ERROR) {
+        return result.response;
+      }
+      if (
+        egress.action === EGRESS_ACTIONS.ROTATE_RELAY &&
+        relayAttempts < EGRESS_ROTATE_MAX_ATTEMPTS &&
+        isEgressAutoRotateEnabled(chatSettings, provider)
+      ) {
+        const currentPoolId = refreshedCredentials?.providerSpecificData?.connectionProxyPoolId || null;
+        if (currentPoolId) relayTriedPoolIds.add(currentPoolId);
+        const nextPool = await pickNextRelayPool({ provider, excludePoolIds: [...relayTriedPoolIds] });
+        if (nextPool) {
+          await markRelayBanned(currentPoolId, { status: result.status, code: egress.code });
+          relayOverridePoolId = nextPool.id;
+          relayPinnedConnectionId = credentials.connectionId;
+          relayTriedPoolIds.add(nextPool.id);
+          relayAttempts += 1;
+          log.warn("EGRESS", `⇄ RELAY:${currentPoolId?.slice(0, 8) || "direct"} BANNED (${result.status}) → ${nextPool.id.slice(0, 8)} (${nextPool.name || nextPool.type || "relay"})`);
+          continue;
+        }
+        // No other relay for this provider: fall through to account fallback.
+      }
+    }
 
     // Antigravity 409/429: refresh live quota to get exact resetAt before locking
     let quotaResetMs = null;
@@ -379,6 +534,12 @@ async function handleSingleModelChat(body, modelStr, clientRawRequest = null, re
     if (shouldFallback) {
       log.warn("FALLBACK", `⇄ ACC:${credentials.connectionName} UNAVAILABLE (${result.status}) → NEXT ACCOUNT`);
       excludeConnectionIds.add(credentials.connectionId);
+      // The account changed, so any relay pin/override dies with it — the
+      // next account starts with its own pool and a fresh relay state.
+      relayOverridePoolId = null;
+      relayPinnedConnectionId = null;
+      relayAttempts = 0;
+      relayTriedPoolIds = new Set();
       lastError = result.error;
       lastStatus = result.status;
       lastHeaders = upstreamResponseHeaders(result.response?.headers);

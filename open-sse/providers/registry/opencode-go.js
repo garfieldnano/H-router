@@ -21,6 +21,8 @@ export default {
   transport: {
     baseUrl: "https://opencode.ai/inference/go/openai/v1/chat/completions",
     headers: {},
+    // Canonical tool-schema injection (plan #1): see opencode.js.
+    canonicalTools: true,
     usage: {
       url: "https://opencode.ai/inference/go/v1/usage",
     },

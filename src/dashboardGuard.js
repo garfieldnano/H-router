@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { getSettings, validateApiKey } from "@/lib/localDb";
 import { getConsistentMachineId } from "@/shared/utils/machineId";
-import { verifyDashboardAuthToken } from "@/lib/auth/dashboardSession";
+import { verifyDashboardAuthToken, getDashboardAuthSession, getSessionRole } from "@/lib/auth/dashboardSession";
 import { hasTrustedPeerHeaders } from "@/lib/auth/trustedPeer";
 
 const CLI_TOKEN_HEADER = "x-9r-cli-token";
@@ -25,6 +25,7 @@ const PUBLIC_API_PATHS = [
   "/api/init",
   "/api/locale",
   "/api/auth/login",
+  "/api/auth/member-login",
   "/api/auth/logout",
   "/api/auth/status",
   "/api/auth/oidc",
@@ -35,7 +36,9 @@ const PUBLIC_API_PATHS = [
 
 // Public top-level prefixes (LLM API endpoints with their own API key auth).
 // Keep root-level rewrites here too: middleware runs before Next.js rewrites.
-const PUBLIC_PREFIXES = ["/v1", "/v1beta", "/api/v1", "/api/v1beta", "/codex", "/responses"];
+// "/api/bot" is the Telegram bot's internal API — it passes the guard here
+// and enforces its own service secret (HROUTER_BOT_SECRET) in each route.
+const PUBLIC_PREFIXES = ["/v1", "/v1beta", "/api/v1", "/api/v1beta", "/codex", "/responses", "/api/bot"];
 
 // Always require JWT token regardless of requireLogin setting
 const ALWAYS_PROTECTED = [
@@ -69,6 +72,10 @@ const PROTECTED_API_PATHS = [
   "/api/mcp",
   "/api/translator",
   "/api/tunnel",
+  "/api/packages",
+  "/api/model-brands",
+  "/api/live-prompts",
+  "/api/vision-overrides",
 ];
 
 // Routes that spawn child processes or read host secrets — restrict to localhost.
@@ -192,6 +199,41 @@ async function isAuthenticated(request) {
   return false;
 }
 
+// --- Member dashboard (v1) role split -------------------------------------
+// A member session (JWT role "member") may only reach its own dashboard page
+// and the API routes that serve it. Everything else under /dashboard and
+// /api/* stays admin-only. This guard is defense in depth: the API routes
+// themselves enforce member scoping too (filtering by the caller's memberId).
+
+// API routes a member session may call (method + exact/prefix match).
+const MEMBER_API_PATHS = [
+  { path: "/api/auth/status", methods: ["GET"] },
+  { path: "/api/auth/logout", methods: ["POST"] },
+  { path: "/api/auth/telegram-link", methods: ["POST"] },
+  { path: "/api/keys", methods: ["GET"] },
+  { path: "/api/usage/history", methods: ["GET"] },
+  { path: "/api/usage/stats", methods: ["GET"] },
+  // Member's own compensation history (§0d) — the route scopes by session.
+  { path: "/api/compensations", methods: ["GET"] },
+];
+
+// Member dashboard pages.
+const MEMBER_DASHBOARD_PREFIXES = ["/dashboard/member"];
+
+export function isMemberAllowedApiPath(pathname, method = "GET") {
+  return MEMBER_API_PATHS.some(
+    (entry) =>
+      (pathname === entry.path || pathname.startsWith(`${entry.path}/`)) &&
+      entry.methods.includes(String(method || "GET").toUpperCase())
+  );
+}
+
+export function isMemberAllowedDashboardPath(pathname) {
+  return MEMBER_DASHBOARD_PREFIXES.some(
+    (p) => pathname === p || pathname.startsWith(`${p}/`)
+  );
+}
+
 function isPublicApi(pathname) {
   if (isPublicLlmApi(pathname)) return true;
   return PUBLIC_API_PATHS.some((p) => pathname === p || pathname.startsWith(`${p}/`));
@@ -206,10 +248,35 @@ export const __test__ = {
   extractApiKey,
   canAccessPublicLlmApi,
   canAccessLocalOnlyRoute,
+  isMemberAllowedApiPath,
+  isMemberAllowedDashboardPath,
 };
 
 export async function proxy(request) {
   const { pathname } = request.nextUrl;
+  const method = request.method || "GET";
+
+  // Member sessions: narrow allow-list, applied BEFORE every other gate.
+  // (CLI-token requests carry no JWT, so they are unaffected here.)
+  const memberToken = request.cookies.get("auth_token")?.value;
+  const memberSession = memberToken ? await getDashboardAuthSession(memberToken) : null;
+  if (getSessionRole(memberSession) === "member") {
+    if (pathname.startsWith("/api/")) {
+      if (isMemberAllowedApiPath(pathname, method)) return NextResponse.next();
+      return NextResponse.json(
+        { error: "Forbidden: member access restricted" },
+        { status: 403 }
+      );
+    }
+    if (pathname.startsWith("/dashboard")) {
+      if (isMemberAllowedDashboardPath(pathname)) return NextResponse.next();
+      return NextResponse.redirect(new URL("/dashboard/member", request.url));
+    }
+    if (pathname === "/") {
+      return NextResponse.redirect(new URL("/dashboard/member", request.url));
+    }
+    // Public LLM API (/v1/*) etc. fall through to the normal gates below.
+  }
 
   // Local-only gate for spawn-capable / host-secret routes.
   if (LOCAL_ONLY_PATHS.some((p) => pathname.startsWith(p))) {

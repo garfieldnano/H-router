@@ -328,6 +328,26 @@ export default function ProfilePage() {
     }
   };
 
+  // RPM (schema v5): global default requests-per-minute for API keys with no
+  // per-key and no per-package limit. No unlimited tier (1–10000).
+  const updateDefaultRpmLimit = async (limit) => {
+    const numLimit = parseInt(limit);
+    if (isNaN(numLimit) || numLimit < 1 || numLimit > 10000) return;
+
+    try {
+      const res = await fetch("/api/settings", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ defaultRpmLimit: numLimit }),
+      });
+      if (res.ok) {
+        setSettings(prev => ({ ...prev, defaultRpmLimit: numLimit }));
+      }
+    } catch (err) {
+      console.error("Failed to update default RPM limit:", err);
+    }
+  };
+
   const updateRequireLogin = async (requireLogin) => {
     try {
       const res = await fetch("/api/settings", {
@@ -1514,6 +1534,25 @@ export default function ProfilePage() {
                 />
               </div>
             )}
+
+            {/* Default RPM Limit (global) */}
+            <div className="flex items-center justify-between pt-4 border-t border-border/50">
+              <div>
+                <p className="font-medium">Default RPM Limit (global)</p>
+                <p className="text-sm text-text-muted">
+                  Requests per minute untuk kunci tanpa batas per kunci/paket. Tidak ada unlimited (1–10000).
+                </p>
+              </div>
+              <Input
+                type="number"
+                min="1"
+                max="10000"
+                value={settings.defaultRpmLimit ?? 50}
+                onChange={(e) => updateDefaultRpmLimit(e.target.value)}
+                disabled={loading}
+                className="w-20 text-center"
+              />
+            </div>
 
             <p className="text-xs text-text-muted italic pt-2 border-t border-border/50">
               {settings.fallbackStrategy === "round-robin"

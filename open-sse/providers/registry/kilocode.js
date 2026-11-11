@@ -17,13 +17,13 @@ export default {
   transport: {
     baseUrl: "https://api.kilo.ai/api/openrouter/chat/completions",
     headers: {},
+    // Header hooks (plan #1): provider-specific header auto-patch, declared
+    // in the registry — a new free-tier provider adds its hook name here.
+    headerHooks: ["kilocodeOrg"],
     auth: {
       combined: true,
       header: "Authorization",
       scheme: "bearer",
-      hooks: [
-        "kilocodeOrg",
-      ],
     },
   },
   models: [

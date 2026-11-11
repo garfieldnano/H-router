@@ -1,11 +1,3 @@
-<svg width="32" height="32" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
-  <rect width="32" height="32" rx="6" fill="url(#gradient)"/>
-  <text x="16" y="24" font-family="system-ui, -apple-system, sans-serif" font-size="20" font-weight="700" fill="white" text-anchor="middle">9</text>
-  <defs>
-    <linearGradient id="gradient" x1="0" y1="0" x2="32" y2="32" gradientUnits="userSpaceOnUse">
-      <stop stop-color="#f97815"/>
-      <stop offset="1" stop-color="#c2590a"/>
-    </linearGradient>
-  </defs>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 430 433" width="430" height="433" role="img" aria-label="h-router logo">
+  <path d="M126.0 12.0 L35.0 62.0 L15.0 85.0 L12.0 243.0 L28.0 226.0 L127.0 166.0 Z M411.0 12.0 L318.0 61.0 L307.0 71.0 L302.0 81.0 L300.0 159.0 L206.0 162.0 L21.0 276.0 L15.0 288.0 L15.0 420.0 L109.0 364.0 L122.0 351.0 L127.0 337.0 L128.0 262.0 L237.0 260.0 L405.0 156.0 L411.0 145.0 L412.0 125.0 Z M416.0 192.0 L302.0 263.0 L302.0 420.0 L395.0 364.0 L410.0 349.0 L417.0 330.0 Z" fill="#05f170"/>
 </svg>
-

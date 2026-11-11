@@ -1,0 +1,38 @@
+# h-router-relay systemd unit.
+# Install: copy to /etc/systemd/system/h-router-relay.service, then
+#   useradd -r -s /usr/sbin/nologin hrouter   (once)
+#   install -d -o hrouter -g hrouter /etc/h-router
+#   install -m 0600 -o hrouter -g hrouter /dev/null /etc/h-router/relay.env
+#     # edit /etc/h-router/relay.env: HROUTER_RELAY_* secrets (see below)
+#   install -m 0755 target/release/h-router-relay /usr/local/bin/h-router-relay
+#   systemctl daemon-reload && systemctl enable --now h-router-relay
+[Unit]
+Description=h-router relay sidecar (HTTP proxy + x-relay-target relay)
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=hrouter
+Group=hrouter
+# Binary installed by `install -m 0755 target/release/h-router-relay ...`
+ExecStart=/usr/local/bin/h-router-relay --config /etc/h-router/relay.toml
+# Secrets / overrides live here, NOT in the unit file:
+#   HROUTER_RELAY_LISTEN=127.0.0.1:20129
+#   HROUTER_RELAY_PROFILE=none
+#   HROUTER_RELAY_KIMI_DEVICE_ID=...
+#   HROUTER_RELAY_CLINE_API_KEY=...        (or HROUTER_RELAY_CLINE_ACCESS_TOKEN=...)
+#   HROUTER_RELAY_KILOCODE_ORG_ID=...
+#   HROUTER_RELAY_MUSE_SUBSCRIPTION=true   (only for Muse subscription mode)
+# File must exist (even if empty) or the unit will fail to start.
+EnvironmentFile=/etc/h-router/relay.env
+Restart=always
+RestartSec=2
+# Hardening: no need for the relay to write anywhere or gain privileges.
+NoNewPrivileges=true
+ProtectSystem=strict
+ProtectHome=true
+PrivateTmp=true
+
+[Install]
+WantedBy=multi-user.target

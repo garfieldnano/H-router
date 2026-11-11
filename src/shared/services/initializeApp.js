@@ -118,6 +118,12 @@ async function runHeavyStartup() {
   import("@/sse/services/backgroundTokenRefresh.js")
     .then(({ startBackgroundTokenRefresh }) => startBackgroundTokenRefresh())
     .catch((e) => console.log("[BackgroundTokenRefresh] scheduler start failed:", e.message));
+
+  // Active IP cap (plan #5): periodic sweep of stale key_ip_usage rows
+  // (the per-request prune only covers keys that are still used).
+  import("@/sse/services/keyIpCap.js")
+    .then(({ startIpUsageSweep }) => startIpUsageSweep())
+    .catch((e) => console.log("[IpUsageSweep] scheduler start failed:", e.message));
 }
 
 // Cheap local check: keeps the scheduler module (and its provider graph) unloaded

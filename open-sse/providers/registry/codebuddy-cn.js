@@ -25,6 +25,10 @@ export default {
     // MiniMax, DeepSeek, Hunyuan) takes reasoning via OpenAI-style reasoning_effort,
     // not its vendor-native thinking shape. Force the openai thinking format.
     thinkingFormat: "openai",
+    // Header hooks (plan #1): channel check requires the plugin's
+    // request/conversation ids — without them upstream rejects with
+    // 400 / 11128 "request illegal".
+    headerHooks: ["codebuddyHeaders"],
     headers: {
       "User-Agent": "CLI/2.108.1 CodeBuddy/2.108.1",
       "X-Product": "SaaS",
@@ -37,9 +41,6 @@ export default {
       combined: true,
       header: "Authorization",
       scheme: "bearer",
-      // Channel check requires the plugin's request/conversation ids — without
-      // them upstream rejects with 400 / 11128 "request illegal".
-      hooks: ["codebuddyHeaders"],
     },
     // Quota endpoint differs from the chat gateway: POST returns nested Tencent
     // billing payload (data.Response.Data.Accounts[]). See services/usage/codebuddy-cn.js.

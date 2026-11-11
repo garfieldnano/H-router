@@ -1,6 +1,7 @@
 import { saveRequestUsage, appendRequestLog, saveRequestDetail } from "@/lib/usageDb.js";
 import { COLORS } from "../../utils/stream.js";
 import { canonicalizeUsage } from "../../utils/usageTracking.js";
+import { sanitizeLivePromptFromBody, LIVE_INJECTED_FLAG } from "@/shared/utils/brandModel.js";
 
 const OPTIONAL_PARAMS = [
   "temperature", "top_p", "top_k",
@@ -80,6 +81,21 @@ export function extractUsageFromResponse(responseBody) {
 }
 
 export function buildRequestDetail(base, overrides = {}) {
+  // Live-prompt redaction (plan #2): when a live system prompt was
+  // injected for this request, the stored `request` (source body) and
+  // `providerRequest` (translated body) must not contain its text — the
+  // injected message is replaced by a placeholder. The fact that an
+  // injection happened is recorded as `live_injected: true` on the
+  // detail itself (internal metadata only; the detail store is
+  // admin-only and API-redacted, never shown on the client dashboard).
+  // The prompt text itself is never written into the returned object.
+  const livePromptText = typeof base?.livePromptText === "string" ? base.livePromptText : null;
+  const request = livePromptText && base.request
+    ? sanitizeLivePromptFromBody(base.request, livePromptText)
+    : base.request;
+  const providerRequest = livePromptText && base.providerRequest
+    ? sanitizeLivePromptFromBody(base.providerRequest, livePromptText)
+    : base.providerRequest;
   return {
     provider: base.provider || "unknown",
     model: base.model || "unknown",
@@ -87,12 +103,13 @@ export function buildRequestDetail(base, overrides = {}) {
     timestamp: new Date().toISOString(),
     latency: base.latency || { ttft: 0, total: 0 },
     tokens: base.tokens || { prompt_tokens: 0, completion_tokens: 0 },
-    request: base.request,
-    providerRequest: base.providerRequest || null,
+    request,
+    providerRequest: providerRequest || null,
     providerResponse: base.providerResponse || null,
     response: base.response || {},
     pxpipe: base.pxpipe || undefined,
     status: base.status || "success",
+    ...(livePromptText ? { [LIVE_INJECTED_FLAG]: true } : {}),
     ...overrides
   };
 }

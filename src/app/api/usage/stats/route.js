@@ -1,5 +1,7 @@
 import { NextResponse } from "next/server";
-import { getUsageStats } from "@/lib/usageDb";
+import { getUsageStats, getMemberUsageStats, sanitizeUsageStatsForBrowser } from "@/lib/usageDb";
+import { getApiKeysByMemberId } from "@/lib/localDb";
+import { getRequestMemberSession } from "@/lib/auth/memberAuth";
 
 const VALID_PERIODS = new Set(["today", "24h", "7d", "30d", "60d", "all"]);
 
@@ -14,7 +16,19 @@ export async function GET(request) {
       return NextResponse.json({ error: "Invalid period" }, { status: 400 });
     }
 
-    const stats = await getUsageStats(period);
+    // Members get ONLY their own usage (rows for keys with
+    // apiKeys.memberId = session.memberId), computed from raw history.
+    const member = await getRequestMemberSession();
+    if (member) {
+      const ownKeys = await getApiKeysByMemberId(member.memberId);
+      const stats = await getMemberUsageStats(ownKeys.map((k) => k.key), period);
+      return NextResponse.json(stats);
+    }
+
+    // Full keys must never reach the browser: getUsageStats() keys
+    // byApiKey by the raw apiKey composite (G7). Member stats are
+    // computed from the member's own keys only (separate function).
+    const stats = sanitizeUsageStatsForBrowser(await getUsageStats(period));
     return NextResponse.json(stats);
   } catch (error) {
     console.error("[API] Failed to get usage stats:", error);

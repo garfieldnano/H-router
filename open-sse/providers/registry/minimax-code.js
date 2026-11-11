@@ -33,12 +33,14 @@ export default {
       "User-Agent": "MiniMaxAgent",
       "X-Mavis-Agent-Id": "main",
     },
+    // Header hooks (plan #1): provider-specific header auto-patch, declared
+    // in the registry — a new free-tier provider adds its hook name here.
+    headerHooks: ["minimaxHeaders"],
     auth: {
       combined: true,
       header: "Authorization",
       scheme: "bearer",
       anthropicVersion: true,
-      hooks: ["minimaxHeaders"],
     },
   },
   oauth: {

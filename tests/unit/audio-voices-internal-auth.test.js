@@ -10,7 +10,14 @@ vi.mock("@/lib/localDb", () => ({
   validateApiKey: async (key) => key === "valid-router-key",
 }));
 vi.mock("@/shared/utils/machineId", () => ({ getConsistentMachineId: async () => "internal-cli-key" }));
-vi.mock("@/lib/auth/dashboardSession", () => ({ verifyDashboardAuthToken: async () => false }));
+vi.mock("@/lib/auth/dashboardSession", () => ({
+  verifyDashboardAuthToken: async () => false,
+  // Same fix as dashboard-guard.test.js: the guard imports these for the
+  // member role split (§0); the mock previously omitted them, breaking
+  // every proxy() test in this file at import time.
+  getDashboardAuthSession: async () => null,
+  getSessionRole: () => null,
+}));
 
 import { proxy } from "@/dashboardGuard.js";
 import { GET as publicVoices } from "@/app/api/v1/audio/voices/route.js";

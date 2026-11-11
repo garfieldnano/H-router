@@ -1,5 +1,7 @@
 import { NextResponse } from "next/server";
 import { getModelAliases, setModelAlias, getCustomModels } from "@/models";
+import { getSettings } from "@/lib/localDb";
+import { applyVisionOverrideToCaps } from "@/shared/utils/visionAdapter.js";
 import { getDisabledModels } from "@/lib/disabledModelsDb";
 import { AI_MODELS } from "@/shared/constants/config";
 import { getProviderAlias, ALIAS_TO_ID } from "@/shared/constants/providers";
@@ -74,6 +76,19 @@ export async function GET() {
         },
       });
     }
+
+    // Vision Adapter (plan G10): admin overrides win over the advertised
+    // caps, so the dashboard shows the same vision capability the chat
+    // gate enforces. Fail-open when settings cannot be read.
+    try {
+      const { visionOverrides } = await getSettings();
+      if (visionOverrides && typeof visionOverrides === "object") {
+        for (const m of models) {
+          if (!m?.caps) continue;
+          m.caps = applyVisionOverrideToCaps(m.caps, m.fullModel || m.routedModel, visionOverrides);
+        }
+      }
+    } catch { /* fail-open: serve the un-overridden caps */ }
 
     return NextResponse.json({ models });
   } catch (error) {

@@ -61,9 +61,21 @@ describe("apiKeys access columns: upgrade from the previous schema", () => {
     expect(await db.validateApiKey("sk-legacy-one")).toBe(true);
     expect((await db.getApiKeyByKey("sk-legacy-one")).access.restricted).toBe(false);
 
-    // The schema bump took the pre-change safety backup.
+    // The schema bump took the pre-change safety backup (v1 -> current).
+    // Named after SCHEMA_VERSION so future bumps do not break this test.
+    const { SCHEMA_VERSION } = await import("@/lib/db/schema.js");
     const backups = fs.readdirSync(path.join(tempDir, "db", "backups"));
-    expect(backups.some((d) => d.startsWith("schema-1-to-2"))).toBe(true);
+    expect(backups.some((d) => d.startsWith(`schema-1-to-${SCHEMA_VERSION}`))).toBe(true);
+
+    // The v3 member-dashboard columns/table were added too.
+    expect(cols).toEqual(expect.arrayContaining(["memberId"]));
+    const tables = adapter.all(`SELECT name FROM sqlite_master WHERE type = 'table'`).map((t) => t.name);
+    expect(tables).toContain("members");
+
+    // The v5 RPM columns were added too (NULL = inherit).
+    expect(cols).toEqual(expect.arrayContaining(["rpmLimit", "packageId"]));
+    const pkgCols = adapter.all(`PRAGMA table_info(packages)`).map((c) => c.name);
+    expect(pkgCols).toEqual(expect.arrayContaining(["rpmLimit"]));
   });
 
   it("persists access through update, new keys default to unrestricted", async () => {

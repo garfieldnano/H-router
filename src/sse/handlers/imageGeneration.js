@@ -8,6 +8,8 @@ import {
 import { getSettings } from "@/lib/localDb";
 import { getModelInfo, getComboModels } from "../services/model.js";
 import { getKeyAccessContext, enforceKeyAccess } from "../services/keyAccess.js";
+import { enforceKeyRateLimit } from "../services/keyRateLimit.js";
+import { enforceKeyIpCap } from "../services/keyIpCap.js";
 import { handleImageGenerationCore } from "open-sse/handlers/imageGenerationCore.js";
 import { getImageAdapter } from "open-sse/handlers/imageProviders/index.js";
 import { errorResponse, unavailableResponse } from "open-sse/utils/error.js";
@@ -72,6 +74,15 @@ export async function handleImageGeneration(request) {
   // Per-key access control: requested target, before combo expansion.
   const keyAccessDenied = await enforceKeyAccess(await getKeyAccessContext(request), modelStr);
   if (keyAccessDenied) return keyAccessDenied;
+
+  // Active IP cap (plan #5): over the cap → 429 + Retry-After. Runs
+  // before the RPM check so a rejected request does not consume an RPM slot.
+  const ipCapLimited = await enforceKeyIpCap(request);
+  if (ipCapLimited) return ipCapLimited;
+
+  // RPM limit (plan §0c): over the limit → 429 + Retry-After.
+  const rateLimited = await enforceKeyRateLimit(request);
+  if (rateLimited) return rateLimited;
 
   // Combo expansion: model may be a combo name → run fallback/round-robin across models
   const comboModels = await getComboModels(modelStr);

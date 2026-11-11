@@ -31,6 +31,11 @@ vi.mock("@/shared/utils/machineId", () => ({
 
 vi.mock("@/lib/auth/dashboardSession", () => ({
   verifyDashboardAuthToken: mocks.verifyDashboardAuthToken,
+  // Added by the member-dashboard build (§0): the guard imports it for the
+  // member role split. The mock previously omitted it, breaking every
+  // proxy() test in this file at import time (pre-existing, fixed here).
+  getDashboardAuthSession: vi.fn(async () => null),
+  getSessionRole: vi.fn(() => null),
 }));
 
 const { proxy, __test__ } = await import("../../src/dashboardGuard.js");
@@ -304,5 +309,18 @@ describe("dashboard guard helpers", () => {
     });
 
     expect(__test__.extractApiKey(apiRequest)).toBe("header-key");
+  });
+
+  it("member may call GET /api/compensations (own history, §0d)", () => {
+    expect(__test__.isMemberAllowedApiPath("/api/compensations", "GET")).toBe(true);
+  });
+
+  it("member may NOT call /api/incidents (admin-only grant surface)", () => {
+    expect(__test__.isMemberAllowedApiPath("/api/incidents", "GET")).toBe(false);
+    expect(__test__.isMemberAllowedApiPath("/api/incidents/abc/grant", "POST")).toBe(false);
+  });
+
+  it("member may NOT POST to /api/compensations", () => {
+    expect(__test__.isMemberAllowedApiPath("/api/compensations", "POST")).toBe(false);
   });
 });

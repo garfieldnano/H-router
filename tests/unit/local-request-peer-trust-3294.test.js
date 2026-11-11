@@ -31,6 +31,11 @@ vi.mock("@/shared/utils/machineId", () => ({
 
 vi.mock("@/lib/auth/dashboardSession", () => ({
   verifyDashboardAuthToken: mocks.verifyDashboardAuthToken,
+  // Same fix as dashboard-guard.test.js: the guard imports these for the
+  // member role split (§0); the mock previously omitted them, breaking
+  // every proxy() test in this file at import time.
+  getDashboardAuthSession: vi.fn(async () => null),
+  getSessionRole: vi.fn(() => null),
 }));
 
 const { proxy } = await import("../../src/dashboardGuard.js");

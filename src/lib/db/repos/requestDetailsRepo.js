@@ -116,6 +116,10 @@ async function flushToDatabase() {
             providerResponse: truncateField(item.providerResponse, config.maxJsonSize),
             response: truncateField(item.response, config.maxJsonSize),
             pxpipe: item.pxpipe || undefined,
+            // plan #2: the live-prompt marker rides on the stored detail
+            // (internal metadata only); carry it through so it survives
+            // persistence instead of being dropped by this field list.
+            live_injected: item.live_injected === true ? true : undefined,
           };
 
           db.run(
@@ -196,6 +200,16 @@ export async function getDistinctProviders() {
   const db = await getAdapter();
   const rows = db.all(`SELECT DISTINCT provider FROM requestDetails WHERE provider IS NOT NULL ORDER BY provider ASC`);
   return rows.map((r) => r.provider);
+}
+
+// Whether the request-details store is recording at all. Same rule as
+// getObservabilityConfig(): ENABLE_REQUEST_LOGS env wins, else the
+// settings flag, else enabled unless OBSERVABILITY_ENABLED=false.
+// Exported so API routes can report the state (the Conversations page
+// shows a different empty state when recording is off).
+export async function isObservabilityEnabled() {
+  const config = await getObservabilityConfig();
+  return config.enabled === true;
 }
 
 export async function getRequestDetailById(id) {

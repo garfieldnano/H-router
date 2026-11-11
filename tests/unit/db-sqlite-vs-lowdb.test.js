@@ -50,7 +50,8 @@ describe("DB SQLite layer — public API parity", () => {
   it("apiKeys: create/get/validate/delete", async () => {
     const k = await sqliteDb.createApiKey("test-key", "machine-abc");
     expect(k.id).toBeDefined();
-    expect(k.key).toMatch(/^sk-/);
+    // §0 changed the key format from sk- to h-router- (see plan §0).
+    expect(k.key).toMatch(/^h-router-/);
     expect(k.machineId).toBe("machine-abc");
     expect(k.isActive).toBe(true);
 

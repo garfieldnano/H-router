@@ -1,14 +1,13 @@
 import { BaseExecutor } from "./base.js";
-import { randomUUID } from "node:crypto";
 import { PROVIDERS, PROVIDER_OAUTH } from "../config/providers.js";
 import { ANTHROPIC_API_VERSION, OPENAI_COMPAT_BASE, ANTHROPIC_COMPAT_BASE, selectAnthropicBeta, mergeAnthropicBeta } from "../providers/shared.js";
 import { resolveOpenAICompatibleApiType } from "../services/provider.js";
 import { OAUTH_ENDPOINTS, buildKimiHeaders, NOUS_ATTRIBUTION } from "../config/appConstants.js";
-import { buildClineHeaders } from "../shared/clineAuth.js";
 import { proxyAwareFetch } from "../utils/proxyFetch.js";
 import { injectReasoningContent } from "../utils/reasoningContentInjector.js";
 import { stripUnsupportedParams } from "../translator/concerns/paramSupport.js";
 import { extractClaudeSessionIdFromUserId } from "../utils/claudeCloaking.js";
+import { applyHeaderHooks } from "./headerHooks.js";
 
 // Auth header descriptors — derived from registry transport.auth, fallback to hardcoded defaults.
 const BEARER = { combined: true, header: "Authorization", scheme: "bearer" };
@@ -37,40 +36,6 @@ function applyAuth(headers, desc, credentials) {
   else if (credentials.accessToken) setAuth(headers, desc.oauth, credentials.accessToken);
   if (desc.anthropicVersion && !headers["anthropic-version"]) headers["anthropic-version"] = ANTHROPIC_API_VERSION;
 }
-
-// Provider-specific header quirks kept as small hooks (not pure auth).
-const HEADER_HOOKS = {
-  // CodeBuddy (CN + intl): the gateway runs a channel check per request and
-  // rejects anything that does not carry the conversation/request identifiers
-  // the official plugin sends. Without them upstream answers
-  // 400 {"code":11128,"msg":"request illegal"} with
-  // "This call failed channel verification, possibly because it was not sent
-  // from an official client" — the request never reaches the model.
-  // The same request WITH these headers passes channel verification and gets
-  // as far as the real rate limiter (429 / 6004).
-  codebuddyHeaders: (h) => {
-    const requestId = randomUUID();
-    h["X-Request-ID"] = requestId;
-    h["X-Conversation-ID"] = randomUUID();
-    h["X-Conversation-Request-ID"] = requestId;
-    h["X-Conversation-Message-ID"] = requestId;
-  },
-  // Stable device_id from OAuth connection (CLIProxyAPI KimiTokenStorage.DeviceID)
-  kimiHeaders: (h, c) => Object.assign(h, buildKimiHeaders(c?.providerSpecificData?.deviceId)),
-  // MiniMax Code (mcode): the placeholder x-api-key rides every request next
-  // to the Bearer token, plus per-request session/timezone headers. Static
-  // teammates (User-Agent, X-Mavis-Agent-Id) live in the registry transport.
-  minimaxHeaders: (h) => {
-    h["x-api-key"] = "sk-xxx";
-    h["X-Mavis-Timezone-Offset"] = String(new Date().getTimezoneOffset() * -60);
-    if (!h["X-Mavis-Session-Id"]) h["X-Mavis-Session-Id"] = randomUUID();
-  },
-  // Muse: x-api-version only on subscription (minted key) requests — plain
-  // Model API keys already work without it
-  museHeaders: (h, c) => { if (c?.accessToken && !c?.apiKey) h["x-api-version"] = "1.0.0"; },
-  clineHeaders: (h, c) => Object.assign(h, buildClineHeaders(c.apiKey || c.accessToken)),
-  kilocodeOrg: (h, c) => { if (c.providerSpecificData?.orgId) h["X-Kilocode-OrganizationID"] = c.providerSpecificData.orgId; },
-};
 
 // Config-driven OAuth refresh grants — derived from registry oauth.refresh.
 const REFRESH_GRANTS = Object.fromEntries(
@@ -207,8 +172,14 @@ export class DefaultExecutor extends BaseExecutor {
     const rt = credentials?.runtimeTransport;
     const headers = { "Content-Type": "application/json", ...(rt ? rt.headers : this.config.headers) };
     const desc = rt?.auth || AUTH_DESCRIPTORS[this.provider] || this.resolveAuthDescriptor();
-    // Hooks run BEFORE auth so dynamic overlays can't clobber the token.
-    for (const hook of desc.hooks || []) HEADER_HOOKS[hook]?.(headers, credentials);
+    // Header hooks (plan #1): declared in the registry as
+    // transport.headerHooks (canonical); auth.hooks is the legacy location
+    // and is still honored. PROVIDERS[id] IS the transport object
+    // (providers/index.js buildTransport spreads it), so the flag lives
+    // directly on this.config. Hooks run BEFORE auth so dynamic overlays
+    // can't clobber the token.
+    const hookNames = [...new Set([...(desc.hooks || []), ...(this.config?.headerHooks || [])])];
+    applyHeaderHooks(headers, hookNames, credentials);
     applyAuth(headers, desc, credentials);
 
     // anthropic-compatible-* nodes serving a real Claude model sit in front of

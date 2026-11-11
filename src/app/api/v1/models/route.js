@@ -7,7 +7,9 @@ import {
   isAnthropicCompatibleProvider,
   isOpenAICompatibleProvider,
 } from "@/shared/constants/providers";
-import { getProviderConnections, getCombos, getCustomModels, getModelAliases } from "@/lib/localDb";
+import { getProviderConnections, getCombos, getCustomModels, getModelAliases, getModelBrands, getSettings } from "@/lib/localDb";
+import { applyModelBrands } from "@/shared/utils/brandModel.js";
+import { applyVisionOverrideToCaps } from "@/shared/utils/visionAdapter.js";
 import { getDisabledModels } from "@/lib/disabledModelsDb";
 import { getKeyAccessContext, filterModelsListForKey } from "@/sse/services/keyAccess.js";
 import { resolveKiroModels } from "open-sse/services/kiroModels.js";
@@ -640,6 +642,22 @@ export async function buildModelsList(kindFilter, options = {}) {
     dedupedModels.push(model);
   }
 
+  // Vision Adapter (plan G10): admin overrides win over the advertised
+  // capabilities, so /v1/models never claims a model can read images when
+  // the gate would reject it (and vice versa). Combos aggregate member
+  // capabilities — overrides apply to their individual seats, not the combo.
+  try {
+    const { visionOverrides } = await getSettings();
+    if (visionOverrides && typeof visionOverrides === "object") {
+      for (const entry of dedupedModels) {
+        if (!entry?.capabilities || entry.owned_by === "combo") continue;
+        entry.capabilities = applyVisionOverrideToCaps(entry.capabilities, entry.id, visionOverrides);
+      }
+    }
+  } catch {
+    // Fail-open: without settings, serve the un-overridden capabilities.
+  }
+
   return dedupedModels;
 }
 
@@ -664,10 +682,21 @@ export async function GET(request) {
   try {
     // Detect cross-instance recursive /models fetch (another 9router fetching our /models)
     const skipDynamicFetch = request?.headers?.get(INTERNAL_MODELS_FETCH_HEADER) === "1";
-    const data = await filterModelsListForKey(
+    const filtered = await filterModelsListForKey(
       await getKeyAccessContext(request),
       await buildModelsList([LLM_KIND], { skipDynamicFetch })
     );
+    // Model rebranding (plan #2, G5): AFTER the key-access filter, so a
+    // restricted key only ever sees brands whose upstream it may call.
+    // A branded upstream entry is replaced by the brand entry
+    // (id = brandModelId, owned_by = "h-router").
+    let data = filtered;
+    try {
+      const brands = await getModelBrands({ activeOnly: true });
+      data = applyModelBrands(filtered, brands, ALIAS_TO_PROVIDER_ID);
+    } catch (e) {
+      console.log("Rebrand map failed, serving unbranded list:", e?.message || e);
+    }
     return Response.json({ object: "list", data }, {
       headers: { "Access-Control-Allow-Origin": "*" },
     });

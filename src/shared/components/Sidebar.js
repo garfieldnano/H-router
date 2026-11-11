@@ -20,9 +20,16 @@ const COMBINED_WEB_ITEM = { id: "web", label: "Web Fetch & Search", icon: "trave
 const navItems = [
   { href: "/dashboard/endpoint", label: "Endpoint & Key", icon: "api" },
   { href: "/dashboard/providers", label: "Providers", icon: "dns" },
+  { href: "/dashboard/scanner", label: "Pemindai Kesehatan", icon: "health_and_safety" },
   // { href: "/dashboard/basic-chat", label: "Basic Chat", icon: "chat" }, // Hidden
   { href: "/dashboard/combos", label: "Combo & Vision Adapter", icon: "layers" },
   { href: "/dashboard/usage", label: "Usage", icon: "bar_chart" },
+  // G7 observability pages (plan G7): per-key usage, live traffic,
+  // conversation log, model playground.
+  { href: "/dashboard/key-usage", label: "Pemakaian Kunci", icon: "vpn_key" },
+  { href: "/dashboard/traffic", label: "Trafik Langsung", icon: "monitoring" },
+  { href: "/dashboard/conversations", label: "Percakapan", icon: "forum" },
+  { href: "/dashboard/playground", label: "Playground", icon: "science" },
   { href: "/dashboard/quota", label: "Quota Tracker", icon: "data_usage" },
   { href: "/dashboard/token-saver", label: "Token Saver", icon: "savings" },
   // { href: "/dashboard/pxpipe", label: "PXPIPE", icon: "image" },
@@ -35,8 +42,17 @@ const debugItems = [
 ];
 
 const systemItems = [
+  { href: "/dashboard/members", label: "Members", icon: "group" },
+  { href: "/dashboard/packages", label: "Paket & Harga", icon: "sell" },
+  { href: "/dashboard/compensations", label: "Kompensasi", icon: "history" },
+  { href: "/dashboard/rebrand", label: "Rebranding", icon: "style" },
   { href: "/dashboard/proxy-pools", label: "Proxy Pools", icon: "lan" },
   { href: "/dashboard/skills", label: "Skills", icon: "extension" },
+];
+
+// Members see ONLY their own dashboard page (read-only usage + keys).
+const memberNavItems = [
+  { href: "/dashboard/member", label: "Dashboard Member", icon: "person" },
 ];
 
 export default function Sidebar({ onClose }) {
@@ -48,9 +64,20 @@ export default function Sidebar({ onClose }) {
   const [isUpdating, setIsUpdating] = useState(false);
   const [shutdownCountdown, setShutdownCountdown] = useState(0);
   const [enableTranslator, setEnableTranslator] = useState(false);
+  const [role, setRole] = useState(null);
   const { copied, copy } = useCopyToClipboard(2000);
 
   const INSTALL_CMD = UPDATER_CONFIG.installCmdLatest;
+
+  // Member dashboard (v1): the sidebar only shows the member page.
+  useEffect(() => {
+    fetch("/api/auth/status")
+      .then((res) => res.json())
+      .then((data) => { if (data?.role) setRole(data.role); })
+      .catch(() => {});
+  }, []);
+
+  const isMember = role === "member";
 
   useEffect(() => {
     useSettingsStore.getState().fetchSettings().then((data) => {
@@ -120,18 +147,16 @@ export default function Sidebar({ onClose }) {
 
         {/* Logo */}
         <div className="px-6 py-4 flex flex-col gap-2">
-          <Link href="/dashboard" className="flex items-center gap-3">
-            <div className="flex items-center justify-center size-9 rounded-[10px] bg-gradient-to-br from-brand-500 to-brand-700 shadow-[var(--shadow-warm)]">
-              <span className="material-symbols-outlined text-white text-[20px]">hub</span>
-            </div>
+          <Link href={isMember ? "/dashboard/member" : "/dashboard"} className="flex items-center gap-3">
+            <img src="/h-router-logo.svg" alt="h-router logo" className="size-9 shrink-0" width={36} height={36} />
             <div className="flex flex-col">
               <h1 className="text-lg font-semibold tracking-tight text-text-main">
-                {APP_CONFIG.name}
+                h-router
               </h1>
               <span className="text-xs text-text-muted">v{APP_CONFIG.version}</span>
             </div>
           </Link>
-          {updateInfo && (
+          {updateInfo && !isMember && (
             <div className="flex flex-col gap-1.5 rounded p-1 -m-1">
               <span className="text-xs font-semibold text-green-600 dark:text-amber-500">
                 ↑ New version available: v{updateInfo.latestVersion}
@@ -159,7 +184,7 @@ export default function Sidebar({ onClose }) {
 
         {/* Navigation */}
         <nav className="flex-1 px-4 py-2 space-y-0.5 overflow-y-auto custom-scrollbar">
-          {navItems.map((item) => (
+          {(isMember ? memberNavItems : navItems).map((item) => (
             <Link
               key={item.href}
               href={item.href}
@@ -183,7 +208,8 @@ export default function Sidebar({ onClose }) {
             </Link>
           ))}
 
-          {/* System section */}
+          {/* System section (admin only) */}
+          {!isMember && (
           <div className="pt-3 mt-2 space-y-0.5">
             <p className="px-4 text-xs font-semibold text-text-muted/60 uppercase tracking-wider mb-2">
               System
@@ -351,6 +377,7 @@ export default function Sidebar({ onClose }) {
               <span className="text-[13px] font-medium">Settings</span>
             </Link>
           </div>
+          )}
         </nav>
 
       </aside>

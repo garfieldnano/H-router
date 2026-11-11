@@ -27,13 +27,13 @@ export default {
     },
     // Non-stream chat completions come back wrapped in {"success":true,"data":{...}}
     quirks: { clineEnvelope: true },
+    // Header hooks (plan #1): provider-specific header auto-patch, declared
+    // in the registry — a new free-tier provider adds its hook name here.
+    headerHooks: ["clineHeaders"],
     auth: {
       combined: true,
       header: "Authorization",
       scheme: "bearer",
-      hooks: [
-        "clineHeaders",
-      ],
     },
   },
   models: [

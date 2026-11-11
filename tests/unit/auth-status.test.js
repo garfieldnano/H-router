@@ -9,6 +9,7 @@ const mocks = vi.hoisted(() => ({
   getSettings: vi.fn(),
   isOidcConfigured: vi.fn(),
   getDashboardAuthSession: vi.fn(),
+  getSessionRole: vi.fn(),
 }));
 
 vi.mock("next/server", () => ({
@@ -29,6 +30,7 @@ vi.mock("@/lib/auth/oidc", () => ({
 
 vi.mock("@/lib/auth/dashboardSession", () => ({
   getDashboardAuthSession: mocks.getDashboardAuthSession,
+  getSessionRole: mocks.getSessionRole,
 }));
 
 const { GET } = await import("../../src/app/api/auth/status/route.js");
@@ -39,6 +41,7 @@ describe("GET /api/auth/status", () => {
     mocks.getSettings.mockResolvedValue({ requireLogin: true, authMode: "password" });
     mocks.cookies.mockResolvedValue({ get: vi.fn(() => ({ value: "session-token" })) });
     mocks.isOidcConfigured.mockReturnValue(false);
+    mocks.getSessionRole.mockReturnValue("admin");
   });
 
   it("reports an authenticated session when the auth cookie is valid", async () => {
@@ -47,6 +50,7 @@ describe("GET /api/auth/status", () => {
     const response = await GET();
 
     expect(response.body.authenticated).toBe(true);
+    expect(response.body.role).toBe("admin");
     expect(mocks.getDashboardAuthSession).toHaveBeenCalledWith("session-token");
   });
 
