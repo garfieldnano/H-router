@@ -1,21 +1,17 @@
 <div align="center">
-  <img src="./images/9router.png?1" alt="9Router Dashboard" width="800"/>
+  <img src="./public/h-router-logo.svg" alt="h-router" width="120"/>
   
-  # 9Router - FREE AI Router & Token Saver
+  # h-router - FREE AI Router & Token Saver
   
   **Never stop coding. Save 20-40% tokens with RTK + auto-fallback to FREE & cheap AI models.**
   
-  **Connect All AI Code Tools (Claude Code, Cursor, Antigravity, Copilot, Codex, Gemini, OpenCode, Cline, OpenClaw...) to 40+ AI Providers & 100+ Models.**
+  **Connect All AI Code Tools (Claude Code, Cursor, Antigravity, Copilot, Codex, Gemini, OpenCode, Cline, OpenClaw...) to 40+ AI Providers & 100+ Models — plus member/reseller features: member dashboard, Telegram bot, RPM limits, downtime compensation, Rust relay, model rebranding, and a Vision Adapter.**
   
-  [![npm](https://img.shields.io/npm/v/9router.svg)](https://www.npmjs.com/package/9router)
-  [![Downloads](https://img.shields.io/npm/dm/9router.svg)](https://www.npmjs.com/package/9router)
-  [![Docker Pulls](https://img.shields.io/docker/pulls/decolua/9router.svg?logo=docker&label=Docker%20pulls)](https://hub.docker.com/r/decolua/9router)
-  [![GHCR](https://img.shields.io/badge/GHCR-decolua%2F9router-blue?logo=github)](https://github.com/decolua/9router/pkgs/container/9router)
-  [![License](https://img.shields.io/npm/l/9router.svg)](https://github.com/decolua/9router/blob/main/LICENSE)
+  Fork of [decolua/9router](https://github.com/decolua/9router) v0.5.116. See [🏷️ h-router (fork additions)](#h-router-fork-additions) and the operator docs in [docs/h-router/](docs/h-router/README.md).
+  
+  [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 
-<a href="https://trendshift.io/repositories/22628" target="_blank"><img src="https://trendshift.io/api/badge/repositories/22628" alt="decolua%2F9router | Trendshift" style="width: 250px; height: 55px;" width="250" height="55"/></a>
-
-[🚀 Quick Start](#-quick-start) • [💡 Features](#-key-features) • [📖 Setup](#-setup-guide) • [🌐 Website](https://9router.com)
+[🚀 Quick Start](#-quick-start) • [💡 Features](#-key-features) • [📖 Setup](#-setup-guide) • [🏷️ h-router](#h-router-fork-additions) • [🌐 Website](https://9router.com)
 
 [🇧🇷 Português (Brasil)](./i18n/README.pt-BR.md) • [🇻🇳 Tiếng Việt](./i18n/README.vi.md) • [🇨🇳 中文](./i18n/README.zh-CN.md) • [🇯🇵 日本語](./i18n/README.ja-JP.md) • [🇷🇺 Русский](./i18n/README.ru.md) • [🇹🇭 ไทย](./i18n/README.th.md) • [🇮🇷 فارسی](./i18n/README.fa_IR.md) • [🇮🇩 Indonesia](./i18n/README.id-ID.md) • [🇪🇸 Español](./i18n/README.es.md) • [🇫🇷 Français](./i18n/README.fr.md)
 
@@ -1557,17 +1553,22 @@ Huge thanks to these authors — without their work, 9Router's token-saving feat
 
 ## 🏷️ h-router (fork additions)
 
-This fork adds reseller/member features on top of 9Router — member
-dashboard (API-key login, read-only own usage/keys), Telegram bot (buy,
-trial, admin panel, daily digest), RPM limits, downtime compensation,
-Rust relay sidecar + egress rotator, model rebranding + live system
-prompts (applyLive), per-key IP caps + provider health scanner,
-observability pages (Live Traffic, Conversations, Playground, per-key
-usage), and per-model RTK toggles.
+This fork adds reseller/member features on top of 9Router v0.5.116:
 
-Operator docs (Indonesian): **[docs/h-router/README.md](docs/h-router/README.md)**
-— includes the go-live checklist. Build logs for every feature:
-`~/workspace/analysis/9router-*-build.md`.
+- **Member dashboard** — API-key login; members view only their own usage & keys (read-only). Admin creates accounts and assigns keys; no self-registration. [Docs](docs/h-router/member-dashboard.md)
+- **Telegram bot** — buy keys via manual transfer + admin confirmation, 1-day free trial (once per user), member menu, full admin panel, daily usage digest ~08:00 WIB. [Docs](docs/h-router/telegram-bot.md)
+- **RPM limits** — per-key → per-package → trial default 20 → global default 50; over-limit returns 429 + `Retry-After`. [Docs](docs/h-router/rpm.md)
+- **Downtime compensation** — outage duration maps to a +1h / +3h / +5h / +8h extension of the key's active period, granted manually by admin. [Docs](docs/h-router/compensation.md)
+- **Rust relay sidecar** — egress proxy with rotation on abusive-traffic / rate-limit responses, canonical tool-schema injector, header hooks. [Docs](docs/h-router/relay.md) · deploy: `relay/deploy.sh`
+- **Model rebranding + applyLive** — `/v1/models` shows the h-router brand and hides upstream names; live system prompts (prepend/replace/append) injected per brand/model and never logged. [Docs](docs/h-router/rebrand-applylive.md)
+- **Per-key IP caps + provider health scanner** — default 3 IPs per key (range 1–100); scanner classifies providers Healthy / Limit / Dead / Unknown. [Docs](docs/h-router/ip-cap-scanner.md)
+- **Observability** — Live Traffic, Conversations, Playground, and per-key usage pages (admin-only). [Docs](docs/h-router/observability.md)
+- **Vision Adapter** — image requests only reach vision-capable models; non-vision models are rejected with a 400 + up to 5 allowed alternatives. Admin overrides via `/api/vision-overrides`.
+- **Per-model RTK toggles** — `provider/model` overrides on top of the global Token Saver setting. [Docs](docs/h-router/rtk.md)
+
+New API keys use the `h-router-` prefix (`sk-` keys keep working for now, transitional only).
+
+Operator docs (Indonesian): **[docs/h-router/README.md](docs/h-router/README.md)** — includes the go-live checklist.
 
 ---
 
