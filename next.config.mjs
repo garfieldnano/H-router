@@ -70,6 +70,17 @@ const nextConfig = {
     };
     return config;
   },
+  // h-router: the upstream /landing route was removed (src/app/landing/
+  // deleted) — it now redirects here so old links land on the new page.
+  async redirects() {
+    return [
+      {
+        source: "/landing",
+        destination: "/",
+        permanent: false,
+      },
+    ];
+  },
   async rewrites() {
     return [
       {

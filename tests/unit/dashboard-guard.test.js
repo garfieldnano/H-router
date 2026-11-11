@@ -1,4 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
+import { getDashboardAuthSession, getSessionRole } from "@/lib/auth/dashboardSession";
 
 const mocks = vi.hoisted(() => ({
   nextResponse: Symbol("next"),
@@ -322,5 +323,32 @@ describe("dashboard guard helpers", () => {
 
   it("member may NOT POST to /api/compensations", () => {
     expect(__test__.isMemberAllowedApiPath("/api/compensations", "POST")).toBe(false);
+  });
+});
+
+// h-router landing page: / is public (was: redirect to /dashboard).
+describe("dashboard guard landing root", () => {
+  it("lets anonymous visitors through to / (landing page)", async () => {
+    const res = await proxy(request("/"));
+    expect(res).toBe(mocks.nextResponse);
+  });
+
+  it("lets logged-in admins through to / (landing page)", async () => {
+    vi.mocked(getDashboardAuthSession).mockResolvedValue({ role: "admin" });
+    vi.mocked(getSessionRole).mockReturnValue("admin");
+    const req = request("/");
+    req.cookies = { get: vi.fn(() => ({ value: "admin-token" })) };
+    const res = await proxy(req);
+    expect(res).toBe(mocks.nextResponse);
+  });
+
+  it("still sends logged-in members from / to /dashboard/member", async () => {
+    vi.mocked(getDashboardAuthSession).mockResolvedValue({ role: "member", memberId: "m1" });
+    vi.mocked(getSessionRole).mockReturnValue("member");
+    const req = request("/");
+    req.cookies = { get: vi.fn(() => ({ value: "member-token" })) };
+    const res = await proxy(req);
+    expect(res.status).toBe(307);
+    expect(String(res.url)).toContain("/dashboard/member");
   });
 });

@@ -346,9 +346,11 @@ export async function proxy(request) {
     return NextResponse.redirect(new URL("/login", request.url));
   }
 
-  // Redirect / to /dashboard if logged in, or /dashboard if it's the root
+  // h-router landing page: / is public. (The member branch above still
+  // sends logged-in members to /dashboard/member; /dashboard itself is
+  // still guarded by the block above.)
   if (pathname === "/") {
-    return NextResponse.redirect(new URL("/dashboard", request.url));
+    return NextResponse.next();
   }
 
   return NextResponse.next();
