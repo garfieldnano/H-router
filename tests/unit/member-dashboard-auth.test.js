@@ -62,21 +62,37 @@ describe("member guard allow-lists (dashboardGuard.__test__)", () => {
     expect(isMemberAllowedApiPath("/api/keys", "POST")).toBe(false);
     expect(isMemberAllowedApiPath("/api/keys/k-1", "DELETE")).toBe(false);
     expect(isMemberAllowedApiPath("/api/settings", "GET")).toBe(false);
-    expect(isMemberAllowedApiPath("/api/providers", "GET")).toBe(false);
     expect(isMemberAllowedApiPath("/api/members", "GET")).toBe(false);
     expect(isMemberAllowedApiPath("/api/members/m-1", "PATCH")).toBe(false);
-    expect(isMemberAllowedApiPath("/api/usage/chart", "GET")).toBe(false);
     expect(isMemberAllowedApiPath("/api/auth/logout", "GET")).toBe(false);
+    // NOTE (member menu expansion, 2026-11-11): /api/providers GET and
+    // /api/usage/chart GET are now member-allowed reads (member-safe
+    // projection / member-scoped aggregation); they moved to the allow test
+    // in dashboard-guard.test.js.
   });
 
-  it("allows members only /dashboard/member pages", () => {
+  it("allows members the 5 member dashboard pages (menu revised 2026-11-11)", () => {
     const { isMemberAllowedDashboardPath } = guard.__test__;
-    expect(isMemberAllowedDashboardPath("/dashboard/member")).toBe(true);
-    expect(isMemberAllowedDashboardPath("/dashboard/member/usage")).toBe(true);
+    for (const p of [
+      "/dashboard/member",
+      "/dashboard/endpoint",
+      "/dashboard/usage",
+      "/dashboard/quota",
+      "/dashboard/cli-tools",
+      "/dashboard/cli-tools/claude",
+    ]) {
+      expect(isMemberAllowedDashboardPath(p)).toBe(true);
+    }
     expect(isMemberAllowedDashboardPath("/dashboard")).toBe(false);
-    expect(isMemberAllowedDashboardPath("/dashboard/providers")).toBe(false);
     expect(isMemberAllowedDashboardPath("/dashboard/members")).toBe(false);
-    expect(isMemberAllowedDashboardPath("/dashboard/usage")).toBe(false);
+    // Providers, combos, and token-saver are admin-only (user correction).
+    expect(isMemberAllowedDashboardPath("/dashboard/providers")).toBe(false);
+    expect(isMemberAllowedDashboardPath("/dashboard/combos")).toBe(false);
+    expect(isMemberAllowedDashboardPath("/dashboard/token-saver")).toBe(false);
+    // No such page: /dashboard/member has no subpages (exact match), and
+    // the provider detail page stays admin-only.
+    expect(isMemberAllowedDashboardPath("/dashboard/member/usage")).toBe(false);
+    expect(isMemberAllowedDashboardPath("/dashboard/providers/abc")).toBe(false);
   });
 });
 

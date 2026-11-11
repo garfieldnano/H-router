@@ -12,10 +12,13 @@ import {
   JcodeToolCard, GrokBuildToolCard, GenericCliToolCard,
 } from "../components";
 
+import { useMemberRole } from "@/shared/hooks/useMemberRole";
+
 const CLOUD_URL = process.env.NEXT_PUBLIC_CLOUD_URL;
 
 export default function ToolDetailClient({ toolId, machineId }) {
   const tool = CLI_TOOLS[toolId];
+  const isMember = useMemberRole();
   const [connections, setConnections] = useState([]);
   const [loading, setLoading] = useState(true);
   const [modelMappings, setModelMappings] = useState({});
@@ -139,6 +142,10 @@ export default function ToolDetailClient({ toolId, machineId }) {
       tunnelPublicUrl,
       tailscaleEnabled,
       tailscaleUrl,
+      // Members get the manual-setup view only: every card hides its
+      // Apply/Reset buttons when readOnly. Server-side the dashboard guard
+      // already 403s all *-settings writes for members.
+      readOnly: isMember,
     };
 
     switch (toolId) {

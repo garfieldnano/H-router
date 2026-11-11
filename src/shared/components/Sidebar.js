@@ -47,9 +47,17 @@ const systemItems = [
   { href: "/dashboard/skills", label: "Skills", icon: "extension" },
 ];
 
-// Members see ONLY their own dashboard page (read-only usage + keys).
+// Members see their own dashboard + the 4 read-only pages below (2026-11-11).
+// Providers, Combo & Vision Adapter, and Token Saver are admin-only
+// (user correction 2026-11-11). Each page gates its admin controls behind
+// the member role, and every API it calls scopes by the session memberId
+// server-side. No System items.
 const memberNavItems = [
   { href: "/dashboard/member", label: "Dashboard Member", icon: "person" },
+  { href: "/dashboard/endpoint", label: "Endpoint & Key", icon: "api" },
+  { href: "/dashboard/usage", label: "Usage", icon: "bar_chart" },
+  { href: "/dashboard/quota", label: "Quota Tracker", icon: "data_usage" },
+  { href: "/dashboard/cli-tools", label: "CLI Tools", icon: "terminal" },
 ];
 
 export default function Sidebar({ onClose }) {

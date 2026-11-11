@@ -999,6 +999,138 @@ export async function getChartData(period = "7d") {
   });
 }
 
+// Member chart: same bucket shapes as getChartData, but computed from the
+// member's own usageHistory rows only. The daily rollup table (usageDaily)
+// is global with no apiKey column, so it cannot be used for members.
+export async function getMemberChartData(apiKeyValues, period = "7d") {
+  const keys = [...new Set((apiKeyValues || []).map((k) => String(k).trim()).filter(Boolean))];
+  if (!keys.length) return [];
+  const db = await getAdapter();
+  const now = Date.now();
+  const placeholders = keys.map(() => "?").join(",");
+
+  const addRow = (buckets, bucketMs, startTime, r) => {
+    const t = new Date(r.timestamp).getTime();
+    if (Number.isNaN(t) || t < startTime) return;
+    const idx = Math.floor((t - startTime) / bucketMs);
+    if (idx < 0 || idx >= buckets.length) return;
+    buckets[idx].tokens += (r.promptTokens || 0) + (r.completionTokens || 0);
+    buckets[idx].cost += r.cost || 0;
+    buckets[idx].requests += 1;
+  };
+
+  if (period === "today" || period === "24h") {
+    const bucketCount = 24;
+    const bucketMs = 3600000;
+    const startTime = period === "today"
+      ? new Date(new Date().setHours(0, 0, 0, 0)).getTime()
+      : now - bucketCount * bucketMs;
+    const labelFn = (ts) => new Date(ts).toLocaleTimeString("en-US", { hour: "2-digit", minute: "2-digit", hour12: false });
+    const buckets = Array.from({ length: bucketCount }, (_, i) => ({ label: labelFn(startTime + i * bucketMs), tokens: 0, cost: 0, requests: 0 }));
+    const rows = db.all(
+      `SELECT timestamp, promptTokens, completionTokens, cost FROM usageHistory WHERE apiKey IN (${placeholders}) AND timestamp >= ?`,
+      [...keys, new Date(startTime).toISOString()]
+    );
+    for (const r of rows) addRow(buckets, bucketMs, startTime, r);
+    return buckets;
+  }
+
+  const bucketCount = period === "7d" ? 7 : period === "30d" ? 30 : period === "60d" ? 60 : null;
+  const labelFn = (d) => d.toLocaleDateString("en-US", { month: "short", day: "numeric" });
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+
+  if (bucketCount === null) {
+    // "all": daily buckets from the member's earliest row (bounded scan).
+    const first = db.get(
+      `SELECT MIN(timestamp) as t FROM usageHistory WHERE apiKey IN (${placeholders})`,
+      keys
+    );
+    if (!first?.t) return [];
+    const earliest = new Date(first.t);
+    earliest.setHours(0, 0, 0, 0);
+    const diffDays = Math.max(1, Math.round((today - earliest) / 86400000) + 1);
+    const buckets = Array.from({ length: diffDays }, (_, i) => {
+      const d = new Date(earliest);
+      d.setDate(d.getDate() + i);
+      return { label: labelFn(d), tokens: 0, cost: 0, requests: 0, _day: `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}` };
+    });
+    const dayMs = 86400000;
+    const rows = db.all(
+      `SELECT timestamp, promptTokens, completionTokens, cost FROM usageHistory WHERE apiKey IN (${placeholders}) ORDER BY timestamp ASC LIMIT 20000`,
+      keys
+    );
+    for (const r of rows) addRow(buckets, dayMs, earliest.getTime(), r);
+    return buckets.map(({ _day, ...b }) => b);
+  }
+
+  const startTime = new Date(today);
+  startTime.setDate(startTime.getDate() - (bucketCount - 1));
+  const buckets = Array.from({ length: bucketCount }, (_, i) => {
+    const d = new Date(startTime);
+    d.setDate(d.getDate() + i);
+    return { label: labelFn(d), tokens: 0, cost: 0, requests: 0 };
+  });
+  const dayMs = 86400000;
+  const rows = db.all(
+    `SELECT timestamp, promptTokens, completionTokens, cost FROM usageHistory WHERE apiKey IN (${placeholders}) AND timestamp >= ?`,
+    [...keys, startTime.toISOString()]
+  );
+  for (const r of rows) addRow(buckets, dayMs, startTime.getTime(), r);
+  return buckets;
+}
+
+// Distinct providers seen in the member's own usage rows (for the Details
+// tab filter + quota views). The requestDetails table has no apiKey column,
+// so its global distinct list cannot be scoped — use usageHistory instead.
+export async function getMemberDistinctProviders(apiKeyValues) {
+  const keys = [...new Set((apiKeyValues || []).map((k) => String(k).trim()).filter(Boolean))];
+  if (!keys.length) return [];
+  const db = await getAdapter();
+  const placeholders = keys.map(() => "?").join(",");
+  const rows = db.all(
+    `SELECT DISTINCT provider FROM usageHistory WHERE provider IS NOT NULL AND apiKey IN (${placeholders}) ORDER BY provider ASC`,
+    keys
+  );
+  return rows.map((r) => r.provider);
+}
+
+// Member-scoped live feed for the usage stream: only recent requests driven
+// by the member's own keys (ring entries carry the full apiKey; the masked
+// form is what leaves the server). Active per-account requests cannot be
+// attributed to an API key (tracked by connectionId), so they are omitted
+// for members rather than leaked. Same for the global error provider.
+export async function getMemberActiveRequests(apiKeyValues) {
+  const keys = new Set([...(apiKeyValues || []).map((k) => String(k).trim()).filter(Boolean)]);
+  if (!keys.size) return { activeRequests: [], recentRequests: [], errorProvider: "" };
+  await ensureRingInitialized();
+  const seen = new Set();
+  const recentRequests = [...recentRing.items]
+    .sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp))
+    .filter((e) => keys.has(String(e.apiKey || "").trim()))
+    .map((e) => {
+      const t = e.tokens || {};
+      return {
+        timestamp: e.timestamp, model: e.model, provider: e.provider || "",
+        apiKey: maskApiKey(e.apiKey),
+        cost: e.cost || 0,
+        promptTokens: t.prompt_tokens || t.input_tokens || 0,
+        completionTokens: t.completion_tokens || t.output_tokens || 0,
+        status: e.status || "ok",
+      };
+    })
+    .filter((e) => {
+      if (e.promptTokens === 0 && e.completionTokens === 0) return false;
+      const minute = e.timestamp ? e.timestamp.slice(0, 16) : "";
+      const key = `${e.model}|${e.provider}|${e.promptTokens}|${e.completionTokens}|${minute}`;
+      if (seen.has(key)) return false;
+      seen.add(key);
+      return true;
+    })
+    .slice(0, 20);
+  return { activeRequests: [], recentRequests, errorProvider: "" };
+}
+
 function formatLogDate(date = new Date()) {
   const pad = (n) => String(n).padStart(2, "0");
   return `${pad(date.getDate())}-${pad(date.getMonth() + 1)}-${date.getFullYear()} ${pad(date.getHours())}:${pad(date.getMinutes())}:${pad(date.getSeconds())}`;
@@ -1007,12 +1139,15 @@ function formatLogDate(date = new Date()) {
 // No-op: request log is now derived from usageHistory table on read.
 export async function appendRequestLog() {}
 
-export async function getRecentLogs(limit = 200) {
+export async function getRecentLogs(limit = 200, apiKeyValues = null) {
   try {
     const db = await getAdapter();
+    // Optional member scoping: only rows driven by the given API keys.
+    const keys = [...new Set((apiKeyValues || []).map((k) => String(k).trim()).filter(Boolean))];
+    const where = keys.length ? `WHERE apiKey IN (${keys.map(() => "?").join(",")})` : "";
     const rows = db.all(
-      `SELECT timestamp, provider, model, connectionId, promptTokens, completionTokens, status, tokens FROM usageHistory ORDER BY id DESC LIMIT ?`,
-      [limit],
+      `SELECT timestamp, provider, model, connectionId, promptTokens, completionTokens, status, tokens FROM usageHistory ${where} ORDER BY id DESC LIMIT ?`,
+      [...keys, limit],
     );
     if (!rows.length) return [];
 

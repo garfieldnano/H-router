@@ -10,7 +10,7 @@ import { matchKnownEndpoint } from "./cliEndpointMatch";
 import { rememberEndpoint } from "./cliEndpointPresets";
 import { getCurrentCodexProviderSettings, deriveProfileNameFromModel } from "./codexConfig";
 
-export default function CodexToolCard({ tool, isExpanded, onToggle, baseUrl, apiKeys, activeProviders, cloudEnabled, initialStatus, tunnelEnabled, tunnelPublicUrl, tailscaleEnabled, tailscaleUrl }) {
+export default function CodexToolCard({ tool, isExpanded, onToggle, baseUrl, apiKeys, activeProviders, cloudEnabled, initialStatus, tunnelEnabled, tunnelPublicUrl, tailscaleEnabled, tailscaleUrl, readOnly = false }) {
   const [codexStatus, setCodexStatus] = useState(initialStatus || null);
   const [checkingCodex, setCheckingCodex] = useState(false);
   const [applying, setApplying] = useState(false);
@@ -447,12 +447,16 @@ default_subagent_model = "${effectiveSubagentModel}"
               )}
 
               <div className="grid grid-cols-1 gap-2 sm:flex sm:items-center">
-                <Button variant="primary" size="sm" onClick={handleApplySettings} disabled={(!selectedApiKey && (cloudEnabled && apiKeys.length > 0)) || !selectedModel} loading={applying}>
+                {!readOnly && (
+<Button variant="primary" size="sm" onClick={handleApplySettings} disabled={(!selectedApiKey && (cloudEnabled && apiKeys.length > 0)) || !selectedModel} loading={applying}>
                   <span className="material-symbols-outlined text-[14px] mr-1">save</span>Apply
                 </Button>
-                <Button variant="outline" size="sm" onClick={handleResetSettings} disabled={restoring} loading={restoring}>
+                )}
+                {!readOnly && (
+<Button variant="outline" size="sm" onClick={handleResetSettings} disabled={restoring} loading={restoring}>
                   <span className="material-symbols-outlined text-[14px] mr-1">restore</span>Reset
                 </Button>
+                )}
                 <Button variant="ghost" size="sm" onClick={() => setShowManualConfigModal(true)}>
                   <span className="material-symbols-outlined text-[14px] mr-1">content_copy</span>Manual Config
                 </Button>
@@ -483,7 +487,7 @@ default_subagent_model = "${effectiveSubagentModel}"
                       onChange={(e) => setAliasInput(e.target.value.toLowerCase().replace(/[^a-z0-9_-]/g, ""))}
                       placeholder="Alias (e.g. claude)"
                       className="w-full min-w-0 px-2.5 py-1.5 bg-surface rounded border border-border text-xs font-mono focus:outline-none focus:ring-1 focus:ring-primary/50"
-                      onKeyDown={(e) => e.key === "Enter" && handleAddProfileWithAlias()}
+                      onKeyDown={(e) => e.key === "Enter" && !readOnly && handleAddProfileWithAlias()}
                     />
                     <div className="relative w-full min-w-0">
                       <input
@@ -497,7 +501,7 @@ default_subagent_model = "${effectiveSubagentModel}"
                         }}
                         placeholder="provider/model-id"
                         className="w-full min-w-0 pl-2.5 pr-7 py-1.5 bg-surface rounded border border-border text-xs focus:outline-none focus:ring-1 focus:ring-primary/50"
-                        onKeyDown={(e) => e.key === "Enter" && handleAddProfileWithAlias()}
+                        onKeyDown={(e) => e.key === "Enter" && !readOnly && handleAddProfileWithAlias()}
                       />
                       {modelInput && (
                         <button
@@ -520,7 +524,8 @@ default_subagent_model = "${effectiveSubagentModel}"
                     >
                       Select Model
                     </button>
-                    <Button
+                    {!readOnly && (
+<Button
                       variant="primary"
                       size="sm"
                       onClick={handleAddProfileWithAlias}
@@ -531,6 +536,7 @@ default_subagent_model = "${effectiveSubagentModel}"
                       <span className="material-symbols-outlined text-[15px] mr-1">add</span>
                       Add
                     </Button>
+                    )}
                   </div>
                 </div>
 
@@ -584,7 +590,8 @@ default_subagent_model = "${effectiveSubagentModel}"
                               <span className="md:hidden">copy</span>
                             </button>
 
-                            <button
+                            {!readOnly && (
+<button
                               onClick={() => handleDeleteProfile(p.name)}
                               disabled={deletingProfile === p.name}
                               className="p-1 text-text-muted hover:text-red-500 opacity-0 group-hover:opacity-100 transition-opacity rounded"
@@ -592,6 +599,7 @@ default_subagent_model = "${effectiveSubagentModel}"
                             >
                               <span className="material-symbols-outlined text-[15px]">close</span>
                             </button>
+                            )}
                           </div>
                         </div>
                       );

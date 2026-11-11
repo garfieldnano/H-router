@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { getRequestDetails, isObservabilityEnabled } from "@/lib/usageDb";
+import { getRequestMemberSession } from "@/lib/auth/memberAuth";
 
 /**
  * GET /api/usage/request-details
@@ -32,6 +33,21 @@ export async function GET(request) {
         { error: "PageSize must be between 1 and 100" },
         { status: 400 }
       );
+    }
+
+    // Members: conversation-detail rows cannot be attributed to an API key —
+    // the requestDetails table has no apiKey column and its JSON blob
+    // carries no key field — so members get an empty result rather than
+    // other members' conversation metadata. Their own usage is fully
+    // visible via /api/usage/stats, /history, /chart and /request-logs.
+    const member = await getRequestMemberSession();
+    if (member) {
+      const observabilityEnabled = await isObservabilityEnabled().catch(() => true);
+      return NextResponse.json({
+        details: [],
+        pagination: { page, pageSize, totalItems: 0, totalPages: 0, hasNext: false, hasPrev: false },
+        observabilityEnabled,
+      });
     }
     
     const filter = {

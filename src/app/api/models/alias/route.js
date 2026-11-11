@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { getRequestMemberSession } from "@/lib/auth/memberAuth";
 import { getModelAliases, setModelAlias, deleteModelAlias } from "@/models";
 
 export const dynamic = "force-dynamic";
@@ -17,6 +18,9 @@ export async function GET() {
 // PUT /api/models/alias - Set model alias
 export async function PUT(request) {
   try {
+    if (await getRequestMemberSession()) {
+      return NextResponse.json({ error: "Forbidden: members are read-only" }, { status: 403 });
+    }
     const body = await request.json();
     const { model, alias } = body;
 
@@ -36,6 +40,9 @@ export async function PUT(request) {
 // DELETE /api/models/alias?alias=xxx - Delete alias
 export async function DELETE(request) {
   try {
+    if (await getRequestMemberSession()) {
+      return NextResponse.json({ error: "Forbidden: members are read-only" }, { status: 403 });
+    }
     const { searchParams } = new URL(request.url);
     const alias = searchParams.get("alias");
 

@@ -206,6 +206,19 @@ async function isAuthenticated(request) {
 // themselves enforce member scoping too (filtering by the caller's memberId).
 
 // API routes a member session may call (method + exact/prefix match).
+// Member dashboard expansion (2026-11-11): members also get 4 extra pages
+// (endpoint, usage, quota, cli-tools) in READ-ONLY form. Only the GET
+// endpoints those pages need are listed here; every route must still scope
+// by the caller's memberId server-side, and all mutations stay blocked by
+// this allow-list (403). Providers, Combo & Vision Adapter, and Token Saver
+// are admin-only (user correction 2026-11-11): their pages are not in the
+// member dashboard prefixes, and their dedicated endpoints (/api/combos*,
+// /api/models, /api/vision-adapter/status, /api/token-saver/status) are NOT
+// listed here. NOTE: /api/providers + /api/provider-nodes STAY because the
+// member Usage page (UsageStats provider filter) and the CLI tool cards
+// call them; /api/providers strips secrets for members server-side, so
+// keeping them does not expose provider credentials. /api/models/alias
+// stays for the same reason (CLI tool cards + KeyAccessControls).
 const MEMBER_API_PATHS = [
   { path: "/api/auth/status", methods: ["GET"] },
   { path: "/api/auth/logout", methods: ["POST"] },
@@ -215,10 +228,35 @@ const MEMBER_API_PATHS = [
   { path: "/api/usage/stats", methods: ["GET"] },
   // Member's own compensation history (§0d) — the route scopes by session.
   { path: "/api/compensations", methods: ["GET"] },
+  // Usage page tabs — routes scope by session memberId (see each route).
+  { path: "/api/usage/stream", methods: ["GET"] },
+  { path: "/api/usage/request-logs", methods: ["GET"] },
+  { path: "/api/usage/request-details", methods: ["GET"] },
+  { path: "/api/usage/providers", methods: ["GET"] },
+  { path: "/api/usage/chart", methods: ["GET"] },
+  // Usage page provider filter (UsageStats) — member-safe projection:
+  // /api/providers strips secrets and, for members, additionally drops
+  // providerSpecificData + account email.
+  { path: "/api/providers", methods: ["GET"] },
+  { path: "/api/provider-nodes", methods: ["GET"] },
+  // CLI tool cards read the model alias list (read-only, no secrets).
+  { path: "/api/models/alias", methods: ["GET"] },
+  // CLI tools + endpoint pages.
+  { path: "/api/tunnel/status", methods: ["GET"] },
+  { path: "/api/cli-tools/all-statuses", methods: ["GET"] },
 ];
 
 // Member dashboard pages.
-const MEMBER_DASHBOARD_PREFIXES = ["/dashboard/member"];
+const MEMBER_DASHBOARD_PREFIXES = [
+  "/dashboard/member",
+  "/dashboard/endpoint",
+  "/dashboard/usage",
+  "/dashboard/quota",
+  "/dashboard/cli-tools",
+];
+
+// Of the prefixes above, only these also allow subpaths for members.
+const MEMBER_DASHBOARD_SUBPATH_PREFIXES = ["/dashboard/cli-tools"];
 
 export function isMemberAllowedApiPath(pathname, method = "GET") {
   return MEMBER_API_PATHS.some(
@@ -229,8 +267,16 @@ export function isMemberAllowedApiPath(pathname, method = "GET") {
 }
 
 export function isMemberAllowedDashboardPath(pathname) {
+  // Exact match for the member pages, except the prefixes in
+  // MEMBER_DASHBOARD_SUBPATH_PREFIXES whose subpaths are also member pages
+  // (/dashboard/cli-tools/[toolId] is part of the member CLI setup flow).
+  // Providers, combos, and token-saver are admin-only (not in the prefixes
+  // above), so members are redirected to /dashboard/member for those URLs.
   return MEMBER_DASHBOARD_PREFIXES.some(
-    (p) => pathname === p || pathname.startsWith(`${p}/`)
+    (p) =>
+      pathname === p ||
+      (MEMBER_DASHBOARD_SUBPATH_PREFIXES.includes(p) &&
+        pathname.startsWith(`${p}/`))
   );
 }
 

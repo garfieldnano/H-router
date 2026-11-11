@@ -8,7 +8,7 @@ import { rememberEndpoint } from "./cliEndpointPresets";
 import ApiKeySelect from "./ApiKeySelect";
 import { matchKnownEndpoint } from "./cliEndpointMatch";
 
-export default function OpenCodeToolCard({ tool, isExpanded, onToggle, baseUrl, apiKeys, activeProviders, cloudEnabled, initialStatus, tunnelEnabled, tunnelPublicUrl, tailscaleEnabled, tailscaleUrl }) {
+export default function OpenCodeToolCard({ tool, isExpanded, onToggle, baseUrl, apiKeys, activeProviders, cloudEnabled, initialStatus, tunnelEnabled, tunnelPublicUrl, tailscaleEnabled, tailscaleUrl, readOnly = false }) {
   const [status, setStatus] = useState(initialStatus || null);
   const [checking, setChecking] = useState(false);
   const [applying, setApplying] = useState(false);
@@ -337,7 +337,7 @@ export default function OpenCodeToolCard({ tool, isExpanded, onToggle, baseUrl, 
                           <span
                             key={model}
                             onClick={async () => {
-                              if (model === activeModel) {
+                              if (model === activeModel && !readOnly) {
                                 try {
                                   const res = await fetch("/api/cli-tools/opencode-settings", {
                                     method: "PATCH",
@@ -364,7 +364,8 @@ export default function OpenCodeToolCard({ tool, isExpanded, onToggle, baseUrl, 
                           >
                             {model === activeModel && <span className="material-symbols-outlined text-[10px]">star</span>}
                             {model}
-                            <button
+                            {!readOnly && (
+<button
                               onClick={async (e) => {
                                 e.stopPropagation();
                                 try {
@@ -385,6 +386,7 @@ export default function OpenCodeToolCard({ tool, isExpanded, onToggle, baseUrl, 
                             >
                               <span className="material-symbols-outlined text-[12px]">close</span>
                             </button>
+                            )}
                           </span>
                         ))
                       )}
@@ -442,12 +444,16 @@ export default function OpenCodeToolCard({ tool, isExpanded, onToggle, baseUrl, 
               )}
 
               <div className="grid grid-cols-1 gap-2 sm:flex sm:items-center">
-                <Button variant="primary" size="sm" onClick={handleApply} disabled={selectedModels.length === 0} loading={applying}>
+                {!readOnly && (
+<Button variant="primary" size="sm" onClick={handleApply} disabled={selectedModels.length === 0} loading={applying}>
                   <span className="material-symbols-outlined text-[14px] mr-1">save</span>Apply
                 </Button>
-                <Button variant="outline" size="sm" onClick={handleReset} disabled={!status.has9Router} loading={restoring}>
+                )}
+                {!readOnly && (
+<Button variant="outline" size="sm" onClick={handleReset} disabled={!status.has9Router} loading={restoring}>
                   <span className="material-symbols-outlined text-[14px] mr-1">restore</span>Reset
                 </Button>
+                )}
                 <Button variant="ghost" size="sm" onClick={() => setShowManualConfigModal(true)}>
                   <span className="material-symbols-outlined text-[14px] mr-1">content_copy</span>Manual Config
                 </Button>
@@ -462,7 +468,9 @@ export default function OpenCodeToolCard({ tool, isExpanded, onToggle, baseUrl, 
           isOpen={modalOpen}
           onClose={() => {
             setModalOpen(false);
-            saveModels(selectedModelsRef.current);
+            // Members are read-only: model selection stays local, nothing
+            // is written back to the host config.
+            if (!readOnly) saveModels(selectedModelsRef.current);
           }}
           onSelect={(model) => {
             if (!selectedModels.includes(model.value)) {

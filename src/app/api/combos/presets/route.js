@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { getRequestMemberSession } from "@/lib/auth/memberAuth";
 import { getCombos, createCombo, getProviderConnections } from "@/lib/localDb";
 import { buildPresetItems, PRESET_SOURCES } from "@/lib/comboPresets";
 import { resolveCursorModels } from "open-sse/services/cursorModels.js";
@@ -74,6 +75,9 @@ export async function GET(request) {
 // POST /api/combos/presets — create missing combos for a source
 export async function POST(request) {
   try {
+    if (await getRequestMemberSession()) {
+      return NextResponse.json({ error: "Forbidden: members are read-only" }, { status: 403 });
+    }
     const body = await request.json().catch(() => ({}));
     const source = parseSource(body?.source);
     if (!source) {

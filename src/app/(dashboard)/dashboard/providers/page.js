@@ -26,6 +26,7 @@ import { useHeaderSearchStore } from "@/store/headerSearchStore";
 import ModelAvailabilityBadge from "./components/ModelAvailabilityBadge";
 import AddCompatibleModal from "./components/AddCompatibleModal";
 import { STATUS_FILTER_OPTIONS, matchesStatusFilter } from "./utils";
+import { useMemberRole } from "@/shared/hooks/useMemberRole";
 
 function getStatusDisplay(connected, error, errorCode) {
   const parts = [];
@@ -108,6 +109,10 @@ export default function ProvidersPage() {
   const [testResults, setTestResults] = useState(null);
   const [statusFilter, setStatusFilter] = useState("all");
   const notify = useNotificationStore();
+  // Member dashboard expansion: members see the provider list/status
+  // read-only — no Add, no Test All, no enable/disable toggles, and the
+  // provider cards are not links (the [id] detail page is admin-only).
+  const isMember = useMemberRole();
   const searchQuery = useHeaderSearchStore((s) => s.query);
   const registerSearch = useHeaderSearchStore((s) => s.register);
   const unregisterSearch = useHeaderSearchStore((s) => s.unregister);
@@ -436,6 +441,7 @@ export default function ProvidersPage() {
           <h2 className="text-lg sm:text-xl font-semibold flex items-center gap-2 leading-tight">
             Custom Providers (OpenAI/Anthropic Compatible){" "}
           </h2>
+{!isMember && (
           <div className="grid grid-cols-1 gap-2 sm:flex sm:w-auto">
             <Button
               size="sm"
@@ -455,18 +461,20 @@ export default function ProvidersPage() {
               Add OpenAI Compatible
             </Button>
           </div>
+          )}
         </div>
         {compatibleProviders.length === 0 &&
         anthropicCompatibleProviders.length === 0 ? (
           <div className="flex items-center justify-center gap-2 py-2 border border-dashed border-border rounded-xl text-text-muted text-sm">
             <span className="material-symbols-outlined text-[18px]">extension</span>
-            <span>No custom providers — use buttons above to add OpenAI/Anthropic compatible endpoints</span>
+            <span>{isMember ? "No custom providers" : "No custom providers — use buttons above to add OpenAI/Anthropic compatible endpoints"}</span>
           </div>
         ) : (
           <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 sm:gap-4 lg:grid-cols-3 xl:grid-cols-4">
             {[...compatibleProviders, ...anthropicCompatibleProviders].map(
               (info) => (
                 <ApiKeyProviderCard
+                  isMember={isMember}
                   key={info.id}
                   providerId={info.id}
                   provider={info}
@@ -491,7 +499,8 @@ export default function ProvidersPage() {
           </h2>
           <div className="flex w-full flex-col gap-2 sm:w-auto sm:flex-row sm:items-center">
             <ModelAvailabilityBadge />
-            <button
+            {!isMember && (
+<button
               onClick={() => handleBatchTest("oauth")}
               disabled={!!testingMode}
               className={`flex w-full items-center justify-center gap-1.5 rounded-lg border px-3 py-2 text-xs font-medium transition-colors sm:w-auto sm:py-1.5 ${
@@ -509,6 +518,7 @@ export default function ProvidersPage() {
               </span>
               {testingMode === "oauth" ? "Testing..." : "Test All"}
             </button>
+            )}
           </div>
         </div>
         <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 sm:gap-4 lg:grid-cols-3 xl:grid-cols-4">
@@ -516,6 +526,7 @@ export default function ProvidersPage() {
             const authTypes = dualAuthTypes(info, key);
             return (
               <ProviderCard
+                isMember={isMember}
                 key={key}
                 providerId={key}
                 provider={info}
@@ -536,7 +547,8 @@ export default function ProvidersPage() {
           <h2 className="text-lg sm:text-xl font-semibold flex items-center gap-2 leading-tight">
             Free Tier Providers
           </h2>
-          <button
+          {!isMember && (
+<button
             onClick={() => handleBatchTest("free")}
             disabled={!!testingMode}
             className={`flex w-full items-center justify-center gap-1.5 rounded-lg border px-3 py-2 text-xs font-medium transition-colors sm:w-auto sm:py-1.5 ${
@@ -554,6 +566,7 @@ export default function ProvidersPage() {
             </span>
             {testingMode === "free" ? "Testing..." : "Test All"}
           </button>
+            )}
         </div>
         <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 sm:gap-4 lg:grid-cols-3 xl:grid-cols-4">
           {freeEntries.map(([key, info]) => {
@@ -562,6 +575,7 @@ export default function ProvidersPage() {
             const freeAuthTypes = dualAuthTypes(info, key);
             return (
               <ProviderCard
+                isMember={isMember}
                 key={key}
                 providerId={key}
                 provider={info}
@@ -577,6 +591,7 @@ export default function ProvidersPage() {
             const freeAuthTypes = dualAuthTypes(info, key);
             return (
               <ApiKeyProviderCard
+                isMember={isMember}
                 key={key}
                 providerId={key}
                 provider={info}
@@ -597,7 +612,8 @@ export default function ProvidersPage() {
           <h2 className="text-lg sm:text-xl font-semibold flex items-center gap-2 leading-tight">
             API Key Providers{" "}
           </h2>
-          <button
+          {!isMember && (
+<button
             onClick={() => handleBatchTest("apikey")}
             disabled={!!testingMode}
             className={`flex w-full items-center justify-center gap-1.5 rounded-lg border px-3 py-2 text-xs font-medium transition-colors sm:w-auto sm:py-1.5 ${
@@ -615,10 +631,12 @@ export default function ProvidersPage() {
             </span>
             {testingMode === "apikey" ? "Testing..." : "Test All"}
           </button>
+            )}
         </div>
         <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 sm:gap-4 lg:grid-cols-3 xl:grid-cols-4">
           {visibleApikeyEntries.map(([key, info]) => (
             <ApiKeyProviderCard
+              isMember={isMember}
               key={key}
               providerId={key}
               provider={info}
@@ -629,6 +647,7 @@ export default function ProvidersPage() {
           ))}
           {webCookieEntries.map(([key, info]) => (
             <ApiKeyProviderCard
+              isMember={isMember}
               key={key}
               providerId={key}
               provider={info}
@@ -700,7 +719,7 @@ export default function ProvidersPage() {
   );
 }
 
-function ProviderCard({ providerId, provider, stats, authType, onToggle }) {
+function ProviderCard({ providerId, provider, stats, authType, onToggle, isMember }) {
   const { connected, error, errorCode, errorTime, allDisabled } = stats;
   const isNoAuth = !!provider.noAuth;
 
@@ -717,8 +736,7 @@ function ProviderCard({ providerId, provider, stats, authType, onToggle }) {
     compatible: "Compatible",
   };
 
-  return (
-    <Link href={`/dashboard/providers/${providerId}`} className="group min-w-0">
+  const inner = (
       <Card
         padding="xs"
         className={`h-full hover:bg-black/[0.01] dark:hover:bg-white/[0.01] transition-colors cursor-pointer ${allDisabled ? "opacity-50" : ""}`}
@@ -768,7 +786,7 @@ function ProviderCard({ providerId, provider, stats, authType, onToggle }) {
             </div>
           </div>
           <div className="flex shrink-0 items-center gap-2">
-            {stats.total > 0 && (
+            {!isMember && stats.total > 0 && (
               <div
                 className="opacity-100 transition-opacity sm:opacity-0 sm:group-hover:opacity-100"
                 onClick={(e) => {
@@ -788,7 +806,10 @@ function ProviderCard({ providerId, provider, stats, authType, onToggle }) {
           </div>
         </div>
       </Card>
-    </Link>
+  );
+  if (isMember) return <div className="group min-w-0">{inner}</div>;
+  return (
+    <Link href={`/dashboard/providers/${providerId}`} className="group min-w-0">{inner}</Link>
   );
 }
 
@@ -816,6 +837,7 @@ function ApiKeyProviderCard({
   stats,
   authType,
   onToggle,
+  isMember,
 }) {
   const { connected, error, errorCode, errorTime, allDisabled } = stats;
   const isCompatible = providerId.startsWith(OPENAI_COMPATIBLE_PREFIX);
@@ -845,8 +867,7 @@ function ApiKeyProviderCard({
     return getProviderIconSrc(provider.id);
   };
 
-  return (
-    <Link href={`/dashboard/providers/${providerId}`} className="group min-w-0">
+  const inner = (
       <Card
         padding="xs"
         className={`h-full hover:bg-black/[0.01] dark:hover:bg-white/[0.01] transition-colors cursor-pointer ${allDisabled ? "opacity-50" : ""}`}
@@ -906,7 +927,7 @@ function ApiKeyProviderCard({
             </div>
           </div>
           <div className="flex shrink-0 items-center gap-2">
-            {stats.total > 0 && (
+            {!isMember && stats.total > 0 && (
               <div
                 className="opacity-100 transition-opacity sm:opacity-0 sm:group-hover:opacity-100"
                 onClick={(e) => {
@@ -926,7 +947,10 @@ function ApiKeyProviderCard({
           </div>
         </div>
       </Card>
-    </Link>
+  );
+  if (isMember) return <div className="group min-w-0">{inner}</div>;
+  return (
+    <Link href={`/dashboard/providers/${providerId}`} className="group min-w-0">{inner}</Link>
   );
 }
 

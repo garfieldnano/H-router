@@ -42,6 +42,7 @@ export default function ClaudeToolCard({
   tunnelPublicUrl,
   tailscaleEnabled,
   tailscaleUrl,
+  readOnly = false,
 }) {
   const [claudeStatus, setClaudeStatus] = useState(initialStatus || null);
   const [checkingClaude, setCheckingClaude] = useState(false);
@@ -465,7 +466,7 @@ export default function ClaudeToolCard({
                   <span className="text-xs font-semibold text-text-main sm:text-right sm:text-sm">Filter naming</span>
                   <span className="material-symbols-outlined hidden text-text-muted text-[14px] sm:inline">arrow_forward</span>
                   <label className="flex items-center gap-1.5 cursor-pointer select-none">
-                    <input type="checkbox" checked={ccFilterNaming} onChange={handleCcFilterNamingToggle} className="w-3.5 h-3.5 accent-primary cursor-pointer shrink-0" />
+                    <input type="checkbox" checked={ccFilterNaming} onChange={handleCcFilterNamingToggle} disabled={readOnly} className="w-3.5 h-3.5 accent-primary cursor-pointer shrink-0 disabled:cursor-not-allowed disabled:opacity-50" />
                     <span className="text-xs text-text-muted">Filter naming requests</span>
                     <Tooltip text="Intercepts Claude Code's topic-naming requests and returns a fake response locally, saving API tokens.">
                       <span className="material-symbols-outlined text-text-muted text-[14px] cursor-help">info</span>
@@ -495,12 +496,16 @@ export default function ClaudeToolCard({
               )}
 
               <div className="flex flex-wrap items-center gap-2">
-                <Button variant="primary" size="sm" onClick={handleApplySettings} disabled={!hasActiveProviders} loading={applying}>
+                {!readOnly && (
+<Button variant="primary" size="sm" onClick={handleApplySettings} disabled={!hasActiveProviders} loading={applying}>
                   <span className="material-symbols-outlined text-[14px] mr-1">save</span>Apply
                 </Button>
-                <Button variant="outline" size="sm" onClick={handleResetSettings} disabled={!claudeStatus?.has9Router} loading={restoring}>
+                )}
+                {!readOnly && (
+<Button variant="outline" size="sm" onClick={handleResetSettings} disabled={!claudeStatus?.has9Router} loading={restoring}>
                   <span className="material-symbols-outlined text-[14px] mr-1">restore</span>Reset
                 </Button>
+                )}
                 <Button variant="ghost" size="sm" onClick={() => setShowManualConfigModal(true)}>
                   <span className="material-symbols-outlined text-[14px] mr-1">content_copy</span>Manual Config
                 </Button>

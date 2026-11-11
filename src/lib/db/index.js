@@ -114,8 +114,8 @@ export {
 
 // Usage
 export {
-  statsEmitter, trackPendingRequest, getActiveRequests,
-  saveRequestUsage, getUsageHistory, getUsageRowsBetween, getUsageStats, getMemberUsageStats, buildMemberUsageStats, getChartData,
+  statsEmitter, trackPendingRequest, getActiveRequests, getMemberActiveRequests,
+  saveRequestUsage, getUsageHistory, getUsageRowsBetween, getUsageStats, getMemberUsageStats, buildMemberUsageStats, getChartData, getMemberChartData, getMemberDistinctProviders,
   appendRequestLog, getRecentLogs, calculateCost, sanitizeUsageStatsForBrowser,
 } from "./repos/usageRepo.js";
 

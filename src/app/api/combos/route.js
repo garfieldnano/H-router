@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { getRequestMemberSession } from "@/lib/auth/memberAuth";
 import { getCombos, createCombo, getComboByName } from "@/lib/localDb";
 
 export const dynamic = "force-dynamic";
@@ -20,6 +21,9 @@ export async function GET() {
 // POST /api/combos - Create new combo
 export async function POST(request) {
   try {
+    if (await getRequestMemberSession()) {
+      return NextResponse.json({ error: "Forbidden: members are read-only" }, { status: 403 });
+    }
     const body = await request.json();
     const { name, models, kind } = body;
 

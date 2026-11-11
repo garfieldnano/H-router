@@ -24,6 +24,7 @@ export default function DroidToolCard({
   tunnelPublicUrl,
   tailscaleEnabled,
   tailscaleUrl,
+  readOnly = false
 }) {
   const [droidStatus, setDroidStatus] = useState(initialStatus || null);
   const [checkingDroid, setCheckingDroid] = useState(false);
@@ -379,12 +380,16 @@ export default function DroidToolCard({
               )}
 
               <div className="grid grid-cols-1 gap-2 sm:flex sm:items-center">
-                <Button variant="primary" size="sm" onClick={handleApplySettings} disabled={modelList.length === 0} loading={applying}>
+                {!readOnly && (
+<Button variant="primary" size="sm" onClick={handleApplySettings} disabled={modelList.length === 0} loading={applying}>
                   <span className="material-symbols-outlined text-[14px] mr-1">save</span>Apply
                 </Button>
-                <Button variant="outline" size="sm" onClick={handleResetSettings} disabled={!droidStatus?.has9Router} loading={restoring}>
+                )}
+                {!readOnly && (
+<Button variant="outline" size="sm" onClick={handleResetSettings} disabled={!droidStatus?.has9Router} loading={restoring}>
                   <span className="material-symbols-outlined text-[14px] mr-1">restore</span>Reset
                 </Button>
+                )}
                 <Button variant="ghost" size="sm" onClick={() => setShowManualConfigModal(true)}>
                   <span className="material-symbols-outlined text-[14px] mr-1">content_copy</span>Manual Config
                 </Button>

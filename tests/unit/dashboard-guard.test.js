@@ -324,6 +324,87 @@ describe("dashboard guard helpers", () => {
   it("member may NOT POST to /api/compensations", () => {
     expect(__test__.isMemberAllowedApiPath("/api/compensations", "POST")).toBe(false);
   });
+
+  // Member menu (2026-11-11, revised same day): the 4 extra member pages
+  // only need these read endpoints; every mutation stays admin-only.
+  // Providers/combos/token-saver endpoints are admin-only (user correction);
+  // /api/providers + /api/provider-nodes stay because the member Usage page
+  // (UsageStats provider filter) needs them, and /api/models/alias stays
+  // because the CLI tool cards need it.
+  it("member may GET the read endpoints the 4 extra member pages need", () => {
+    const allowed = __test__.isMemberAllowedApiPath;
+    for (const p of [
+      "/api/usage/stream",
+      "/api/usage/request-logs",
+      "/api/usage/request-details",
+      "/api/usage/providers",
+      "/api/usage/chart",
+      "/api/providers",
+      "/api/provider-nodes",
+      "/api/models/alias",
+      "/api/tunnel/status",
+      "/api/cli-tools/all-statuses",
+    ]) {
+      expect(allowed(p, "GET")).toBe(true);
+    }
+    // Admin-only pages' endpoints (user correction 2026-11-11).
+    for (const p of [
+      "/api/combos",
+      "/api/combos/presets",
+      "/api/models",
+      "/api/vision-adapter/status",
+      "/api/token-saver/status",
+    ]) {
+      expect(allowed(p, "GET")).toBe(false);
+    }
+  });
+
+  it("member may NOT write through the member pages' endpoints", () => {
+    const allowed = __test__.isMemberAllowedApiPath;
+    expect(allowed("/api/combos", "POST")).toBe(false);
+    expect(allowed("/api/combos/abc", "PUT")).toBe(false);
+    expect(allowed("/api/combos/abc", "DELETE")).toBe(false);
+    expect(allowed("/api/combos/presets", "POST")).toBe(false);
+    expect(allowed("/api/models/alias", "PUT")).toBe(false);
+    expect(allowed("/api/models/alias", "DELETE")).toBe(false);
+    expect(allowed("/api/keys", "POST")).toBe(false);
+    expect(allowed("/api/cli-tools/claude-settings", "POST")).toBe(false);
+    expect(allowed("/api/cli-tools/claude-settings", "DELETE")).toBe(false);
+    expect(allowed("/api/settings", "PATCH")).toBe(false);
+  });
+
+  it("member dashboard paths cover the 5 member pages and nothing else", () => {
+    const allowed = __test__.isMemberAllowedDashboardPath;
+    for (const p of [
+      "/dashboard/member",
+      "/dashboard/endpoint",
+      "/dashboard/usage",
+      "/dashboard/quota",
+      "/dashboard/cli-tools",
+      "/dashboard/cli-tools/claude",
+    ]) {
+      expect(allowed(p)).toBe(true);
+    }
+    // Admin-only pages: providers/combos/token-saver (user correction
+    // 2026-11-11) and the provider detail page (connection mgmt).
+    for (const p of [
+      "/dashboard/providers",
+      "/dashboard/providers/abc",
+      "/dashboard/combos",
+      "/dashboard/token-saver",
+      "/dashboard/members",
+      "/dashboard/traffic",
+      "/dashboard/conversations",
+      "/dashboard/playground",
+      "/dashboard/key-usage",
+      "/dashboard/compensations",
+      "/dashboard/rebrand",
+      "/dashboard/settings",
+      "/dashboard/scanner",
+    ]) {
+      expect(allowed(p)).toBe(false);
+    }
+  });
 });
 
 // h-router landing page: / is public (was: redirect to /dashboard).

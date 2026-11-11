@@ -10,6 +10,7 @@ import { APIKEY_PROVIDERS } from "@/shared/constants/config";
 import { AI_PROVIDERS, FREE_TIER_PROVIDERS, WEB_COOKIE_PROVIDERS, isOpenAICompatibleProvider, isAnthropicCompatibleProvider, isCustomEmbeddingProvider } from "@/shared/constants/providers";
 import { normalizeProviderId, normalizeProviderSpecificData } from "@/lib/providerNormalization";
 import { toProviderConnectionResponse } from "@/lib/providerConnectionResponse";
+import { getRequestMemberSession } from "@/lib/auth/memberAuth";
 
 export const dynamic = "force-dynamic";
 
@@ -61,16 +62,25 @@ export async function GET() {
       }
     } catch { }
 
+    // Members get a reduced projection: toProviderConnectionResponse already
+    // strips apiKey/accessToken/refreshToken/idToken, but providerSpecificData
+    // can still hold provider cookies/tokens and `email` is the admin's
+    // provider account address — both are dropped for members.
+    const member = await getRequestMemberSession();
+
     // Hide sensitive fields, enrich name for compatible providers
     const safeConnections = connections.map(c => {
       const isCompatible = isOpenAICompatibleProvider(c.provider) || isAnthropicCompatibleProvider(c.provider);
       const name = isCompatible
         ? (c.name || nodeNameMap[c.provider] || c.providerSpecificData?.nodeName || c.provider)
         : c.name;
-      return {
+      const base = {
         ...toProviderConnectionResponse(c),
         name,
       };
+      if (!member) return base;
+      const { providerSpecificData, email, ...memberSafe } = base;
+      return memberSafe;
     });
 
     return NextResponse.json({ connections: safeConnections });

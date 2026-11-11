@@ -8,6 +8,7 @@ import { restrictToVerticalAxis, restrictToParentElement } from "@dnd-kit/modifi
 import { Card, Button, Modal, Input, CardSkeleton, ModelSelectModal, ConfirmModal, CapacityBadges, Select, Toggle, Badge, SmartPolicyModal } from "@/shared/components";
 import { useCopyToClipboard } from "@/shared/hooks/useCopyToClipboard";
 import { useModelCaps } from "@/shared/hooks/useModelCaps";
+import { useMemberRole } from "@/shared/hooks/useMemberRole";
 import { aggregateComboCapabilities } from "open-sse/providers/capabilities.js";
 import { resolveProviderId, AI_PROVIDERS } from "@/shared/constants/providers";
 
@@ -81,10 +82,11 @@ export default function CombosPage() {
   const [bulkBusy, setBulkBusy] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const { copied, copy } = useCopyToClipboard();
+  const isMember = useMemberRole();
 
   useEffect(() => {
     fetchData();
-  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [isMember]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Drop stale selection when the combo list changes (delete / refresh).
   useEffect(() => {
@@ -431,9 +433,11 @@ export default function CombosPage() {
               </button>
             )}
           </div>
-          <Button icon="add" onClick={() => setShowCreateModal(true)} className="w-full sm:w-auto whitespace-nowrap">
-            Create Combo
-          </Button>
+          {!isMember && (
+            <Button icon="add" onClick={() => setShowCreateModal(true)} className="w-full sm:w-auto whitespace-nowrap">
+              Create Combo
+            </Button>
+          )}
           <div className="hidden">
             <Button
               variant="secondary"
@@ -470,14 +474,17 @@ export default function CombosPage() {
             </div>
             <p className="text-text-main font-medium mb-1">No combos yet</p>
             <p className="text-sm text-text-muted mb-4">Create model combos with fallback support</p>
-            <Button icon="add" onClick={() => setShowCreateModal(true)} className="w-full sm:w-auto">
-              Create Combo
-            </Button>
+            {!isMember && (
+              <Button icon="add" onClick={() => setShowCreateModal(true)} className="w-full sm:w-auto">
+                Create Combo
+              </Button>
+            )}
           </div>
         </Card>
       ) : (
         <div className="flex flex-col gap-3">
           {/* Selection toolbar */}
+          {!isMember && (
           <div className="flex min-w-0 flex-col gap-2 rounded-lg border border-black/5 bg-black/[0.015] px-3 py-2 dark:border-white/5 dark:bg-white/[0.02] sm:flex-row sm:items-center sm:justify-between">
             <label className="flex cursor-pointer items-center gap-2 text-xs text-text-muted hover:text-primary select-none">
               <input
@@ -540,7 +547,7 @@ export default function CombosPage() {
               )}
             </div>
           </div>
-
+          )}
           <div className="flex flex-col gap-3">
             {(() => {
               const comboByName = Object.fromEntries(combos.map((c) => [c.name, c.models]));
@@ -572,6 +579,7 @@ export default function CombosPage() {
                   onSetStrategy={(patch) => handleSetComboStrategy(combo.name, patch)}
                   selected={selectedIds.includes(combo.id)}
                   onToggleSelect={() => toggleSelect(combo.id)}
+                  isMember={isMember}
                 />
               ));
             })()}
@@ -585,6 +593,7 @@ export default function CombosPage() {
         onChange={handleSetCapacityAdapter}
         activeProviders={activeProviders}
         getCaps={getCaps}
+        readOnly={isMember}
       />
 
       {/* Create Modal - Use key to force remount and reset state */}
@@ -655,7 +664,7 @@ function getRouterModelStatus(routerModel, activeProviders) {
   return { ready: false, label: "Not configured", providerId };
 }
 
-function ComboCard({ combo, getCaps, comboByName = {}, activeProviders = [], copied, onCopy, onEdit, onDelete, strategy = {}, onSetStrategy, selected = false, onToggleSelect }) {
+function ComboCard({ combo, getCaps, comboByName = {}, activeProviders = [], copied, onCopy, onEdit, onDelete, strategy = {}, onSetStrategy, selected = false, onToggleSelect, isMember = false }) {
   const [showJudgeSelect, setShowJudgeSelect] = useState(false);
   const [showRouterSelect, setShowRouterSelect] = useState(false);
   const [showPolicyModal, setShowPolicyModal] = useState(false);
@@ -673,6 +682,7 @@ function ComboCard({ combo, getCaps, comboByName = {}, activeProviders = [], cop
     <Card padding="sm" className={`group ${selected ? "ring-1 ring-primary/40 bg-primary/[0.03]" : ""}`}>
       <div className="flex min-w-0 flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div className="flex min-w-0 flex-1 items-start gap-3 sm:items-center">
+{!isMember && (
           <label className="flex shrink-0 items-center pt-1 sm:pt-0 cursor-pointer" title="Select combo">
             <input
               type="checkbox"
@@ -683,6 +693,7 @@ function ComboCard({ combo, getCaps, comboByName = {}, activeProviders = [], cop
               aria-label={`Select ${combo.name}`}
             />
           </label>
+          )}
           <div className="size-8 rounded-lg bg-primary/10 flex items-center justify-center shrink-0">
             <span className="material-symbols-outlined text-primary text-[18px]">layers</span>
           </div>
@@ -719,14 +730,15 @@ function ComboCard({ combo, getCaps, comboByName = {}, activeProviders = [], cop
               <div className="mt-2 flex min-w-0 flex-wrap items-center gap-1.5">
                 <span className="text-[11px] font-medium text-text-muted">Judge</span>
                 <button
-                  onClick={() => setShowJudgeSelect(true)}
+                  onClick={isMember ? undefined : () => setShowJudgeSelect(true)}
+                  disabled={isMember}
                   className="inline-flex max-w-full items-center gap-1 rounded border border-dashed border-primary/40 px-1.5 py-0.5 font-mono text-[11px] text-primary hover:border-primary hover:bg-primary/5 transition-colors"
                   title="Pick the model that fuses panel answers"
                 >
                   <span className="material-symbols-outlined text-[13px]">gavel</span>
                   <span className="truncate">{judge || `Auto — ${combo.models[0] || "first model"}`}</span>
                 </button>
-                {judge && (
+                {judge && !isMember && (
                   <button
                     onClick={() => onSetStrategy({ judgeModel: "" })}
                     className="p-0.5 rounded text-text-muted hover:text-red-500 hover:bg-red-500/10 transition-colors"
@@ -745,7 +757,8 @@ function ComboCard({ combo, getCaps, comboByName = {}, activeProviders = [], cop
                 <div className="mt-2 flex min-w-0 flex-wrap items-center gap-1.5">
                   <span className="text-[11px] font-medium text-text-muted">Router</span>
                   <button
-                    onClick={() => setShowRouterSelect(true)}
+                    onClick={isMember ? undefined : () => setShowRouterSelect(true)}
+                    disabled={isMember}
                     className="inline-flex max-w-full items-center gap-1 rounded border border-dashed border-primary/40 px-1.5 py-0.5 font-mono text-[11px] text-primary hover:border-primary hover:bg-primary/5 transition-colors"
                     title="Pick the System One model that decides model routing"
                   >
@@ -757,24 +770,27 @@ function ComboCard({ combo, getCaps, comboByName = {}, activeProviders = [], cop
                   ) : (
                     <span className="inline-flex items-center gap-1">
                       <Badge variant="error" size="sm" dot>{routerStatus.label}</Badge>
-                      <Link
-                        href={`/dashboard/media-providers/systemone/${routerStatus.providerId}`}
-                        className="text-[10px] text-primary hover:underline font-medium"
-                        title="Configure in Media Providers"
-                      >
-                        Configure
-                      </Link>
+                      {!isMember && (
+                        <Link
+                          href={`/dashboard/media-providers/systemone/${routerStatus.providerId}`}
+                          className="text-[10px] text-primary hover:underline font-medium"
+                          title="Configure in Media Providers"
+                        >
+                          Configure
+                        </Link>
+                      )}
                     </span>
                   )}
                   <button
-                    onClick={() => setShowPolicyModal(true)}
+                    onClick={isMember ? undefined : () => setShowPolicyModal(true)}
+                    disabled={isMember}
                     className="inline-flex items-center gap-1 rounded border border-border/70 bg-black/[0.02] dark:bg-white/[0.02] px-2 py-0.5 text-[11px] text-text-main hover:border-primary/50 hover:bg-primary/5 transition-colors"
                     title="Configure routing policy and prompt cache retention"
                   >
                     <span className="material-symbols-outlined text-[13px] text-text-muted">tune</span>
                     <span className="font-medium">{policyLabel}</span>
                   </button>
-                  {routerModel && (
+                  {routerModel && !isMember && (
                     <button
                       onClick={() => onSetStrategy({ routerModel: "" })}
                       className="p-0.5 rounded text-text-muted hover:text-red-500 hover:bg-red-500/10 transition-colors"
@@ -798,6 +814,7 @@ function ComboCard({ combo, getCaps, comboByName = {}, activeProviders = [], cop
               value={current}
               onChange={(e) => onSetStrategy({ fallbackStrategy: e.target.value })}
               selectClassName="py-1.5 text-xs"
+              disabled={isMember}
             />
           </div>
 
@@ -812,6 +829,7 @@ function ComboCard({ combo, getCaps, comboByName = {}, activeProviders = [], cop
               </span>
               <span className="text-[10px] leading-tight">Copy</span>
             </button>
+{!isMember && (
             <button
               onClick={onEdit}
               className="flex flex-col items-center rounded px-2 py-1 text-text-muted transition-colors hover:bg-black/5 hover:text-primary dark:hover:bg-white/5"
@@ -820,6 +838,8 @@ function ComboCard({ combo, getCaps, comboByName = {}, activeProviders = [], cop
               <span className="material-symbols-outlined text-[18px]">edit</span>
               <span className="text-[10px] leading-tight">Edit</span>
             </button>
+            )}
+{!isMember && (
             <button
               onClick={onDelete}
               className="flex flex-col items-center rounded px-2 py-1 text-red-500 transition-colors hover:bg-red-500/10"
@@ -828,6 +848,7 @@ function ComboCard({ combo, getCaps, comboByName = {}, activeProviders = [], cop
               <span className="material-symbols-outlined text-[18px]">delete</span>
               <span className="text-[10px] leading-tight">Delete</span>
             </button>
+            )}
           </div>
         </div>
       </div>
@@ -874,7 +895,7 @@ function ComboCard({ combo, getCaps, comboByName = {}, activeProviders = [], cop
   );
 }
 
-function CapacityAdapterSection({ capacityAdapter, onChange, activeProviders, getCaps }) {
+function CapacityAdapterSection({ capacityAdapter, onChange, activeProviders, getCaps, readOnly = false }) {
   return (
     <div className="flex flex-col gap-3">
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
@@ -894,6 +915,7 @@ function CapacityAdapterSection({ capacityAdapter, onChange, activeProviders, ge
             onChange={(entry) => onChange({ ...capacityAdapter, [cap.key]: entry })}
             activeProviders={activeProviders}
             getCaps={getCaps}
+            readOnly={readOnly}
           />
         ))}
       </div>
@@ -901,7 +923,7 @@ function CapacityAdapterSection({ capacityAdapter, onChange, activeProviders, ge
   );
 }
 
-function CapacityAdapterCap({ cap, entry, onChange, activeProviders, getCaps }) {
+function CapacityAdapterCap({ cap, entry, onChange, activeProviders, getCaps, readOnly = false }) {
   const [showModelSelect, setShowModelSelect] = useState(false);
   const { enabled, roundRobin, models } = entry;
 
@@ -940,6 +962,7 @@ function CapacityAdapterCap({ cap, entry, onChange, activeProviders, getCaps }) 
           <Toggle
             checked={enabled}
             onChange={(v) => patch({ enabled: v })}
+            disabled={readOnly}
             aria-label={`Enable ${cap.label} adapter`}
           />
           <div className="size-8 rounded-lg bg-primary/10 flex items-center justify-center shrink-0">
@@ -959,11 +982,12 @@ function CapacityAdapterCap({ cap, entry, onChange, activeProviders, getCaps }) 
             <Toggle
               checked={roundRobin}
               onChange={(v) => patch({ roundRobin: v })}
-              disabled={!enabled}
+              disabled={readOnly || !enabled}
               aria-label={`Round-robin ${cap.label} adapter`}
             />
             <span>Round</span>
           </label>
+{!readOnly && (
           <Button
             icon="add"
             variant="ghost"
@@ -974,6 +998,7 @@ function CapacityAdapterCap({ cap, entry, onChange, activeProviders, getCaps }) 
           >
             Add Model
           </Button>
+          )}
         </div>
       </div>
 
@@ -1015,9 +1040,9 @@ function CapacityAdapterCap({ cap, entry, onChange, activeProviders, getCaps }) 
                       <button
                         type="button"
                         onClick={() => handleMove(index, -1)}
-                        disabled={!enabled || index === 0}
+                        disabled={readOnly || !enabled || index === 0}
                         className={`p-1 rounded transition-colors ${
-                          !enabled || index === 0
+                          readOnly || !enabled || index === 0
                             ? "text-text-muted/20 cursor-not-allowed"
                             : "text-text-muted hover:text-primary hover:bg-black/5 dark:hover:bg-white/5"
                         }`}
@@ -1028,9 +1053,9 @@ function CapacityAdapterCap({ cap, entry, onChange, activeProviders, getCaps }) 
                       <button
                         type="button"
                         onClick={() => handleMove(index, 1)}
-                        disabled={!enabled || index === models.length - 1}
+                        disabled={readOnly || !enabled || index === models.length - 1}
                         className={`p-1 rounded transition-colors ${
-                          !enabled || index === models.length - 1
+                          readOnly || !enabled || index === models.length - 1
                             ? "text-text-muted/20 cursor-not-allowed"
                             : "text-text-muted hover:text-primary hover:bg-black/5 dark:hover:bg-white/5"
                         }`}
@@ -1044,9 +1069,9 @@ function CapacityAdapterCap({ cap, entry, onChange, activeProviders, getCaps }) 
                     <button
                       type="button"
                       onClick={() => handleRemove(index)}
-                      disabled={!enabled}
+                      disabled={readOnly || !enabled}
                       className={`p-1 rounded transition-colors ${
-                        !enabled
+                        readOnly || !enabled
                           ? "text-text-muted/20 cursor-not-allowed"
                           : "text-text-muted hover:text-red-500 hover:bg-red-500/10"
                       }`}

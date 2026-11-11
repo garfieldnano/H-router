@@ -1,4 +1,6 @@
-import { getUsageStats, statsEmitter, getActiveRequests, sanitizeUsageStatsForBrowser } from "@/lib/usageDb";
+import { getUsageStats, getMemberUsageStats, statsEmitter, getActiveRequests, getMemberActiveRequests, sanitizeUsageStatsForBrowser } from "@/lib/usageDb";
+import { getRequestMemberSession } from "@/lib/auth/memberAuth";
+import { getApiKeysByMemberId } from "@/lib/localDb";
 
 export const dynamic = "force-dynamic";
 
@@ -16,6 +18,14 @@ export async function GET(request) {
     });
   }
 
+  // Members get ONLY their own usage: member stats + member-filtered live
+  // feed. Active per-account requests cannot be attributed to an API key,
+  // so getMemberActiveRequests omits them (and the global error provider).
+  const member = await getRequestMemberSession();
+  const ownKeyValues = member
+    ? (await getApiKeysByMemberId(member.memberId)).map((k) => k.key)
+    : null;
+
   const encoder = new TextEncoder();
   const state = { closed: false, keepalive: null, send: null, sendPending: null, cachedStats: null };
 
@@ -27,7 +37,9 @@ export async function GET(request) {
         try {
           // Push lightweight update immediately so UI reflects changes fast
           if (state.cachedStats) {
-            const { activeRequests, recentRequests, errorProvider } = await getActiveRequests();
+            const { activeRequests, recentRequests, errorProvider } = member
+              ? await getMemberActiveRequests(ownKeyValues)
+              : await getActiveRequests();
             const quickStats = { ...state.cachedStats, activeRequests, recentRequests, errorProvider };
             controller.enqueue(encoder.encode(`data: ${JSON.stringify(quickStats)}\n\n`));
           }
@@ -36,7 +48,9 @@ export async function GET(request) {
           // RAW apiKey composite — full key values must never reach the
           // browser (G7). recentRequests / activeRequests already carry
           // masked keys only.
-          const stats = sanitizeUsageStatsForBrowser(await getUsageStats(period));
+          const stats = member
+            ? await getMemberUsageStats(ownKeyValues, period)
+            : sanitizeUsageStatsForBrowser(await getUsageStats(period));
           state.cachedStats = stats;
           controller.enqueue(encoder.encode(`data: ${JSON.stringify(stats)}\n\n`));
         } catch {
@@ -51,7 +65,9 @@ export async function GET(request) {
       state.sendPending = async () => {
         if (state.closed || !state.cachedStats) return;
         try {
-          const { activeRequests, recentRequests, errorProvider } = await getActiveRequests();
+          const { activeRequests, recentRequests, errorProvider } = member
+            ? await getMemberActiveRequests(ownKeyValues)
+            : await getActiveRequests();
           const stats = { ...state.cachedStats, activeRequests, recentRequests, errorProvider };
           controller.enqueue(encoder.encode(`data: ${JSON.stringify(stats)}\n\n`));
         } catch {

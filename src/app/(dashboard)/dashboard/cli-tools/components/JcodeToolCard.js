@@ -22,6 +22,7 @@ export default function JcodeToolCard({
   tunnelPublicUrl,
   tailscaleEnabled,
   tailscaleUrl,
+  readOnly = false
 }) {
   const [jcodeStatus, setJcodeStatus] = useState(initialStatus || null);
   const [checkingJcode, setCheckingJcode] = useState(false);
@@ -349,12 +350,16 @@ id = "${selectedModel || "cc/claude-opus-4-7"}"`;
               )}
 
               <div className="grid grid-cols-1 gap-2 sm:flex sm:items-center">
-                <Button variant="primary" size="sm" onClick={handleApplySettings} disabled={!selectedModel} loading={applying}>
+                {!readOnly && (
+<Button variant="primary" size="sm" onClick={handleApplySettings} disabled={!selectedModel} loading={applying}>
                   <span className="material-symbols-outlined text-[14px] mr-1">save</span>Apply
                 </Button>
-                <Button variant="outline" size="sm" onClick={handleResetSettings} disabled={!jcodeStatus?.has9Router} loading={restoring}>
+                )}
+                {!readOnly && (
+<Button variant="outline" size="sm" onClick={handleResetSettings} disabled={!jcodeStatus?.has9Router} loading={restoring}>
                   <span className="material-symbols-outlined text-[14px] mr-1">restore</span>Reset
                 </Button>
+                )}
                 <Button variant="ghost" size="sm" onClick={() => setShowManualConfigModal(true)}>
                   <span className="material-symbols-outlined text-[14px] mr-1">content_copy</span>Manual Config
                 </Button>

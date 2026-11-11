@@ -5,6 +5,7 @@ import { useSearchParams, useRouter } from "next/navigation";
 import { RequestLogger, CardSkeleton, SegmentedControl } from "@/shared/components";
 import UsageStats from "@/shared/components/UsageStats";
 import RequestDetailsTab from "./components/RequestDetailsTab";
+import { useMemberRole } from "@/shared/hooks/useMemberRole";
 
 const PERIODS = [
   { value: "today", label: "Today" },
@@ -26,6 +27,7 @@ export default function UsagePage() {
 function UsageContent() {
   const searchParams = useSearchParams();
   const router = useRouter();
+  const isMember = useMemberRole();
 
   const [period, setPeriod] = useState("today");
 
@@ -46,10 +48,17 @@ function UsageContent() {
       {/* Tabs + period selector on same row */}
       <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
         <SegmentedControl
-          options={[
-            { value: "overview", label: "Overview" },
-            { value: "details", label: "Details" },
-          ]}
+          options={
+            // Members have no per-request conversation details: those rows
+            // carry no API key, so they cannot be attributed to a member
+            // and the server returns an empty list for them.
+            isMember
+              ? [{ value: "overview", label: "Overview" }]
+              : [
+                  { value: "overview", label: "Overview" },
+                  { value: "details", label: "Details" },
+                ]
+          }
           value={activeTab}
           onChange={handleTabChange}
           className="w-full sm:w-auto"
@@ -71,7 +80,15 @@ function UsageContent() {
         </Suspense>
       )}
       {activeTab === "logs" && <RequestLogger />}
-      {activeTab === "details" && <RequestDetailsTab />}
+      {activeTab === "details" &&
+        (isMember ? (
+          <p className="text-sm text-text-muted">
+            Per-request conversation details are not available for member
+            accounts — they cannot be attributed to a single API key.
+          </p>
+        ) : (
+          <RequestDetailsTab />
+        ))}
     </div>
   );
 }

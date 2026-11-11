@@ -4,6 +4,7 @@ import { useState, useEffect, useRef, useCallback } from "react";
 import PropTypes from "prop-types";
 import { Card, Button, Input, Modal, CardSkeleton, Toggle, ConfirmModal } from "@/shared/components";
 import { useCopyToClipboard } from "@/shared/hooks/useCopyToClipboard";
+import { useMemberRole } from "@/shared/hooks/useMemberRole";
 import {
   TUNNEL_BENEFITS,
   TUNNEL_PING_INTERVAL_MS,
@@ -87,6 +88,11 @@ export default function APIPageClient({ machineId }) {
   }, []);
 
   const { copied, copy } = useCopyToClipboard();
+
+  // Member dashboard expansion: members see their OWN keys read-only —
+  // no create/delete, no RPM/IP edits, no access controls, no tunnel or
+  // Tailscale controls. Mutations are also blocked server-side (guard 403).
+  const isMember = useMemberRole();
 
   // Security gate: block remote exposure while dashboard uses default password or login is off.
   const isLoginUnsafe = !requireLogin || !hasPassword;
@@ -257,7 +263,17 @@ export default function APIPageClient({ machineId }) {
 
       let existing = await fetchKeys();
       // Auto-provision a default key for first-time users so the endpoint works out of the box.
+      // Members never auto-provision (they cannot create keys; admin assigns them).
       if (existing.length === 0) {
+        let role = null;
+        try {
+          const roleRes = await fetch("/api/auth/status", { cache: "no-store" });
+          if (roleRes.ok) role = (await roleRes.json())?.role;
+        } catch { /* fall through */ }
+        if (role === "member") {
+          setKeys(existing);
+          return;
+        }
         try {
           const createRes = await fetch("/api/keys", {
             method: "POST",
@@ -792,6 +808,7 @@ export default function APIPageClient({ machineId }) {
             onCopy={copy}
           />
           {/* Cloudflare Tunnel */}
+          {!isMember && (
           <div className="flex items-center gap-2">
             <span className={`text-xs font-mono px-1.5 py-0.5 rounded shrink-0 min-w-[88px] text-center ${
               tunnelEnabled ? "bg-primary/10 text-primary" : "bg-surface-2 text-text-muted"
@@ -883,7 +900,9 @@ export default function APIPageClient({ machineId }) {
               </Button>
             )}
           </div>
+          )}
           {/* Tailscale */}
+          {!isMember && (
           <div className="flex items-center gap-2">
             <span className={`text-xs font-mono px-1.5 py-0.5 rounded shrink-0 min-w-[88px] text-center ${
               tsEnabled ? "bg-primary/10 text-primary" : "bg-surface-2 text-text-muted"
@@ -967,6 +986,7 @@ export default function APIPageClient({ machineId }) {
               </Button>
             )}
           </div>
+          )}
         </div>
 
         {/* Pre-enable security gate banner */}
@@ -1026,23 +1046,27 @@ export default function APIPageClient({ machineId }) {
             <span className="material-symbols-outlined text-primary">vpn_key</span>
             API Keys
           </h2>
-          <Button icon="add" onClick={() => setShowAddModal(true)}>
-            Create Key
-          </Button>
+          {!isMember && (
+            <Button icon="add" onClick={() => setShowAddModal(true)}>
+              Create Key
+            </Button>
+          )}
         </div>
 
-        <div className="flex items-center justify-between pb-4 mb-4 border-b border-border">
-          <div>
-            <p className="font-medium">Require API key</p>
-            <p className="text-sm text-text-muted">
-              Requests without a valid key will be rejected
-            </p>
+        {!isMember && (
+          <div className="flex items-center justify-between pb-4 mb-4 border-b border-border">
+            <div>
+              <p className="font-medium">Require API key</p>
+              <p className="text-sm text-text-muted">
+                Requests without a valid key will be rejected
+              </p>
+            </div>
+            <Toggle
+              checked={requireApiKey}
+              onChange={() => handleRequireApiKey(!requireApiKey)}
+            />
           </div>
-          <Toggle
-            checked={requireApiKey}
-            onChange={() => handleRequireApiKey(!requireApiKey)}
-          />
-        </div>
+        )}
 
         {isRemoteHost && !requireApiKey && (
           <div className="mb-4 -mt-2">
@@ -1056,10 +1080,16 @@ export default function APIPageClient({ machineId }) {
               <span className="material-symbols-outlined text-[32px]">vpn_key</span>
             </div>
             <p className="text-text-main font-medium mb-1">No API keys yet</p>
-            <p className="text-sm text-text-muted mb-4">Create your first API key to get started</p>
-            <Button icon="add" onClick={() => setShowAddModal(true)}>
-              Create Key
-            </Button>
+            <p className="text-sm text-text-muted mb-4">
+              {isMember
+                ? "Minta admin untuk menetapkan kunci API ke akun Anda."
+                : "Create your first API key to get started"}
+            </p>
+            {!isMember && (
+              <Button icon="add" onClick={() => setShowAddModal(true)}>
+                Create Key
+              </Button>
+            )}
           </div>
         ) : (
           <div className="flex flex-col">
@@ -1130,12 +1160,14 @@ export default function APIPageClient({ machineId }) {
                       </button>
                     </span>
                   ) : (
-                    <button
-                      onClick={() => setRpmEditing(prev => ({ ...prev, [key.id]: key.rpmLimit != null ? String(key.rpmLimit) : "" }))}
-                      className="mt-1 text-xs text-primary hover:underline"
-                    >
-                      Ubah RPM
-                    </button>
+                    !isMember && (
+                      <button
+                        onClick={() => setRpmEditing(prev => ({ ...prev, [key.id]: key.rpmLimit != null ? String(key.rpmLimit) : "" }))}
+                        className="mt-1 text-xs text-primary hover:underline"
+                      >
+                        Ubah RPM
+                      </button>
+                    )
                   )}
                   {ipEditing[key.id] !== undefined ? (
                     <span className="inline-flex items-center gap-1 mt-1">
@@ -1160,30 +1192,35 @@ export default function APIPageClient({ machineId }) {
                       </button>
                     </span>
                   ) : (
-                    <button
-                      onClick={() => setIpEditing(prev => ({ ...prev, [key.id]: key.maxIps != null ? String(key.maxIps) : "" }))}
-                      className="mt-1 ml-2 text-xs text-primary hover:underline"
-                    >
-                      Ubah batas IP
-                    </button>
+                    !isMember && (
+                      <button
+                        onClick={() => setIpEditing(prev => ({ ...prev, [key.id]: key.maxIps != null ? String(key.maxIps) : "" }))}
+                        className="mt-1 ml-2 text-xs text-primary hover:underline"
+                      >
+                        Ubah batas IP
+                      </button>
+                    )
                   )}
                   {key.isActive === false && (
                     <p className="text-xs text-orange-500 mt-1">Paused</p>
                   )}
-                  <KeyAccessControls
-                    apiKey={key}
-                    onChange={(access) => handleUpdateKeyAccess(key.id, access)}
-                    onRequestRestrict={() => setConfirmState({
-                      title: "Restrict API Key",
-                      message: `Restrict API key "${key.name}"?\n\nIt will only be able to call the combos and models you add. Until you add one, it can call nothing.`,
-                      onConfirm: async () => {
-                        setConfirmState(null);
-                        handleUpdateKeyAccess(key.id, { restricted: true, allow: key.access?.allow || [] });
-                      }
-                    })}
-                  />
+                  {!isMember && (
+                    <KeyAccessControls
+                      apiKey={key}
+                      onChange={(access) => handleUpdateKeyAccess(key.id, access)}
+                      onRequestRestrict={() => setConfirmState({
+                        title: "Restrict API Key",
+                        message: `Restrict API key "${key.name}"?\n\nIt will only be able to call the combos and models you add. Until you add one, it can call nothing.`,
+                        onConfirm: async () => {
+                          setConfirmState(null);
+                          handleUpdateKeyAccess(key.id, { restricted: true, allow: key.access?.allow || [] });
+                        }
+                      })}
+                    />
+                  )}
                 </div>
-                <div className="flex items-center gap-2 shrink-0 pt-0.5">
+                {!isMember && (
+                  <div className="flex items-center gap-2 shrink-0 pt-0.5">
                   <Toggle
                     size="sm"
                     checked={key.isActive ?? true}
@@ -1209,7 +1246,8 @@ export default function APIPageClient({ machineId }) {
                   >
                     <span className="material-symbols-outlined text-[18px]">delete</span>
                   </button>
-                </div>
+                  </div>
+                )}
               </div>
             ))}
           </div>

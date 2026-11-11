@@ -54,6 +54,7 @@ export default function GenericCliToolCard({
   tunnelPublicUrl,
   tailscaleEnabled,
   tailscaleUrl,
+  readOnly = false
 }) {
   const [status, setStatus] = useState(() => initialStatus || null);
   const [checking, setChecking] = useState(false);
@@ -712,7 +713,8 @@ export default function GenericCliToolCard({
               {/* Action Buttons */}
               <div className="flex flex-wrap items-center justify-between gap-3 pt-2">
                 <div className="flex items-center gap-2">
-                  <Button
+                  {!readOnly && (
+<Button
                     variant="primary"
                     size="sm"
                     onClick={handleApply}
@@ -720,7 +722,8 @@ export default function GenericCliToolCard({
                   >
                     {applying ? "Applying..." : "Apply Settings"}
                   </Button>
-                  {status?.has9Router && (
+                  )}
+                  {status?.has9Router && !readOnly && (
                     <Button
                       variant="outline"
                       size="sm"

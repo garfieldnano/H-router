@@ -24,6 +24,7 @@ export default function DeepSeekTuiToolCard({
   tunnelPublicUrl,
   tailscaleEnabled,
   tailscaleUrl,
+  readOnly = false
 }) {
   const [deepseekStatus, setDeepseekStatus] = useState(initialStatus || null);
   const [checking, setChecking] = useState(false);
@@ -307,12 +308,16 @@ model = "${selectedModel || "provider/model-id"}"
               )}
 
               <div className="grid grid-cols-1 gap-2 sm:flex sm:items-center">
-                <Button variant="primary" size="sm" onClick={handleApply} disabled={!selectedModel} loading={applying}>
+                {!readOnly && (
+<Button variant="primary" size="sm" onClick={handleApply} disabled={!selectedModel} loading={applying}>
                   <span className="material-symbols-outlined text-[14px] mr-1">save</span>Apply
                 </Button>
-                <Button variant="outline" size="sm" onClick={handleReset} disabled={!deepseekStatus?.has9Router} loading={restoring}>
+                )}
+                {!readOnly && (
+<Button variant="outline" size="sm" onClick={handleReset} disabled={!deepseekStatus?.has9Router} loading={restoring}>
                   <span className="material-symbols-outlined text-[14px] mr-1">restore</span>Reset
                 </Button>
+                )}
                 <Button variant="ghost" size="sm" onClick={() => setShowManualConfigModal(true)}>
                   <span className="material-symbols-outlined text-[14px] mr-1">content_copy</span>Manual Config
                 </Button>

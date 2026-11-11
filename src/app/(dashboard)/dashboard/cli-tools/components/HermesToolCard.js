@@ -26,6 +26,7 @@ export default function HermesToolCard({
   tunnelPublicUrl,
   tailscaleEnabled,
   tailscaleUrl,
+  readOnly = false
 }) {
   const [hermesStatus, setHermesStatus] = useState(initialStatus || null);
   const [checking, setChecking] = useState(false);
@@ -582,10 +583,12 @@ export default function HermesToolCard({
               )}
 
               <div className="flex flex-col sm:flex-row sm:items-center gap-2">
-                <Button variant="primary" size="sm" onClick={handleApply} disabled={!selectedModel || (audioEnabled && !sttModel.trim())} title={audioEnabled && !sttModel.trim() ? "Select an STT model first" : undefined} loading={applying} className="w-full sm:w-auto">
+                {!readOnly && (
+<Button variant="primary" size="sm" onClick={handleApply} disabled={!selectedModel || (audioEnabled && !sttModel.trim())} title={audioEnabled && !sttModel.trim() ? "Select an STT model first" : undefined} loading={applying} className="w-full sm:w-auto">
                   <span className="material-symbols-outlined text-[14px] mr-1">save</span>Apply
                 </Button>
-                {profiles.length > 1 && (
+                )}
+                {profiles.length > 1 && !readOnly && (
                   <Button
                     variant="secondary"
                     size="sm"
@@ -597,9 +600,11 @@ export default function HermesToolCard({
                     <span className="material-symbols-outlined text-[14px] mr-1">groups</span>Apply to All Profiles
                   </Button>
                 )}
-                <Button variant="outline" size="sm" onClick={handleReset} disabled={!hermesStatus?.has9Router && !hermesStatus?.has9RouterStt} loading={restoring} className="w-full sm:w-auto">
+                {!readOnly && (
+<Button variant="outline" size="sm" onClick={handleReset} disabled={!hermesStatus?.has9Router && !hermesStatus?.has9RouterStt} loading={restoring} className="w-full sm:w-auto">
                   <span className="material-symbols-outlined text-[14px] mr-1">restore</span>Reset
                 </Button>
+                )}
                 <Button variant="ghost" size="sm" onClick={() => setShowManualConfigModal(true)} className="w-full sm:w-auto">
                   <span className="material-symbols-outlined text-[14px] mr-1">content_copy</span>Manual Config
                 </Button>

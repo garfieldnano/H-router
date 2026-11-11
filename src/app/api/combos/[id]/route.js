@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { getRequestMemberSession } from "@/lib/auth/memberAuth";
 import { getComboById, updateCombo, deleteCombo, getComboByName } from "@/lib/localDb";
 import { resetComboRotation } from "open-sse/services/combo.js";
 
@@ -25,6 +26,9 @@ export async function GET(request, { params }) {
 // PUT /api/combos/[id] - Update combo
 export async function PUT(request, { params }) {
   try {
+    if (await getRequestMemberSession()) {
+      return NextResponse.json({ error: "Forbidden: members are read-only" }, { status: 403 });
+    }
     const { id } = await params;
     const body = await request.json();
     
@@ -63,6 +67,9 @@ export async function PUT(request, { params }) {
 // DELETE /api/combos/[id] - Delete combo
 export async function DELETE(request, { params }) {
   try {
+    if (await getRequestMemberSession()) {
+      return NextResponse.json({ error: "Forbidden: members are read-only" }, { status: 403 });
+    }
     const { id } = await params;
     const prev = await getComboById(id);
     const success = await deleteCombo(id);
