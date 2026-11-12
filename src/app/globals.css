@@ -733,49 +733,32 @@ button:disabled,
     border-color: #000000;
     color: var(--daytona-primary-btn-text);
   }
-  /* Landing closing CTA: its card inverts (dark zinc-900 in light mode,
-     white in dark mode), so the primary button must invert too — white
-     pill on the dark card, black pill on the white card. Without this
-     the Daytona primary (black in light / white in dark) disappears
-     into the card and reads as plain text. Higher specificity than the
-     rules above (extra .landing-cta-inverted class) so it wins. */
-  html:not(.dark) .landing-cta-inverted.ant-btn-color-primary.ant-btn-variant-solid,
-  html:not(.dark) .landing-cta-inverted.ant-btn-primary {
-    background: #ffffff;
-    border-color: #ffffff;
-    color: #09090b;
-    box-shadow: none;
+  /* Brand strip marquee: when the catalog serves many brands the strip
+     scrolls horizontally and pauses on hover. The track holds 4 copies
+     of the list and animates -25% (exactly one copy), so the loop is
+     seamless. Edge fade via mask. Respects prefers-reduced-motion. */
+  .brand-marquee {
+    mask-image: linear-gradient(to right, transparent, black 8%, black 92%, transparent);
+    -webkit-mask-image: linear-gradient(to right, transparent, black 8%, black 92%, transparent);
   }
-  html:not(.dark) .landing-cta-inverted.ant-btn-color-primary.ant-btn-variant-solid:not(:disabled):hover,
-  html:not(.dark) .landing-cta-inverted.ant-btn-primary:not(:disabled):hover {
-    background: #f4f4f5;
-    border-color: #f4f4f5;
-    color: #09090b;
+  .brand-marquee-track {
+    animation: brand-marquee 30s linear infinite;
   }
-  html:not(.dark) .landing-cta-inverted.ant-btn-color-primary.ant-btn-variant-solid:not(:disabled):active,
-  html:not(.dark) .landing-cta-inverted.ant-btn-primary:not(:disabled):active {
-    background: #e4e4e7;
-    border-color: #e4e4e7;
-    color: #09090b;
+  .brand-marquee:hover .brand-marquee-track {
+    animation-play-state: paused;
   }
-  html.dark .landing-cta-inverted.ant-btn-color-primary.ant-btn-variant-solid,
-  html.dark .landing-cta-inverted.ant-btn-primary {
-    background: #0a0a0a;
-    border-color: #0a0a0a;
-    color: #ffffff;
-    box-shadow: none;
+  @keyframes brand-marquee {
+    from {
+      transform: translateX(0);
+    }
+    to {
+      transform: translateX(-25%);
+    }
   }
-  html.dark .landing-cta-inverted.ant-btn-color-primary.ant-btn-variant-solid:not(:disabled):hover,
-  html.dark .landing-cta-inverted.ant-btn-primary:not(:disabled):hover {
-    background: #262626;
-    border-color: #262626;
-    color: #ffffff;
-  }
-  html.dark .landing-cta-inverted.ant-btn-color-primary.ant-btn-variant-solid:not(:disabled):active,
-  html.dark .landing-cta-inverted.ant-btn-primary:not(:disabled):active {
-    background: #000000;
-    border-color: #000000;
-    color: #ffffff;
+  @media (prefers-reduced-motion: reduce) {
+    .brand-marquee-track {
+      animation: none;
+    }
   }
   /* Disabled primary must not inherit the white/black bg. */
   .ant-btn-color-primary.ant-btn-variant-solid:disabled,
