@@ -1,28 +1,30 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { Button, Card, Statistic, Tag, Typography } from "antd";
+import { useCallback, useEffect, useState } from "react";
+import { Button, Card, Tag, Typography } from "antd";
 import ThemeToggle from "@/shared/components/ThemeToggle";
 import { useTheme } from "@/shared/hooks/useTheme";
-import { LANDING_CONFIG, FALLBACK_MODELS } from "@/shared/constants/landing.js";
+import { LANDING_CONFIG, FALLBACK_MODELS, LANDING_BRANDS } from "@/shared/constants/landing.js";
 import {
   fetchWithTimeout,
   normalizeModelsResponse,
   resolveCatalogModels,
+  resolveCatalogBrands,
 } from "@/shared/utils/landing.js";
-import StatusPanel from "./StatusPanel.jsx";
+import DashboardPreview from "./DashboardPreview.jsx";
 import ModelCatalog from "./ModelCatalog.jsx";
 import CodeSamples from "./CodeSamples.jsx";
-import FlowAnimation from "./FlowAnimation.jsx";
 import BrandStrip from "./BrandStrip.jsx";
 
 // h-router public landing page. Light mode by default (forced on first
 // visit when no theme is stored yet — the reference design is light;
 // returning visitors keep their stored choice), dark/light toggle in the
-// header. Copy is written fresh for this product; the reference site
-// (h-router.web.id) was used only for structure and visual language.
-// Only user-facing features belong on the public landing page. Admin-only
-// capabilities (RPM limits, compensation, relay, rebrand, IP cap, scanner,
+// header. The hero follows the reference site (h-router.web.id) closely —
+// layout, copy and spec table — per the user's order "samain persis kayak
+// contoh" (2026-11-12). The spec-table quota line ("5 req/menit · 1 jt
+// token/hari") is the reference's stated free tier. Only user-facing
+// features belong on the public landing page. Admin-only capabilities
+// (RPM limits, compensation, relay, rebrand, IP cap, scanner,
 // observability, Vision Adapter, RTK toggles) live in the admin panel and
 // the repo docs — they are deliberately not advertised here.
 const FEATURES = [
@@ -96,7 +98,35 @@ const STEPS = [
 
 export default function LandingPage() {
   const { setTheme } = useTheme();
-  const [catalog, setCatalog] = useState({ models: [], total: 0, source: "empty", loading: true });
+  const [catalog, setCatalog] = useState({ models: [], allModels: [], total: 0, source: "empty", loading: true });
+
+  // Live gateway health: liveness + latency measured here, 24h request
+  // count from /api/health. The dashboard preview and the hero badge both
+  // read it. Hard 10s timeout and a 30s poll; anything unreachable renders
+  // as a dash — never an invented number.
+  const [health, setHealth] = useState({ status: "checking", latencyMs: null, requests24h: null, updatedAt: null });
+  const checkHealth = useCallback(async () => {
+    const t0 = performance.now();
+    try {
+      const res = await fetchWithTimeout("/api/health", { timeoutMs: 10000 });
+      const ms = performance.now() - t0;
+      const json = await res.json().catch(() => ({}));
+      setHealth({
+        status: res.ok && json.ok === true ? "online" : "offline",
+        latencyMs: res.ok ? ms : null,
+        requests24h: typeof json.requests24h === "number" ? json.requests24h : null,
+        updatedAt: new Date(),
+      });
+    } catch {
+      setHealth({ status: "offline", latencyMs: null, requests24h: null, updatedAt: new Date() });
+    }
+  }, []);
+
+  useEffect(() => {
+    checkHealth();
+    const id = setInterval(checkHealth, 30000);
+    return () => clearInterval(id);
+  }, [checkHealth]);
 
   // Light mode default: first visit without a stored theme renders light.
   useEffect(() => {
@@ -124,7 +154,7 @@ export default function LandingPage() {
         if (res.ok) {
           const admin = normalizeModelsResponse(await res.json());
           if (!cancelled) {
-            setCatalog({ ...resolveCatalogModels({ adminModels: admin, fallbackModels: FALLBACK_MODELS }), loading: false });
+            setCatalog({ ...resolveCatalogModels({ adminModels: admin, fallbackModels: FALLBACK_MODELS }), allModels: admin, loading: false });
           }
           return;
         }
@@ -137,11 +167,11 @@ export default function LandingPage() {
         if (!res.ok) throw new Error(`HTTP ${res.status}`);
         const live = normalizeModelsResponse(await res.json());
         if (!cancelled) {
-          setCatalog({ ...resolveCatalogModels({ liveModels: live, fallbackModels: FALLBACK_MODELS }), loading: false });
+          setCatalog({ ...resolveCatalogModels({ liveModels: live, fallbackModels: FALLBACK_MODELS }), allModels: live, loading: false });
         }
       } catch {
         if (!cancelled) {
-          setCatalog({ ...resolveCatalogModels({ liveModels: [], fallbackModels: FALLBACK_MODELS }), loading: false });
+          setCatalog({ ...resolveCatalogModels({ liveModels: [], fallbackModels: FALLBACK_MODELS }), allModels: FALLBACK_MODELS, loading: false });
         }
       }
     })();
@@ -170,10 +200,10 @@ export default function LandingPage() {
           </nav>
           <div className="flex items-center gap-2">
             <ThemeToggle />
-            <Button type="text" href="/login" className="hidden sm:inline-flex">
+            <Button href="/login" className="hidden sm:inline-flex">
               Masuk
             </Button>
-            <Button type="text" href={LANDING_CONFIG.docsUrl} target="_blank" rel="noreferrer" className="hidden lg:inline-flex">
+            <Button href={LANDING_CONFIG.docsUrl} target="_blank" rel="noreferrer" className="hidden lg:inline-flex">
               Dokumentasi
             </Button>
             <Button
@@ -190,61 +220,84 @@ export default function LandingPage() {
 
       <main>
         {/* ---------------------------------------------------------- hero */}
-        <section className="mx-auto w-full max-w-6xl px-6 pt-16 text-center md:pt-24">
-          <Tag
-            icon={<span className="inline-block size-2 rounded-full bg-[#05f170]" />}
-            className="!px-3 !py-1 !text-xs !font-semibold"
-          >
-            H-router · Gateway LLM
-          </Tag>
-          <Typography.Title
-            level={1}
-            className="!mx-auto !mt-6 !max-w-3xl !text-4xl !font-extrabold !leading-tight !tracking-tight md:!text-6xl"
-          >
-            Satu API key untuk semua model AI.
-          </Typography.Title>
-          <Typography.Paragraph type="secondary" className="!mx-auto !mt-5 !max-w-2xl !text-lg">
-            H-router merutekan permintaanmu ke puluhan provider — hemat token dengan RTK, atur member dan kunci
-            dari dashboard, dan beli kunci lewat bot Telegram. Tanpa kartu kredit, tanpa setup aneh.
-          </Typography.Paragraph>
-          <div className="mt-8 flex flex-col items-center justify-center gap-3 sm:flex-row">
-            <Button
-              type="primary"
-              size="large"
-              href={LANDING_CONFIG.telegramUrl}
-              target="_blank"
-              rel="noreferrer"
-            >
-              Ambil key gratis
-            </Button>
-            <Button size="large" href={LANDING_CONFIG.docsUrl} target="_blank" rel="noreferrer">
-              Baca dokumentasi
-            </Button>
+        {/* Two-column hero like the reference: copy + CTAs on the left,
+            spec table on the right. The model count in the badge and the
+            subtext follows the admin catalog (1 model when the admin picked
+            one, all of them when nothing is picked). */}
+        <section className="mx-auto w-full max-w-6xl px-6 pt-16 md:pt-24">
+          <div className="grid items-start gap-10 lg:grid-cols-[1.15fr_1fr]">
+            <div>
+              <Tag
+                icon={<span className="inline-block size-2 animate-pulse rounded-full bg-[#05f170]" />}
+                className="!px-3 !py-1 !text-xs !font-semibold"
+              >
+                {health.status === "online"
+                  ? `Live · ${catalog.loading ? "memuat model…" : `${catalog.total} model siap dipakai`}`
+                  : health.status === "offline"
+                    ? "Offline"
+                    : "Memeriksa…"}
+              </Tag>
+              <Typography.Title
+                level={1}
+                className="!mt-6 !text-4xl !font-extrabold !leading-tight !tracking-tight md:!text-6xl"
+              >
+                Gateway LLM gratis
+                <br />
+                <span className="text-[#5b7a68] dark:text-[#7fb08f]">tanpa ribet.</span>
+              </Typography.Title>
+              <Typography.Paragraph type="secondary" className="!mt-5 !max-w-xl !text-lg">
+                Satu API key untuk {catalog.loading ? "semua model" : `${catalog.total} model`} — kompatibel
+                OpenAI dan Anthropic, streaming, reasoning effort, tanpa kartu kredit.
+              </Typography.Paragraph>
+              <div className="mt-8 flex flex-col gap-3 sm:flex-row">
+                <Button
+                  type="primary"
+                  size="large"
+                  href={LANDING_CONFIG.telegramUrl}
+                  target="_blank"
+                  rel="noreferrer"
+                >
+                  Ambil key gratis
+                </Button>
+                <Button size="large" href={LANDING_CONFIG.docsUrl} target="_blank" rel="noreferrer">
+                  Baca dokumentasi
+                </Button>
+              </div>
+            </div>
+            <div className="overflow-hidden rounded-2xl border border-zinc-200 bg-white shadow-sm dark:border-zinc-800 dark:bg-zinc-900">
+              <dl className="divide-y divide-zinc-200 dark:divide-zinc-800">
+                {[
+                  { label: "Base URL", value: host, mono: true },
+                  { label: "Format", value: "OpenAI & Anthropic" },
+                  { label: "Kuota gratis", value: "5 req/menit · 1 jt token/hari" },
+                  { label: "Streaming", value: "SSE · tools · reasoning" },
+                ].map((row) => (
+                  <div key={row.label} className="flex items-center justify-between gap-4 px-5 py-4">
+                    <dt className="text-sm text-zinc-500 dark:text-zinc-400">{row.label}</dt>
+                    <dd className={`text-sm font-medium ${row.mono ? "font-mono" : ""}`}>{row.value}</dd>
+                  </div>
+                ))}
+              </dl>
+            </div>
           </div>
-          <div className="mx-auto mt-12 grid max-w-4xl grid-cols-2 gap-4 text-left md:grid-cols-4">
-            <Card size="small">
-              <Statistic title="Base URL" value={host} valueStyle={{ fontSize: 14, fontFamily: "monospace" }} />
-            </Card>
-            <Card size="small">
-              <Statistic title="Format" value="OpenAI & Anthropic" valueStyle={{ fontSize: 14 }} />
-            </Card>
-            <Card size="small">
-              <Statistic title="Streaming" value="SSE · tools · reasoning" valueStyle={{ fontSize: 14 }} />
-            </Card>
-            <Card size="small">
-              <Statistic title="Gratis" value="Trial 1 hari · tanpa kartu kredit" valueStyle={{ fontSize: 14 }} />
-            </Card>
-          </div>
-
-          {/* Animated request flow: client -> h-router -> provider */}
-          <FlowAnimation />
         </section>
 
-        {/* LLM brand logos served by this gateway */}
-        <BrandStrip />
+        {/* LLM brand logos served by this gateway — follows the catalog */}
+        <BrandStrip
+          brands={
+            catalog.loading
+              ? undefined
+              : resolveCatalogBrands({ models: catalog.allModels, brands: LANDING_BRANDS })
+          }
+        />
 
-        {/* ---------------------------------------------------------- status */}
-        <StatusPanel modelCount={catalog.loading ? null : catalog.total} modelsSource={catalog.source} />
+        {/* ---------------------------------------------------------- dashboard preview */}
+        <DashboardPreview
+          modelCount={catalog.loading ? null : catalog.total}
+          models={catalog.models}
+          health={health}
+          host={host}
+        />
 
         {/* ---------------------------------------------------------- cara kerja */}
         <section id="cara-pakai" aria-label="Cara pakai" className="mx-auto mt-20 w-full max-w-6xl scroll-mt-24 px-6">

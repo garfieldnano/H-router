@@ -84,6 +84,101 @@ export function formatLatency(ms) {
   return `${(ms / 1000).toFixed(2)} dtk`;
 }
 
+// Short latency for the dashboard preview ("1.07s" / "842ms" / "—").
+export function formatLatencyShort(ms) {
+  if (!Number.isFinite(ms) || ms < 0) return "—";
+  if (ms < 1000) return `${Math.round(ms)}ms`;
+  return `${(ms / 1000).toFixed(2)}s`;
+}
+
+// Deterministic jitter around the measured base latency for the preview
+// request log: the same (base, index) always yields the same value, within
+// ±60 ms of the base and never below 1 ms. Non-finite input yields null
+// (the log renders a dash instead of inventing a number).
+export function requestLogLatency(baseMs, index) {
+  if (!Number.isFinite(baseMs) || baseMs < 0) return null;
+  const jitter = ((Math.floor(index) * 37) % 121) - 60;
+  return Math.max(1, Math.round(baseMs + jitter));
+}
+
+// Provider alias (the part before "/" in a model id) -> brand name in
+// LANDING_BRANDS. The catalog's provider aliases are not the brand names:
+// alicode[-intl] serves Qwen, deepseek-web serves DeepSeek, groq serves
+// Meta (Llama), moonshot is Kimi, zhipu/zai is GLM.
+const BRAND_BY_PROVIDER = {
+  openai: "OpenAI",
+  anthropic: "Anthropic",
+  gemini: "Google Gemini",
+  google: "Google Gemini",
+  deepseek: "DeepSeek",
+  "deepseek-web": "DeepSeek",
+  alicode: "Qwen",
+  "alicode-intl": "Qwen",
+  qwen: "Qwen",
+  kimi: "Kimi",
+  moonshot: "Kimi",
+  glm: "GLM",
+  zhipu: "GLM",
+  zai: "GLM",
+  xai: "xAI",
+  mistral: "Mistral",
+  minimax: "MiniMax",
+  groq: "Meta",
+  meta: "Meta",
+  nvidia: "NVIDIA",
+};
+
+// The model's own owner name (ownedBy) -> brand name, for when the
+// provider alias is unknown but the owner is a known brand.
+const BRAND_BY_OWNER = {
+  openai: "OpenAI",
+  anthropic: "Anthropic",
+  google: "Google Gemini",
+  deepseek: "DeepSeek",
+  alibaba: "Qwen",
+  qwen: "Qwen",
+  moonshot: "Kimi",
+  kimi: "Kimi",
+  zhipu: "GLM",
+  "z.ai": "GLM",
+  glm: "GLM",
+  xai: "xAI",
+  mistral: "Mistral",
+  minimax: "MiniMax",
+  meta: "Meta",
+  nvidia: "NVIDIA",
+};
+
+// Derive the brand strip from the catalog: distinct brands of the models
+// the admin publishes, in first-seen order, capped at `limit`. A brand
+// resolves through the provider-alias map, then through the model owner's
+// name; a model whose brand cannot be resolved at all is skipped. Brands
+// missing from `brands` (the vendored list) still appear as a text badge
+// (logo: null) so the strip never hides a published brand.
+export function resolveCatalogBrands({ models, brands, limit = 12 } = {}) {
+  const list = Array.isArray(models) ? models : [];
+  const known = Array.isArray(brands) ? brands : [];
+  const byName = new Map(known.map((b) => [String(b.name).toLowerCase(), b]));
+  const out = [];
+  const seen = new Set();
+  for (const m of list) {
+    if (out.length >= limit) break;
+    if (!m || typeof m.id !== "string" || !m.id) continue;
+    const provider = m.id.split("/")[0].toLowerCase();
+    const owner = typeof m.ownedBy === "string" ? m.ownedBy.toLowerCase() : "";
+    const name =
+      BRAND_BY_PROVIDER[provider] ||
+      BRAND_BY_OWNER[owner] ||
+      (typeof m.ownedBy === "string" && m.ownedBy ? m.ownedBy : null);
+    if (!name) continue;
+    const key = name.toLowerCase();
+    if (seen.has(key)) continue;
+    seen.add(key);
+    out.push(byName.get(key) || { name, logo: null });
+  }
+  return out;
+}
+
 // Code samples for the "Mulai" section. `model` is the first catalog model
 // id when known, otherwise a visible placeholder (never a fake model id).
 export function buildCodeSamples({ baseUrl, apiKey, model } = {}) {

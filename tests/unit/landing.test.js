@@ -8,7 +8,10 @@ import {
   normalizeModelsResponse,
   resolveCatalogModels,
   resolvePublishedModels,
+  resolveCatalogBrands,
   formatLatency,
+  formatLatencyShort,
+  requestLogLatency,
   buildCodeSamples,
 } from "@/shared/utils/landing.js";
 import { LANDING_CONFIG, FALLBACK_MODELS, LANDING_BRANDS } from "@/shared/constants/landing.js";
@@ -217,6 +220,97 @@ describe("formatLatency", () => {
     expect(formatLatency(NaN)).toBe("—");
     expect(formatLatency(-1)).toBe("—");
     expect(formatLatency(undefined)).toBe("—");
+  });
+});
+
+// ---------------------------------------------------------------- resolveCatalogBrands
+describe("resolveCatalogBrands", () => {
+  const brands = LANDING_BRANDS;
+
+  it("maps provider aliases to their brands (alicode -> Qwen, deepseek-web -> DeepSeek, groq -> Meta)", () => {
+    const r = resolveCatalogBrands({
+      models: [
+        { id: "alicode-intl/qwen3.5-plus", name: "Qwen 3.5 Plus", ownedBy: "Alibaba" },
+        { id: "deepseek-web/deepseek-v4-flash", name: "DeepSeek V4 Flash", ownedBy: "DeepSeek" },
+        { id: "groq/meta-llama/llama-4-maverick-17b-128e-instruct", name: "Llama 4 Maverick", ownedBy: "Meta" },
+      ],
+      brands,
+    });
+    expect(r.map((b) => b.name)).toEqual(["Qwen", "DeepSeek", "Meta"]);
+    expect(r[0].logo).toBe("/brands/qwen.svg");
+  });
+
+  it("dedups brands and preserves first-seen order", () => {
+    const r = resolveCatalogBrands({
+      models: [
+        { id: "openai/gpt-5.5", name: "GPT-5.5", ownedBy: "OpenAI" },
+        { id: "openai/gpt-5.4", name: "GPT-5.4", ownedBy: "OpenAI" },
+        { id: "anthropic/claude-opus-4", name: "Claude Opus 4", ownedBy: "Anthropic" },
+      ],
+      brands,
+    });
+    expect(r.map((b) => b.name)).toEqual(["OpenAI", "Anthropic"]);
+  });
+
+  it("resolves through the owner name when the provider alias is unknown", () => {
+    const r = resolveCatalogBrands({
+      models: [{ id: "oc/model-a", name: "Model A", ownedBy: "Moonshot" }],
+      brands,
+    });
+    expect(r.map((b) => b.name)).toEqual(["Kimi"]);
+  });
+
+  it("caps at the limit and keeps unknown owners as text badges", () => {
+    const r = resolveCatalogBrands({
+      models: [
+        { id: "oc/model-a", name: "A", ownedBy: "MerekLain" },
+        { id: "openai/gpt-5.5", name: "GPT-5.5", ownedBy: "OpenAI" },
+        { id: "anthropic/claude-opus-4", name: "Claude", ownedBy: "Anthropic" },
+      ],
+      brands,
+      limit: 2,
+    });
+    expect(r.map((b) => b.name)).toEqual(["MerekLain", "OpenAI"]);
+    expect(r[0].logo).toBeNull();
+  });
+
+  it("skips models with no usable id or brand and tolerates missing inputs", () => {
+    expect(resolveCatalogBrands({ models: [{ id: "", ownedBy: "" }, null, { name: "x" }], brands })).toEqual([]);
+    expect(resolveCatalogBrands({})).toEqual([]);
+  });
+});
+
+// ---------------------------------------------------------------- formatLatencyShort
+describe("formatLatencyShort", () => {
+  it("formats sub-second values as ms and seconds with two decimals", () => {
+    expect(formatLatencyShort(42)).toBe("42ms");
+    expect(formatLatencyShort(1067)).toBe("1.07s");
+  });
+
+  it("never invents a number for bad input", () => {
+    expect(formatLatencyShort(NaN)).toBe("—");
+    expect(formatLatencyShort(-1)).toBe("—");
+    expect(formatLatencyShort(undefined)).toBe("—");
+  });
+});
+
+// ---------------------------------------------------------------- requestLogLatency
+describe("requestLogLatency", () => {
+  it("is deterministic and stays within ±60 ms of the base, never below 1", () => {
+    for (let i = 0; i < 200; i++) {
+      const v = requestLogLatency(1067, i);
+      expect(v).toBe(requestLogLatency(1067, i));
+      expect(v).toBeGreaterThanOrEqual(1);
+      expect(v).toBeGreaterThanOrEqual(1067 - 60);
+      expect(v).toBeLessThanOrEqual(1067 + 60);
+    }
+    expect(requestLogLatency(30, 0)).toBe(1); // base 30 - 60 clamps at 1
+  });
+
+  it("returns null for non-finite input", () => {
+    expect(requestLogLatency(NaN, 0)).toBeNull();
+    expect(requestLogLatency(undefined, 0)).toBeNull();
+    expect(requestLogLatency(-5, 0)).toBeNull();
   });
 });
 
