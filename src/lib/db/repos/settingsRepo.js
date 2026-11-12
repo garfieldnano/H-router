@@ -102,6 +102,10 @@ const DEFAULT_SETTINGS = {
   // every available admin model. A non-empty list restricts the catalog to
   // exactly those ids.
   landingModels: [],
+  // Landing catalog display names: model id -> custom display name the admin
+  // set via Rename in the Landing catalog card. Empty/absent = the model's
+  // own name. Only applies to picked models (landingModels).
+  landingModelNames: {},
 };
 
 async function readRaw() {

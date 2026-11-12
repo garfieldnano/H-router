@@ -3,7 +3,7 @@ import { getDisabledModels } from "@/lib/disabledModelsDb";
 import { getSettings, getProviderConnections } from "@/lib/localDb";
 import { AI_MODELS } from "@/shared/constants/config";
 import { AI_PROVIDERS, getProviderAlias, ALIAS_TO_ID } from "@/shared/constants/providers";
-import { resolvePublishedModels } from "@/shared/utils/landing.js";
+import { resolvePublishedModels, applyLandingModelNames } from "@/shared/utils/landing.js";
 import { getCustomModels } from "@/models";
 
 // GET /api/public/models — public catalog for the landing page.
@@ -88,15 +88,25 @@ export async function GET() {
     // Empty/missing = no restriction. Fail-open: a settings read failure
     // must not blank the public catalog.
     let picked = [];
+    let customNames = {};
     try {
       const settings = await getSettings();
       picked = settings?.landingModels;
+      customNames =
+        settings?.landingModelNames && typeof settings.landingModelNames === "object" && !Array.isArray(settings.landingModelNames)
+          ? settings.landingModelNames
+          : {};
     } catch {
       picked = [];
+      customNames = {};
     }
     const published = resolvePublishedModels({ models, picked });
+    // Landing rename (Settings → Landing catalog → Rename): a custom display
+    // name set for a picked model replaces its name on the landing. Only
+    // applies to picked models; an empty/absent name keeps the model name.
+    const renamed = applyLandingModelNames(published, customNames);
 
-    return NextResponse.json({ data: published, total: published.length });
+    return NextResponse.json({ data: renamed, total: renamed.length });
   } catch (error) {
     console.log("Error fetching public models:", error);
     return NextResponse.json({ error: "Failed to fetch models" }, { status: 500 });

@@ -8,6 +8,7 @@ import {
   normalizeModelsResponse,
   resolveCatalogModels,
   resolvePublishedModels,
+  applyLandingModelNames,
   resolveCatalogBrands,
   resolveModelBrand,
   resolvePublicBaseUrl,
@@ -209,6 +210,34 @@ describe("resolvePublishedModels", () => {
   it("tolerates missing inputs", () => {
     expect(resolvePublishedModels({})).toEqual([]);
     expect(resolvePublishedModels({ models: null, picked: ["a/one"] })).toEqual([]);
+  });
+});
+
+// ---------------------------------------------------------------- applyLandingModelNames (Landing catalog Rename)
+describe("applyLandingModelNames", () => {
+  const models = [
+    { id: "coarena/deepseek-v4-1-flash-1017", name: "deepseek-v4-1-flash-1017", ownedBy: "coarena" },
+    { id: "coarena/gemini-3-8-flash", name: "gemini-3-8-flash", ownedBy: "coarena" },
+  ];
+
+  it("replaces the name with the admin's custom display name", () => {
+    const r = applyLandingModelNames(models, {
+      "coarena/deepseek-v4-1-flash-1017": "DeepSeek V4.1 Flash",
+    });
+    expect(r[0].name).toBe("DeepSeek V4.1 Flash");
+    expect(r[0].id).toBe("coarena/deepseek-v4-1-flash-1017");
+    expect(r[1].name).toBe("gemini-3-8-flash");
+  });
+
+  it("ignores empty or whitespace-only names and tolerates missing inputs", () => {
+    const r = applyLandingModelNames(models, {
+      "coarena/deepseek-v4-1-flash-1017": "   ",
+      "coarena/gemini-3-8-flash": "",
+    });
+    expect(r.map((m) => m.name)).toEqual(["deepseek-v4-1-flash-1017", "gemini-3-8-flash"]);
+    expect(applyLandingModelNames(models, null)).toEqual(models);
+    expect(applyLandingModelNames(models)).toEqual(models);
+    expect(applyLandingModelNames(null, { "coarena/deepseek-v4-1-flash-1017": "X" })).toEqual([]);
   });
 });
 

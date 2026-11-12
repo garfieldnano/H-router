@@ -140,6 +140,18 @@ export function resolvePublishedModels({ models, picked } = {}) {
   return out;
 }
 
+// Apply the admin's Landing catalog renames (settings.landingModelNames:
+// model id -> custom display name) to a published model list. A custom
+// name replaces the model's name; an empty/absent name keeps it. Pure.
+export function applyLandingModelNames(models, customNames) {
+  const all = Array.isArray(models) ? models : [];
+  const names = customNames && typeof customNames === "object" && !Array.isArray(customNames) ? customNames : {};
+  return all.map((m) => {
+    const custom = names[m.id];
+    return typeof custom === "string" && custom.trim() ? { ...m, name: custom.trim() } : m;
+  });
+}
+
 // Format a measured round-trip (ms) for the status panel. Never invents a
 // number: non-finite input renders as a dash.
 export function formatLatency(ms) {

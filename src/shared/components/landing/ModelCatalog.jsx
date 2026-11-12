@@ -83,11 +83,17 @@ export default function ModelCatalog({ catalog }) {
                 <List.Item.Meta
                   avatar={<BrandAvatar model={m} />}
                   title={
-                    <Typography.Text strong className="font-mono text-sm">
-                      {m.id}
+                    <Typography.Text strong className={m.name && m.name !== m.id ? "text-sm" : "font-mono text-sm"}>
+                      {m.name || m.id}
                     </Typography.Text>
                   }
-                  description={m.ownedBy ? <Typography.Text type="secondary" className="text-xs">{m.ownedBy}</Typography.Text> : null}
+                  description={
+                    m.name && m.name !== m.id ? (
+                      <Typography.Text type="secondary" className="font-mono text-xs">{m.id}</Typography.Text>
+                    ) : m.ownedBy ? (
+                      <Typography.Text type="secondary" className="text-xs">{m.ownedBy}</Typography.Text>
+                    ) : null
+                  }
                 />
               </List.Item>
             )}

@@ -83,6 +83,12 @@ export default function ProfilePage() {
   // Landing catalog picker: model ids ("provider/model") the admin chose to
   // show on the public landing page. Empty = show every available model.
   const [landingModels, setLandingModels] = useState([]);
+  // Custom display names for picked landing models: model id -> name set
+  // via Rename in the card. Empty object = every model uses its own name.
+  const [landingModelNames, setLandingModelNames] = useState({});
+  // Inline rename state: which picked model is being renamed, and the draft.
+  const [renamingId, setRenamingId] = useState(null);
+  const [renameDraft, setRenameDraft] = useState("");
   const [landingOptions, setLandingOptions] = useState([]);
   const [landingLoading, setLandingLoading] = useState(false);
   const [landingStatus, setLandingStatus] = useState({ type: "", message: "" });
@@ -130,6 +136,7 @@ export default function ProfilePage() {
           outboundNoProxy: data?.outboundNoProxy || "",
         });
         setLandingModels(Array.isArray(data?.landingModels) ? data.landingModels : []);
+        setLandingModelNames(data?.landingModelNames && typeof data.landingModelNames === "object" && !Array.isArray(data.landingModelNames) ? data.landingModelNames : {});
         setLoading(false);
       })
       .catch((err) => {
@@ -391,6 +398,17 @@ export default function ProfilePage() {
   };
   const removeLandingModel = (id) => {
     setLandingModels((prev) => (Array.isArray(prev) ? prev : []).filter((m) => m !== id));
+    // Dropping a model also drops its custom display name.
+    setLandingModelNames((prev) => {
+      if (!prev || typeof prev !== "object" || !(id in prev)) return prev;
+      const next = { ...prev };
+      delete next[id];
+      return next;
+    });
+    if (renamingId === id) {
+      setRenamingId(null);
+      setRenameDraft("");
+    }
   };
   const moveLandingModel = (index, dir) => {
     setLandingModels((prev) => {
@@ -400,6 +418,33 @@ export default function ProfilePage() {
       [list[index], list[next]] = [list[next], list[index]];
       return list;
     });
+  };
+  // Inline rename: the display name shown for a picked model on the landing.
+  // An empty name clears the custom name (the model falls back to its own
+  // name). Stored in landingModelNames (id -> name), saved with the catalog.
+  const displayNameForLandingModel = (id) => {
+    const custom = landingModelNames && typeof landingModelNames === "object" ? landingModelNames[id] : null;
+    if (typeof custom === "string" && custom.trim()) return custom.trim();
+    return String(id).split("/").pop();
+  };
+  const startRenameLandingModel = (id) => {
+    setRenamingId(id);
+    setRenameDraft(displayNameForLandingModel(id));
+  };
+  const cancelRenameLandingModel = () => {
+    setRenamingId(null);
+    setRenameDraft("");
+  };
+  const saveRenameLandingModel = (id) => {
+    const name = String(renameDraft || "").trim();
+    setLandingModelNames((prev) => {
+      const next = { ...(prev && typeof prev === "object" ? prev : {}) };
+      if (name) next[id] = name;
+      else delete next[id];
+      return next;
+    });
+    setRenamingId(null);
+    setRenameDraft("");
   };
 
   const updateRequireLogin = async (requireLogin) => {
@@ -419,16 +464,22 @@ export default function ProfilePage() {
 
   const saveLandingModels = async () => {
     const picked = Array.isArray(landingModels) ? landingModels.filter((id) => typeof id === "string" && id) : [];
+    // Keep only custom names for models still in the catalog.
+    const names = {};
+    for (const [id, name] of Object.entries(landingModelNames && typeof landingModelNames === "object" ? landingModelNames : {})) {
+      if (picked.includes(id) && typeof name === "string" && name.trim()) names[id] = name.trim();
+    }
     setLandingSaving(true);
     setLandingStatus({ type: "", message: "" });
     try {
       const res = await fetch("/api/settings", {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ landingModels: picked }),
+        body: JSON.stringify({ landingModels: picked, landingModelNames: names }),
       });
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
-      setSettings((prev) => ({ ...prev, landingModels: picked }));
+      setLandingModelNames(names);
+      setSettings((prev) => ({ ...prev, landingModels: picked, landingModelNames: names }));
       setLandingStatus({
         type: "success",
         message: picked.length === 0
@@ -913,24 +964,55 @@ export default function ProfilePage() {
             ) : (
               <ul className="flex flex-col divide-y divide-border rounded-md border border-border overflow-hidden">
                 {landingModels.map((id, i) => {
-                  const model = String(id).split("/").pop();
+                  const model = displayNameForLandingModel(id);
+                  const isRenaming = renamingId === id;
                   return (
                     <li key={id} className="flex items-center gap-3 px-3 py-2.5 bg-bg">
                       <span className="text-xs font-mono text-text-muted w-5 shrink-0 text-center">{i + 1}</span>
                       <div className="min-w-0 flex-1">
-                        <p className="text-sm font-medium truncate">{model}</p>
+                        {isRenaming ? (
+                          <input
+                            autoFocus
+                            value={renameDraft}
+                            onChange={(e) => setRenameDraft(e.target.value)}
+                            onKeyDown={(e) => {
+                              if (e.key === "Enter") saveRenameLandingModel(id);
+                              if (e.key === "Escape") cancelRenameLandingModel();
+                            }}
+                            placeholder="Display name — empty to use the model name"
+                            className="w-full rounded border border-border bg-bg px-2 py-1 text-sm outline-none focus:border-green-500"
+                          />
+                        ) : (
+                          <p className="text-sm font-medium truncate">{model}</p>
+                        )}
                         <p className="text-xs text-text-muted font-mono truncate">{id}</p>
                       </div>
                       <div className="flex items-center gap-0.5 shrink-0">
-                        <button type="button" onClick={() => moveLandingModel(i, -1)} disabled={i === 0} title="Move up" className="p-1 rounded hover:bg-black/5 dark:hover:bg-white/10 disabled:opacity-30">
-                          <span className="material-symbols-outlined text-[18px]">keyboard_arrow_up</span>
-                        </button>
-                        <button type="button" onClick={() => moveLandingModel(i, 1)} disabled={i === landingModels.length - 1} title="Move down" className="p-1 rounded hover:bg-black/5 dark:hover:bg-white/10 disabled:opacity-30">
-                          <span className="material-symbols-outlined text-[18px]">keyboard_arrow_down</span>
-                        </button>
-                        <button type="button" onClick={() => removeLandingModel(id)} title="Remove from catalog" className="p-1 rounded hover:bg-red-500/10 text-red-500">
-                          <span className="material-symbols-outlined text-[18px]">close</span>
-                        </button>
+                        {isRenaming ? (
+                          <>
+                            <button type="button" onClick={() => saveRenameLandingModel(id)} title="Save name" className="p-1 rounded hover:bg-green-500/10 text-green-500">
+                              <span className="material-symbols-outlined text-[18px]">check</span>
+                            </button>
+                            <button type="button" onClick={cancelRenameLandingModel} title="Cancel rename" className="p-1 rounded hover:bg-black/5 dark:hover:bg-white/10">
+                              <span className="material-symbols-outlined text-[18px]">close</span>
+                            </button>
+                          </>
+                        ) : (
+                          <>
+                            <button type="button" onClick={() => startRenameLandingModel(id)} title="Rename model" className="p-1 rounded hover:bg-black/5 dark:hover:bg-white/10">
+                              <span className="material-symbols-outlined text-[18px]">edit</span>
+                            </button>
+                            <button type="button" onClick={() => moveLandingModel(i, -1)} disabled={i === 0} title="Move up" className="p-1 rounded hover:bg-black/5 dark:hover:bg-white/10 disabled:opacity-30">
+                              <span className="material-symbols-outlined text-[18px]">keyboard_arrow_up</span>
+                            </button>
+                            <button type="button" onClick={() => moveLandingModel(i, 1)} disabled={i === landingModels.length - 1} title="Move down" className="p-1 rounded hover:bg-black/5 dark:hover:bg-white/10 disabled:opacity-30">
+                              <span className="material-symbols-outlined text-[18px]">keyboard_arrow_down</span>
+                            </button>
+                            <button type="button" onClick={() => removeLandingModel(id)} title="Remove from catalog" className="p-1 rounded hover:bg-red-500/10 text-red-500">
+                              <span className="material-symbols-outlined text-[18px]">close</span>
+                            </button>
+                          </>
+                        )}
                       </div>
                     </li>
                   );
@@ -941,7 +1023,7 @@ export default function ProfilePage() {
               <Button type="primary" onClick={saveLandingModels} loading={landingSaving} disabled={loading} className="w-full sm:w-auto">
                 Save catalog
               </Button>
-              <Button onClick={() => setLandingModels([])} disabled={loading || landingModels.length === 0} className="w-full sm:w-auto">
+              <Button onClick={() => { setLandingModels([]); setLandingModelNames({}); setRenamingId(null); setRenameDraft(""); }} disabled={loading || landingModels.length === 0} className="w-full sm:w-auto">
                 Show all models
               </Button>
             </div>
