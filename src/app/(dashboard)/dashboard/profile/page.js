@@ -847,6 +847,53 @@ export default function ProfilePage() {
           <h1 className="text-xl font-semibold tracking-tight text-text-main">Settings</h1>
           <p className="text-sm text-text-muted">Appearance, language, security, routing, network, and observability.</p>
         </div>
+
+        {/* Landing catalog — models shown on the public landing page (what you sell) */}
+        <Card className="hcard">
+          <div className="flex items-center gap-3 mb-4">
+            <div className="p-2 rounded-md bg-green-500/10 text-green-500 shrink-0">
+              <span className="material-symbols-outlined text-[20px]">list</span>
+            </div>
+            <h3 className="text-base sm:text-lg font-semibold">Landing catalog</h3>
+          </div>
+          <div className="flex flex-col gap-4">
+            <p className="text-xs sm:text-sm text-text-muted">
+              Choose which models appear in the public landing page catalog. Leave empty to show every available model. The order you pick is the order shown.
+            </p>
+            <Select
+              mode="multiple"
+              placeholder="Search models…"
+              value={landingModels}
+              onChange={setLandingModels}
+              options={[
+                ...landingOptions,
+                ...landingModels
+                  .filter((id) => !landingOptions.some((o) => o.value === id))
+                  .map((id) => ({ value: id, label: id })),
+              ]}
+              loading={landingLoading}
+              disabled={loading}
+              showSearch
+              optionFilterProp="label"
+              maxTagCount="responsive"
+              className="w-full"
+            />
+            <div className="flex flex-col sm:flex-row gap-2">
+              <Button type="primary" onClick={saveLandingModels} loading={landingSaving} disabled={loading} className="w-full sm:w-auto">
+                Save catalog
+              </Button>
+              <Button onClick={() => setLandingModels([])} disabled={loading || landingModels.length === 0} className="w-full sm:w-auto">
+                Show all models
+              </Button>
+            </div>
+            {landingStatus.message && (
+              <p className={`text-xs sm:text-sm ${landingStatus.type === "error" ? "text-red-500" : "text-green-500"}`}>
+                {landingStatus.message}
+              </p>
+            )}
+          </div>
+        </Card>
+
         {/* Local Mode Info */}
         <Card className="hcard">
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-4">
@@ -1016,52 +1063,6 @@ export default function ProfilePage() {
                   </Button>
                 </div>
               </form>
-            )}
-          </div>
-        </Card>
-
-        {/* Landing catalog */}
-        <Card className="hcard">
-          <div className="flex items-center gap-3 mb-4">
-            <div className="p-2 rounded-md bg-green-500/10 text-green-500 shrink-0">
-              <span className="material-symbols-outlined text-[20px]">list</span>
-            </div>
-            <h3 className="text-base sm:text-lg font-semibold">Landing catalog</h3>
-          </div>
-          <div className="flex flex-col gap-4">
-            <p className="text-xs sm:text-sm text-text-muted">
-              Choose which models appear in the public landing page catalog. Leave empty to show every available model. The order you pick is the order shown.
-            </p>
-            <Select
-              mode="multiple"
-              placeholder="Search models…"
-              value={landingModels}
-              onChange={setLandingModels}
-              options={[
-                ...landingOptions,
-                ...landingModels
-                  .filter((id) => !landingOptions.some((o) => o.value === id))
-                  .map((id) => ({ value: id, label: id })),
-              ]}
-              loading={landingLoading}
-              disabled={loading}
-              showSearch
-              optionFilterProp="label"
-              maxTagCount="responsive"
-              className="w-full"
-            />
-            <div className="flex flex-col sm:flex-row gap-2">
-              <Button type="primary" onClick={saveLandingModels} loading={landingSaving} disabled={loading} className="w-full sm:w-auto">
-                Save catalog
-              </Button>
-              <Button onClick={() => setLandingModels([])} disabled={loading || landingModels.length === 0} className="w-full sm:w-auto">
-                Show all models
-              </Button>
-            </div>
-            {landingStatus.message && (
-              <p className={`text-xs sm:text-sm ${landingStatus.type === "error" ? "text-red-500" : "text-green-500"}`}>
-                {landingStatus.message}
-              </p>
             )}
           </div>
         </Card>
