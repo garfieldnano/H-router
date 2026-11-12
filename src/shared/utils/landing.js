@@ -261,8 +261,11 @@ function brandNameForModelFamily(modelName) {
 function brandNameForModel({ id, ownedBy } = {}) {
   if (!id || typeof id !== "string") return null;
   const parts = id.split("/");
-  const provider = parts[0].toLowerCase();
-  const modelName = parts.slice(1).join("/");
+  // An id without a "/" has no provider prefix — the whole id is the model
+  // name (the public recent-requests feed returns bare model ids), so the
+  // family prefix (e.g. "deepseek") is what resolves the brand.
+  const provider = parts.length > 1 ? parts[0].toLowerCase() : "";
+  const modelName = parts.length > 1 ? parts.slice(1).join("/") : parts[0];
   const owner = typeof ownedBy === "string" ? ownedBy.toLowerCase() : "";
   return (
     BRAND_BY_PROVIDER[provider] ||

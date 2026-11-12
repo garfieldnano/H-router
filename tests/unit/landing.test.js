@@ -348,6 +348,21 @@ describe("resolveModelBrand", () => {
     });
   });
 
+  it("resolves a bare model id with no provider prefix (recent-requests feed)", () => {
+    expect(resolveModelBrand({ id: "deepseek-v4-1-flash-1017", ownedBy: "", brands })).toEqual({
+      name: "DeepSeek",
+      logo: "/providers/deepseek.png",
+    });
+    expect(resolveModelBrand({ id: "claude-fable-5", ownedBy: "", brands })).toEqual({
+      name: "Claude",
+      logo: "/providers/claude.png",
+    });
+    expect(resolveModelBrand({ id: "gemini-3-8-flash", ownedBy: "", brands })).toEqual({
+      name: "Google Gemini",
+      logo: "/providers/gemini.png",
+    });
+  });
+
   it("returns a text badge when the brand has no vendored logo", () => {
     expect(resolveModelBrand({ id: "oc/model-a", ownedBy: "MerekLain", brands })).toEqual({
       name: "MerekLain",
