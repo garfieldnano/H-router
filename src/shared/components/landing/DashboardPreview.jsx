@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { formatLatency, formatLatencyShort, requestLogLatency } from "@/shared/utils/landing.js";
+import { formatLatency, formatLatencyShort, formatTokenCount, requestLogLatency } from "@/shared/utils/landing.js";
 
 const LOG_PATHS = ["/v1/chat/completions", "/v1/chat/completions", "/v1/messages"];
 const LOG_VISIBLE = 4;
@@ -105,7 +105,7 @@ export default function DashboardPreview({ modelCount, models, health, host }) {
 
           <div className="p-4 md:p-6">
             {/* live stats */}
-            <div className="grid grid-cols-3 gap-3">
+            <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
               <div>
                 <p className="text-[11px] font-bold uppercase tracking-widest text-zinc-400 dark:text-zinc-500">
                   Model aktif
@@ -128,6 +128,14 @@ export default function DashboardPreview({ modelCount, models, health, host }) {
                 </p>
                 <p className="mt-1 text-2xl font-extrabold tracking-tight md:text-3xl">
                   {typeof health?.requests24h === "number" ? health.requests24h : "—"}
+                </p>
+              </div>
+              <div>
+                <p className="text-[11px] font-bold uppercase tracking-widest text-zinc-400 dark:text-zinc-500">
+                  Token 24 jam
+                </p>
+                <p className="mt-1 text-2xl font-extrabold tracking-tight md:text-3xl">
+                  {formatTokenCount(health?.tokens24h)}
                 </p>
               </div>
             </div>

@@ -2,9 +2,34 @@
 
 import { useState } from "react";
 import { Button, Empty, List, Tag, Typography } from "antd";
+import { LANDING_BRANDS } from "@/shared/constants/landing.js";
+import { resolveModelBrand } from "@/shared/utils/landing.js";
 import CopyButton from "./CopyButton.jsx";
 
 const PAGE_SIZE = 12;
+
+// Brand mark for one catalog row: the model's brand logo (vendored SVG)
+// in a white chip so the monochrome mark reads in both themes, or a
+// styled initial badge when the brand has no logo. Nothing renders when
+// the brand cannot be resolved at all.
+function BrandAvatar({ model }) {
+  const brand = resolveModelBrand({ id: model.id, ownedBy: model.ownedBy, brands: LANDING_BRANDS });
+  if (!brand) return null;
+  return (
+    <span className="flex h-9 w-9 items-center justify-center rounded-lg border border-zinc-200 bg-white shadow-sm">
+      {brand.logo ? (
+        <img src={brand.logo} alt={brand.name} width={20} height={20} loading="lazy" className="h-5 w-5" />
+      ) : (
+        <span
+          aria-hidden="true"
+          className="flex h-5 w-5 items-center justify-center rounded-md bg-zinc-900 text-[11px] font-extrabold text-white"
+        >
+          {brand.name.charAt(0)}
+        </span>
+      )}
+    </span>
+  );
+}
 
 // Data-driven model catalog. `catalog` comes from the parent page:
 // { models, total, source, loading } — the admin panel's published list
@@ -56,6 +81,7 @@ export default function ModelCatalog({ catalog }) {
                 ]}
               >
                 <List.Item.Meta
+                  avatar={<BrandAvatar model={m} />}
                   title={
                     <Typography.Text strong className="font-mono text-sm">
                       {m.id}

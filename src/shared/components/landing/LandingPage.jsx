@@ -91,20 +91,17 @@ const STEPS = [
 // mode). The old override forced dark text with !important in BOTH
 // modes, which made the light-mode CTAs unreadable (black on black).
 // (Kept out of this comment on purpose: the literal class name would
-// make Tailwind generate the unused utility again.) The closing-CTA
-// button is the exception: its card inverts (dark in light mode, white
-// in dark mode), so it uses `.landing-cta-inverted` (globals.css) —
-// white pill on the dark card, black pill on the white card.
+// make Tailwind generate the unused utility again.)
 
-export default function LandingPage() {
+export default function LandingPage({ baseUrl = LANDING_CONFIG.baseUrl } = {}) {
   const { setTheme } = useTheme();
   const [catalog, setCatalog] = useState({ models: [], allModels: [], total: 0, source: "empty", loading: true });
 
-  // Live gateway health: liveness + latency measured here, 24h request
-  // count from /api/health. The dashboard preview and the hero badge both
-  // read it. Hard 10s timeout and a 30s poll; anything unreachable renders
-  // as a dash — never an invented number.
-  const [health, setHealth] = useState({ status: "checking", latencyMs: null, requests24h: null, updatedAt: null });
+  // Live gateway health: liveness + latency measured here, 24h request and
+  // token counts from /api/health. The dashboard preview and the hero badge
+  // both read it. Hard 10s timeout and a 30s poll; anything unreachable
+  // renders as a dash — never an invented number.
+  const [health, setHealth] = useState({ status: "checking", latencyMs: null, requests24h: null, tokens24h: null, updatedAt: null });
   const checkHealth = useCallback(async () => {
     const t0 = performance.now();
     try {
@@ -115,10 +112,11 @@ export default function LandingPage() {
         status: res.ok && json.ok === true ? "online" : "offline",
         latencyMs: res.ok ? ms : null,
         requests24h: typeof json.requests24h === "number" ? json.requests24h : null,
+        tokens24h: typeof json.tokens24h === "number" ? json.tokens24h : null,
         updatedAt: new Date(),
       });
     } catch {
-      setHealth({ status: "offline", latencyMs: null, requests24h: null, updatedAt: new Date() });
+      setHealth({ status: "offline", latencyMs: null, requests24h: null, tokens24h: null, updatedAt: new Date() });
     }
   }, []);
 
@@ -180,7 +178,7 @@ export default function LandingPage() {
     };
   }, []);
 
-  const host = LANDING_CONFIG.baseUrl.replace(/^https?:\/\//, "");
+  const host = baseUrl.replace(/^https?:\/\//, "");
   const sampleModelId = catalog.models[0]?.id || null;
 
   return (
@@ -227,16 +225,6 @@ export default function LandingPage() {
         <section className="mx-auto w-full max-w-6xl px-6 pt-16 md:pt-24">
           <div className="grid items-start gap-10 lg:grid-cols-[1.15fr_1fr]">
             <div>
-              <Tag
-                icon={<span className="inline-block size-2 animate-pulse rounded-full bg-[#05f170]" />}
-                className="!px-3 !py-1 !text-xs !font-semibold"
-              >
-                {health.status === "online"
-                  ? `Live · ${catalog.loading ? "memuat model…" : `${catalog.total} model siap dipakai`}`
-                  : health.status === "offline"
-                    ? "Offline"
-                    : "Memeriksa…"}
-              </Tag>
               <Typography.Title
                 level={1}
                 className="!mt-6 !text-4xl !font-extrabold !leading-tight !tracking-tight md:!text-6xl"
@@ -326,7 +314,7 @@ export default function LandingPage() {
         <ModelCatalog catalog={catalog} />
 
         {/* ---------------------------------------------------------- mulai */}
-        <CodeSamples sampleModelId={sampleModelId} />
+        <CodeSamples sampleModelId={sampleModelId} baseUrl={baseUrl} />
 
         {/* ---------------------------------------------------------- fitur */}
         <section id="fitur" aria-label="Fitur" className="mx-auto mt-20 w-full max-w-6xl scroll-mt-24 px-6">
@@ -354,15 +342,18 @@ export default function LandingPage() {
         </section>
 
         {/* ---------------------------------------------------------- closing CTA */}
+        {/* Soft green-tint card in the Daytona theme (the old near-black
+            card did not match the light theme). The buttons are the plain
+            Daytona primary + default — no color override. */}
         <section className="mx-auto mt-20 w-full max-w-6xl px-6 pb-20">
-          <div className="rounded-2xl bg-zinc-900 px-6 py-14 text-center dark:bg-white">
+          <div className="rounded-2xl border border-[#b8e6c6] bg-[#e9fbf0] px-6 py-14 text-center dark:border-emerald-900 dark:bg-emerald-950/60">
             <Typography.Title
               level={2}
-              className="!text-3xl !font-extrabold !tracking-tight !text-white md:!text-4xl dark:!text-zinc-900"
+              className="!text-3xl !font-extrabold !tracking-tight !text-zinc-900 md:!text-4xl dark:!text-white"
             >
               Mulai sekarang, gratis.
             </Typography.Title>
-            <Typography.Paragraph className="!mx-auto !mt-3 !max-w-xl !text-zinc-300 dark:!text-zinc-600">
+            <Typography.Paragraph className="!mx-auto !mt-3 !max-w-xl !text-zinc-600 dark:!text-zinc-300">
               Buat key lewat bot, tempel base URL, kirim request pertama. Tanpa billing, tanpa kartu kredit.
             </Typography.Paragraph>
             <div className="mt-8 flex flex-col items-center justify-center gap-3 sm:flex-row">
@@ -372,7 +363,6 @@ export default function LandingPage() {
                 href={LANDING_CONFIG.telegramUrl}
                 target="_blank"
                 rel="noreferrer"
-                className="landing-cta-inverted"
               >
                 Ambil key gratis
               </Button>
@@ -401,7 +391,7 @@ export default function LandingPage() {
               Dokumentasi
             </a>
             <a href="/login" className="hover:text-zinc-900 dark:hover:text-white">Masuk panel</a>
-            <a href={LANDING_CONFIG.baseUrl} target="_blank" rel="noreferrer" className="hover:text-zinc-900 dark:hover:text-white">
+            <a href={baseUrl} target="_blank" rel="noreferrer" className="hover:text-zinc-900 dark:hover:text-white">
               API
             </a>
             <a href={LANDING_CONFIG.telegramUrl} target="_blank" rel="noreferrer" className="hover:text-zinc-900 dark:hover:text-white">

@@ -9,8 +9,11 @@ import {
   resolveCatalogModels,
   resolvePublishedModels,
   resolveCatalogBrands,
+  resolveModelBrand,
+  resolvePublicBaseUrl,
   formatLatency,
   formatLatencyShort,
+  formatTokenCount,
   requestLogLatency,
   buildCodeSamples,
 } from "@/shared/utils/landing.js";
@@ -280,6 +283,56 @@ describe("resolveCatalogBrands", () => {
   });
 });
 
+// ---------------------------------------------------------------- resolveModelBrand
+describe("resolveModelBrand", () => {
+  const brands = LANDING_BRANDS;
+
+  it("resolves a model to its brand with the vendored logo", () => {
+    expect(resolveModelBrand({ id: "alicode-intl/qwen3.5-plus", ownedBy: "Alibaba Coding", brands })).toEqual({
+      name: "Qwen",
+      logo: "/brands/qwen.svg",
+    });
+    expect(resolveModelBrand({ id: "groq/meta-llama/llama-4-maverick-17b-128e-instruct", ownedBy: "Meta", brands }).name).toBe("Meta");
+  });
+
+  it("returns a text badge when the brand has no vendored logo", () => {
+    expect(resolveModelBrand({ id: "oc/model-a", ownedBy: "MerekLain", brands })).toEqual({
+      name: "MerekLain",
+      logo: null,
+    });
+  });
+
+  it("returns null when the brand cannot be resolved at all", () => {
+    expect(resolveModelBrand({ id: "", ownedBy: "", brands })).toBeNull();
+    expect(resolveModelBrand({})).toBeNull();
+  });
+});
+
+// ---------------------------------------------------------------- resolvePublicBaseUrl
+describe("resolvePublicBaseUrl", () => {
+  it("prefers an operator-pinned base URL and trims trailing slashes", () => {
+    expect(
+      resolvePublicBaseUrl({ host: "20127-x.daytonaproxy01.net", proto: "https", pinnedBaseUrl: "https://h-router.web.id/v1/" })
+    ).toBe("https://h-router.web.id/v1");
+  });
+
+  it("derives the address from the public host behind the proxy", () => {
+    expect(
+      resolvePublicBaseUrl({ host: "20127-x.daytonaproxy01.net", proto: "https", pinnedBaseUrl: "" })
+    ).toBe("https://20127-x.daytonaproxy01.net/v1");
+  });
+
+  it("uses http for localhost and https otherwise when no proto is given", () => {
+    expect(resolvePublicBaseUrl({ host: "localhost:20127", proto: "" })).toBe("http://localhost:20127/v1");
+    expect(resolvePublicBaseUrl({ host: "h-router.web.id", proto: "" })).toBe("https://h-router.web.id/v1");
+  });
+
+  it("falls back to the built-in default when no host is known", () => {
+    expect(resolvePublicBaseUrl({})).toBe(LANDING_CONFIG.baseUrl);
+    expect(resolvePublicBaseUrl({ host: "   " })).toBe(LANDING_CONFIG.baseUrl);
+  });
+});
+
 // ---------------------------------------------------------------- formatLatencyShort
 describe("formatLatencyShort", () => {
   it("formats sub-second values as ms and seconds with two decimals", () => {
@@ -291,6 +344,24 @@ describe("formatLatencyShort", () => {
     expect(formatLatencyShort(NaN)).toBe("—");
     expect(formatLatencyShort(-1)).toBe("—");
     expect(formatLatencyShort(undefined)).toBe("—");
+  });
+});
+
+// ---------------------------------------------------------------- formatTokenCount
+describe("formatTokenCount", () => {
+  it("renders small counts as-is and compacts thousands and millions", () => {
+    expect(formatTokenCount(0)).toBe("0");
+    expect(formatTokenCount(42)).toBe("42");
+    expect(formatTokenCount(999)).toBe("999");
+    expect(formatTokenCount(1200)).toBe("1.2 rb");
+    expect(formatTokenCount(1234567)).toBe("1.23 jt");
+    expect(formatTokenCount(1000000)).toBe("1 jt");
+  });
+
+  it("never invents a number for bad input", () => {
+    expect(formatTokenCount(NaN)).toBe("—");
+    expect(formatTokenCount(-1)).toBe("—");
+    expect(formatTokenCount(undefined)).toBe("—");
   });
 });
 

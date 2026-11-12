@@ -1,4 +1,25 @@
 // Pure helpers for the h-router landing page (no DOM, no DB — unit-tested).
+import { LANDING_CONFIG } from "@/shared/constants/landing.js";
+
+// Resolve the public base URL the landing advertises. Precedence:
+// 1. an operator-pinned NEXT_PUBLIC_HROUTER_BASE_URL (pinnedBaseUrl),
+// 2. the request's own public host (x-forwarded-host when behind the
+//    Daytona proxy — the proxy rewrites Host to localhost — else host)
+//    + scheme (x-forwarded-proto, else http for localhost, https otherwise),
+// 3. the built-in default (LANDING_CONFIG.baseUrl, h-router.web.id/v1).
+// Pure and unit-tested; the page component supplies the header values.
+export function resolvePublicBaseUrl({ host, proto, pinnedBaseUrl } = {}) {
+  if (typeof pinnedBaseUrl === "string" && pinnedBaseUrl) return pinnedBaseUrl.replace(/\/+$/, "");
+  const h = typeof host === "string" ? host.trim() : "";
+  if (!h) return LANDING_CONFIG.baseUrl;
+  const scheme =
+    typeof proto === "string" && proto
+      ? proto.split(",")[0].trim()
+      : h.startsWith("localhost") || h.startsWith("127.0.0.1")
+        ? "http"
+        : "https";
+  return `${scheme}://${h}/v1`;
+}
 
 // Fetch with a hard timeout. A hung request must never leave the landing
 // page stuck on "Memuat…" forever: callers treat a timeout like any other
@@ -91,6 +112,15 @@ export function formatLatencyShort(ms) {
   return `${(ms / 1000).toFixed(2)}s`;
 }
 
+// Compact token count for the dashboard preview ("0" / "1.2 rb" / "1.23 jt").
+// Non-finite input renders as a dash — never an invented number.
+export function formatTokenCount(n) {
+  if (!Number.isFinite(n) || n < 0) return "—";
+  if (n >= 1_000_000) return `${Number((n / 1_000_000).toFixed(2))} jt`;
+  if (n >= 1_000) return `${Number((n / 1_000).toFixed(1))} rb`;
+  return `${Math.round(n)}`;
+}
+
 // Deterministic jitter around the measured base latency for the preview
 // request log: the same (base, index) always yields the same value, within
 // ±60 ms of the base and never below 1 ms. Non-finite input yields null
@@ -149,6 +179,20 @@ const BRAND_BY_OWNER = {
   nvidia: "NVIDIA",
 };
 
+// Resolve one model's brand name from its provider alias, then its owner
+// name. Shared by resolveCatalogBrands (the strip) and resolveModelBrand
+// (one catalog row). Returns null when neither resolves to a name.
+function brandNameForModel({ id, ownedBy } = {}) {
+  if (!id || typeof id !== "string") return null;
+  const provider = id.split("/")[0].toLowerCase();
+  const owner = typeof ownedBy === "string" ? ownedBy.toLowerCase() : "";
+  return (
+    BRAND_BY_PROVIDER[provider] ||
+    BRAND_BY_OWNER[owner] ||
+    (typeof ownedBy === "string" && ownedBy ? ownedBy : null)
+  );
+}
+
 // Derive the brand strip from the catalog: distinct brands of the models
 // the admin publishes, in first-seen order, capped at `limit`. A brand
 // resolves through the provider-alias map, then through the model owner's
@@ -164,12 +208,7 @@ export function resolveCatalogBrands({ models, brands, limit = 12 } = {}) {
   for (const m of list) {
     if (out.length >= limit) break;
     if (!m || typeof m.id !== "string" || !m.id) continue;
-    const provider = m.id.split("/")[0].toLowerCase();
-    const owner = typeof m.ownedBy === "string" ? m.ownedBy.toLowerCase() : "";
-    const name =
-      BRAND_BY_PROVIDER[provider] ||
-      BRAND_BY_OWNER[owner] ||
-      (typeof m.ownedBy === "string" && m.ownedBy ? m.ownedBy : null);
+    const name = brandNameForModel(m);
     if (!name) continue;
     const key = name.toLowerCase();
     if (seen.has(key)) continue;
@@ -177,6 +216,17 @@ export function resolveCatalogBrands({ models, brands, limit = 12 } = {}) {
     out.push(byName.get(key) || { name, logo: null });
   }
   return out;
+}
+
+// Resolve the brand (name + vendored logo) of one model, for a catalog
+// row. Returns null when the brand cannot be resolved at all; a brand
+// missing from `brands` comes back as a text badge (logo: null).
+export function resolveModelBrand({ id, ownedBy, brands } = {}) {
+  const name = brandNameForModel({ id, ownedBy });
+  if (!name) return null;
+  const known = Array.isArray(brands) ? brands : [];
+  const found = known.find((b) => String(b.name).toLowerCase() === name.toLowerCase());
+  return found || { name, logo: null };
 }
 
 // Code samples for the "Mulai" section. `model` is the first catalog model

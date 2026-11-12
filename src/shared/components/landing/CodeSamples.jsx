@@ -13,18 +13,19 @@ const TABS = [
 ];
 
 // "Mulai" section: code samples for the public gateway. One base URL
-// (LANDING_CONFIG.baseUrl), a placeholder key, and the first catalog model
-// id when known — never a made-up model id.
-export default function CodeSamples({ sampleModelId }) {
+// (the `baseUrl` prop — the real deployed address, resolved per request
+// by the page; defaults to LANDING_CONFIG.baseUrl), a placeholder key,
+// and the first catalog model id when known — never a made-up model id.
+export default function CodeSamples({ sampleModelId, baseUrl = LANDING_CONFIG.baseUrl }) {
   const [tab, setTab] = useState("curl");
   const samples = useMemo(
     () =>
       buildCodeSamples({
-        baseUrl: LANDING_CONFIG.baseUrl,
+        baseUrl,
         apiKey: LANDING_CONFIG.sampleApiKey,
         model: sampleModelId,
       }),
-    [sampleModelId]
+    [sampleModelId, baseUrl]
   );
 
   return (
@@ -62,7 +63,7 @@ export default function CodeSamples({ sampleModelId }) {
         <Typography.Text type="secondary" className="block border-t border-zinc-200 px-4 py-2 font-mono text-xs dark:border-zinc-800">
           Base URL{" "}
           <Typography.Text strong className="font-mono text-xs">
-            {LANDING_CONFIG.baseUrl}
+            {baseUrl}
           </Typography.Text>
         </Typography.Text>
       </Card>

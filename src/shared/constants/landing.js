@@ -2,10 +2,16 @@
 // landing page's links and defaults. The base URL is the PUBLIC gateway
 // address shown in code samples; override it with
 // NEXT_PUBLIC_HROUTER_BASE_URL when this repo is deployed elsewhere.
+// `baseUrlPinned` is true exactly when that override is set — the landing
+// page then advertises the pinned address; otherwise it derives the base
+// URL from the request's own public host (x-forwarded-host behind the
+// Daytona proxy, else host), so the address shown is always the real
+// deployed one and follows the host when it moves.
 export const LANDING_CONFIG = {
   brand: "H-router",
   accent: "#05f170",
   baseUrl: (process.env.NEXT_PUBLIC_HROUTER_BASE_URL || "https://h-router.web.id/v1").replace(/\/+$/, ""),
+  baseUrlPinned: Boolean(process.env.NEXT_PUBLIC_HROUTER_BASE_URL),
   docsUrl: "https://github.com/garfieldnano/H-router/tree/master/docs/h-router",
   repoUrl: "https://github.com/garfieldnano/H-router",
   telegramUrl: "https://t.me/routermm_bot",
