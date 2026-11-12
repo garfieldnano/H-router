@@ -378,6 +378,28 @@ export default function ProfilePage() {
     }
   };
 
+  // Landing catalog list helpers: the picker below is add-only; the picked
+  // models render as a visible list (order = display order on the landing).
+  const addLandingModel = (id) => {
+    if (typeof id !== "string" || !id) return;
+    setLandingModels((prev) => {
+      const list = Array.isArray(prev) ? prev : [];
+      return list.includes(id) ? list : [...list, id];
+    });
+  };
+  const removeLandingModel = (id) => {
+    setLandingModels((prev) => (Array.isArray(prev) ? prev : []).filter((m) => m !== id));
+  };
+  const moveLandingModel = (index, dir) => {
+    setLandingModels((prev) => {
+      const list = Array.isArray(prev) ? [...prev] : [];
+      const next = index + dir;
+      if (index < 0 || index >= list.length || next < 0 || next >= list.length) return list;
+      [list[index], list[next]] = [list[next], list[index]];
+      return list;
+    });
+  };
+
   const updateRequireLogin = async (requireLogin) => {
     try {
       const res = await fetch("/api/settings", {
@@ -855,29 +877,64 @@ export default function ProfilePage() {
               <span className="material-symbols-outlined text-[20px]">list</span>
             </div>
             <h3 className="text-base sm:text-lg font-semibold">Landing catalog</h3>
+            <span className="inline-flex items-center rounded-full bg-green-500/10 text-green-600 dark:text-green-400 text-xs font-medium px-2.5 py-0.5 shrink-0">
+              {landingModels.length === 0 ? "All models" : `${landingModels.length} model${landingModels.length === 1 ? "" : "s"}`}
+            </span>
+            <a href="/" target="_blank" rel="noreferrer" className="ml-auto inline-flex items-center gap-1 text-xs sm:text-sm text-green-600 dark:text-green-400 hover:underline shrink-0">
+              View landing
+              <span className="material-symbols-outlined text-[16px]">open_in_new</span>
+            </a>
           </div>
           <div className="flex flex-col gap-4">
             <p className="text-xs sm:text-sm text-text-muted">
-              Choose which models appear in the public landing page catalog. Leave empty to show every available model. The order you pick is the order shown.
+              Pick the models shown on the public landing page — these are the models you sell. The list order below is the display order. Leave empty to show every available model.
             </p>
             <Select
               mode="multiple"
-              placeholder="Search models…"
-              value={landingModels}
-              onChange={setLandingModels}
-              options={[
-                ...landingOptions,
-                ...landingModels
-                  .filter((id) => !landingOptions.some((o) => o.value === id))
-                  .map((id) => ({ value: id, label: id })),
-              ]}
+              placeholder="Add a model… — type to search"
+              value={[]}
+              onChange={(vals) => {
+                const id = Array.isArray(vals) ? vals[vals.length - 1] : vals;
+                if (id) addLandingModel(id);
+              }}
+              options={landingOptions.filter((o) => !landingModels.includes(o.value))}
               loading={landingLoading}
               disabled={loading}
               showSearch
               optionFilterProp="label"
-              maxTagCount="responsive"
               className="w-full"
             />
+            {landingModels.length === 0 ? (
+              <div className="rounded-md border border-dashed border-border px-3 py-4 text-center text-xs sm:text-sm text-text-muted">
+                No models picked — the landing shows every available model.
+              </div>
+            ) : (
+              <ul className="flex flex-col divide-y divide-border rounded-md border border-border overflow-hidden">
+                {landingModels.map((id, i) => {
+                  const model = String(id).split("/").pop();
+                  return (
+                    <li key={id} className="flex items-center gap-3 px-3 py-2.5 bg-bg">
+                      <span className="text-xs font-mono text-text-muted w-5 shrink-0 text-center">{i + 1}</span>
+                      <div className="min-w-0 flex-1">
+                        <p className="text-sm font-medium truncate">{model}</p>
+                        <p className="text-xs text-text-muted font-mono truncate">{id}</p>
+                      </div>
+                      <div className="flex items-center gap-0.5 shrink-0">
+                        <button type="button" onClick={() => moveLandingModel(i, -1)} disabled={i === 0} title="Move up" className="p-1 rounded hover:bg-black/5 dark:hover:bg-white/10 disabled:opacity-30">
+                          <span className="material-symbols-outlined text-[18px]">keyboard_arrow_up</span>
+                        </button>
+                        <button type="button" onClick={() => moveLandingModel(i, 1)} disabled={i === landingModels.length - 1} title="Move down" className="p-1 rounded hover:bg-black/5 dark:hover:bg-white/10 disabled:opacity-30">
+                          <span className="material-symbols-outlined text-[18px]">keyboard_arrow_down</span>
+                        </button>
+                        <button type="button" onClick={() => removeLandingModel(id)} title="Remove from catalog" className="p-1 rounded hover:bg-red-500/10 text-red-500">
+                          <span className="material-symbols-outlined text-[18px]">close</span>
+                        </button>
+                      </div>
+                    </li>
+                  );
+                })}
+              </ul>
+            )}
             <div className="flex flex-col sm:flex-row gap-2">
               <Button type="primary" onClick={saveLandingModels} loading={landingSaving} disabled={loading} className="w-full sm:w-auto">
                 Save catalog
