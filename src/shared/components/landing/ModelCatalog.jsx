@@ -28,25 +28,28 @@ function BrandAvatar({ model }) {
   );
 }
 
-// Live signal that fills the empty middle of a catalog row: a small
-// equalizer (bars rising/falling, staggered) plus a pulsing "Live" dot.
-// Pure CSS, subtle green, so the row reads as a live model instead of
-// an empty gap between the name and the copy button.
+// Live signal that fills the empty middle of a catalog row: a "Live"
+// badge at a fixed spot plus a full-width equalizer (many bars spanning
+// the whole middle, staggered) so the animation is long and every row's
+// signal starts at the same x. Pure CSS, subtle green, so the row reads
+// as a live model instead of an empty gap between the name and the copy
+// button.
 function LiveSignal() {
+  const BARS = 22;
   return (
-    <span className="flex min-w-0 flex-1 items-center justify-center gap-2" aria-hidden="true">
-      <span className="flex h-4 items-end gap-[3px]">
-        {[0, 1, 2, 3, 4].map((i) => (
-          <span
-            key={i}
-            className="animate-wave w-[3px] rounded-full bg-[#05a843] dark:bg-[#05f170]"
-            style={{ height: "100%", animationDelay: `${i * 0.14}s` }}
-          />
-        ))}
-      </span>
-      <span className="flex items-center gap-1.5 text-[11px] font-semibold text-zinc-400 dark:text-zinc-500">
+    <span className="flex min-w-0 flex-1 items-center gap-3" aria-hidden="true">
+      <span className="flex shrink-0 items-center gap-1.5 text-[11px] font-semibold text-zinc-400 dark:text-zinc-500">
         <span className="animate-pulse h-1.5 w-1.5 rounded-full bg-[#05a843] dark:bg-[#05f170]" />
         Live
+      </span>
+      <span className="flex h-4 min-w-0 flex-1 items-end gap-[2px]">
+        {Array.from({ length: BARS }, (_, i) => (
+          <span
+            key={i}
+            className="animate-wave min-w-0 flex-1 rounded-full bg-[#05a843] dark:bg-[#05f170]"
+            style={{ height: "100%", animationDelay: `${(i % 7) * 0.13}s` }}
+          />
+        ))}
       </span>
     </span>
   );
@@ -95,9 +98,13 @@ export default function ModelCatalog({ catalog }) {
                 title="Klik untuk menyalin id"
               >
                 <BrandAvatar model={m} />
-                <Typography.Text strong className={m.name && m.name !== m.id ? "shrink-0 text-sm" : "shrink-0 font-mono text-sm"}>
+                <span
+                  className={`w-48 shrink-0 truncate text-sm font-semibold ${
+                    m.name && m.name !== m.id ? "" : "font-mono"
+                  }`}
+                >
                   {m.name || m.id}
-                </Typography.Text>
+                </span>
                 <LiveSignal />
                 {m.tier ? (
                   <Tag color={m.tier === "FREE" ? "green" : "default"} className="shrink-0">
