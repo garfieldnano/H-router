@@ -234,7 +234,7 @@ export default function LandingPage({ baseUrl = LANDING_CONFIG.baseUrl } = {}) {
                 <span className="text-[#05f170]">tanpa ribet.</span>
               </Typography.Title>
               <Typography.Paragraph type="secondary" className="!mt-5 !max-w-xl !text-lg">
-                Satu API key untuk {catalog.loading ? "semua model" : `${catalog.total} model`} — kompatibel
+                Satu API key untuk {catalog.loading ? "model AI" : `${catalog.total} model`} — kompatibel
                 OpenAI dan Anthropic, streaming, reasoning effort, tanpa kartu kredit.
               </Typography.Paragraph>
               <div className="mt-8 flex flex-col gap-3 sm:flex-row">

@@ -1,14 +1,13 @@
 "use client";
 
-import { LANDING_BRANDS } from "@/shared/constants/landing.js";
-
 // Logo strip under the hero. The strip follows the admin catalog: the
 // parent passes `brands` (resolveCatalogBrands over the published models),
 // so the strip shows exactly the brands the landing serves — one brand
 // when the admin picked one model, all of them when nothing is picked.
-// `brands` undefined means the catalog is still loading: the static
-// config list renders instead so the strip is never blank. An empty array
-// means the catalog published no brands at all, so nothing renders.
+// `brands` undefined means the catalog is still loading: NOTHING renders
+// (no static fallback list), so a refresh never flashes the wrong brands
+// before the real catalog arrives. An empty array means the catalog
+// published no brands at all, so nothing renders either.
 // Logos are vendored SVGs in public/brands/; brands without one get a
 // styled initial badge — never a broken image. Chips stay white in both
 // themes so the monochrome brand marks always read.
@@ -41,7 +40,7 @@ function BrandChip({ brand, hidden }) {
 }
 
 export default function BrandStrip({ brands } = {}) {
-  const list = brands === undefined ? LANDING_BRANDS : brands;
+  const list = brands;
   if (!Array.isArray(list) || list.length === 0) return null;
   const marquee = list.length >= MARQUEE_MIN;
   return (
