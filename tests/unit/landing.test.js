@@ -63,7 +63,7 @@ describe("LANDING_CONFIG", () => {
       expect(b.name.length).toBeGreaterThan(0);
       expect(names.has(b.name)).toBe(false);
       names.add(b.name);
-      expect(b.logo === null || (typeof b.logo === "string" && b.logo.startsWith("/brands/") && /\.(svg|png)$/.test(b.logo))).toBe(true);
+      expect(b.logo === null || (typeof b.logo === "string" && (b.logo.startsWith("/brands/") || b.logo.startsWith("/providers/")) && /\.(svg|png)$/.test(b.logo))).toBe(true);
     }
     // Every brand now has a real vendored logo (Kimi: Moonshot AI mark,
     // GLM: Z.ai mark — both LobeHub mono SVG; xAI: official Grok logomark).
@@ -241,7 +241,7 @@ describe("resolveCatalogBrands", () => {
       brands,
     });
     expect(r.map((b) => b.name)).toEqual(["Qwen", "DeepSeek", "Meta"]);
-    expect(r[0].logo).toBe("/brands/qwen.svg");
+    expect(r[0].logo).toBe("/providers/qwen.png");
   });
 
   it("dedups brands and preserves first-seen order", () => {
