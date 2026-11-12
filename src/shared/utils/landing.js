@@ -182,7 +182,7 @@ export function formatTokenCount(n) {
 // Meta (Llama), moonshot is Kimi, zhipu/zai is GLM.
 const BRAND_BY_PROVIDER = {
   openai: "OpenAI",
-  anthropic: "Anthropic",
+  anthropic: "Claude",
   gemini: "Google Gemini",
   google: "Google Gemini",
   deepseek: "DeepSeek",
@@ -207,7 +207,7 @@ const BRAND_BY_PROVIDER = {
 // provider alias is unknown but the owner is a known brand.
 const BRAND_BY_OWNER = {
   openai: "OpenAI",
-  anthropic: "Anthropic",
+  anthropic: "Claude",
   google: "Google Gemini",
   deepseek: "DeepSeek",
   alibaba: "Qwen",
@@ -227,12 +227,12 @@ const BRAND_BY_OWNER = {
 // Model-family prefix (the part after "/") -> brand name. A model served
 // through an aggregator/proxy provider (e.g. coarena) carries the provider's
 // name, not the model's real brand — but the model family itself reveals it
-// (claude-* is Anthropic, deepseek-* is DeepSeek, gemini-* is Google
+// (claude-* is Claude, deepseek-* is DeepSeek, gemini-* is Google
 // Gemini). Checked after the provider alias and before the owner name, so a
 // known provider still wins and an unknown proxy falls through to the real
 // brand instead of rendering a fake initial-letter badge for the proxy.
 const BRAND_BY_MODEL_PREFIX = [
-  ["claude", "Anthropic"],
+  ["claude", "Claude"],
   ["deepseek", "DeepSeek"],
   ["gemini", "Google Gemini"],
   ["gpt", "OpenAI"],

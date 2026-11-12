@@ -282,7 +282,7 @@ describe("resolveCatalogBrands", () => {
       ],
       brands,
     });
-    expect(r.map((b) => b.name)).toEqual(["OpenAI", "Anthropic"]);
+    expect(r.map((b) => b.name)).toEqual(["OpenAI", "Claude"]);
   });
 
   it("resolves through the owner name when the provider alias is unknown", () => {
@@ -330,12 +330,14 @@ describe("resolveModelBrand", () => {
     // so the brand must come from the model name — never a "coarena" badge.
     // Logos are the same /providers/*.png files the admin Providers menu
     // uses, so the landing and the admin show identical brand marks.
+    // Claude models use the Claude mark (orange asterisk, /providers/claude.png)
+    // — the same logo as the Claude Code provider card in the admin menu.
     expect(resolveModelBrand({ id: "coarena/claude-opus-5-5", ownedBy: "coarena", brands })).toEqual({
-      name: "Anthropic",
-      logo: "/providers/anthropic.png",
+      name: "Claude",
+      logo: "/providers/claude.png",
     });
-    expect(resolveModelBrand({ id: "coarena/claude-sonnet-5-5", ownedBy: "coarena", brands }).name).toBe("Anthropic");
-    expect(resolveModelBrand({ id: "coarena/claude-haiku-5-5", ownedBy: "coarena", brands }).name).toBe("Anthropic");
+    expect(resolveModelBrand({ id: "coarena/claude-sonnet-5-5", ownedBy: "coarena", brands }).name).toBe("Claude");
+    expect(resolveModelBrand({ id: "coarena/claude-haiku-5-5", ownedBy: "coarena", brands }).name).toBe("Claude");
     expect(resolveModelBrand({ id: "coarena/deepseek-v4-1-flash-1017", ownedBy: "coarena", brands })).toEqual({
       name: "DeepSeek",
       logo: "/providers/deepseek.png",

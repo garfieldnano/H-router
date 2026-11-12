@@ -54,7 +54,7 @@ export const FALLBACK_MODELS = [
 // logo CDN at runtime.
 export const LANDING_BRANDS = [
   { name: "OpenAI", logo: "/providers/openai.png" },
-  { name: "Anthropic", logo: "/providers/anthropic.png" },
+  { name: "Claude", logo: "/providers/claude.png" },
   { name: "Google Gemini", logo: "/providers/gemini.png" },
   { name: "DeepSeek", logo: "/providers/deepseek.png" },
   { name: "Meta", logo: "/brands/meta.svg" },
