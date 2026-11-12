@@ -96,6 +96,12 @@ const DEFAULT_SETTINGS = {
       notes: "",
     },
   },
+  // Landing catalog picker (admin Settings → Landing catalog): model ids
+  // ("provider/model") the admin chose to show on the public landing page,
+  // in display order. Empty (default) = no restriction: the landing shows
+  // every available admin model. A non-empty list restricts the catalog to
+  // exactly those ids.
+  landingModels: [],
 };
 
 async function readRaw() {

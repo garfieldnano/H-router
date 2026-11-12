@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, useRef } from "react";
-import { Button, Card, Input, Modal, Switch } from "antd";
+import { Button, Card, Input, Modal, Select, Switch } from "antd";
 import LanguageSwitcher from "@/shared/components/LanguageSwitcher";
 import { useTheme } from "@/shared/hooks/useTheme";
 import { cn } from "@/shared/utils/cn";
@@ -80,6 +80,14 @@ export default function ProfilePage() {
   const [proxyLoading, setProxyLoading] = useState(false);
   const [proxyTestLoading, setProxyTestLoading] = useState(false);
 
+  // Landing catalog picker: model ids ("provider/model") the admin chose to
+  // show on the public landing page. Empty = show every available model.
+  const [landingModels, setLandingModels] = useState([]);
+  const [landingOptions, setLandingOptions] = useState([]);
+  const [landingLoading, setLandingLoading] = useState(false);
+  const [landingStatus, setLandingStatus] = useState({ type: "", message: "" });
+  const [landingSaving, setLandingSaving] = useState(false);
+
   const [isRemoteHost, setIsRemoteHost] = useState(false);
   useEffect(() => {
     if (typeof window !== "undefined")
@@ -121,12 +129,35 @@ export default function ProfilePage() {
           outboundProxyUrl: data?.outboundProxyUrl || "",
           outboundNoProxy: data?.outboundNoProxy || "",
         });
+        setLandingModels(Array.isArray(data?.landingModels) ? data.landingModels : []);
         setLoading(false);
       })
       .catch((err) => {
         console.error("Failed to fetch settings:", err);
         setLoading(false);
       });
+  }, []);
+
+  // Model options for the landing catalog picker (admin /api/models list).
+  useEffect(() => {
+    setLandingLoading(true);
+    fetch("/api/models")
+      .then((res) => res.json())
+      .then((data) => {
+        const list = Array.isArray(data?.models) ? data.models : [];
+        setLandingOptions(
+          list
+            .map((m) => ({
+              value: m.routedModel || m.fullModel || `${m.provider}/${m.model}`,
+              label: m.name ? `${m.name} (${m.routedModel || m.fullModel || `${m.provider}/${m.model}`})` : (m.routedModel || m.fullModel || `${m.provider}/${m.model}`),
+            }))
+            .filter((o) => o.value)
+        );
+      })
+      .catch((err) => {
+        console.error("Failed to fetch models:", err);
+      })
+      .finally(() => setLandingLoading(false));
   }, []);
 
   const updateOutboundProxy = async (e) => {
@@ -359,6 +390,32 @@ export default function ProfilePage() {
       }
     } catch (err) {
       console.error("Failed to update require login:", err);
+    }
+  };
+
+  const saveLandingModels = async () => {
+    const picked = Array.isArray(landingModels) ? landingModels.filter((id) => typeof id === "string" && id) : [];
+    setLandingSaving(true);
+    setLandingStatus({ type: "", message: "" });
+    try {
+      const res = await fetch("/api/settings", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ landingModels: picked }),
+      });
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      setSettings((prev) => ({ ...prev, landingModels: picked }));
+      setLandingStatus({
+        type: "success",
+        message: picked.length === 0
+          ? "Saved. The landing catalog now shows every available model."
+          : `Saved. The landing catalog now shows ${picked.length} picked model${picked.length === 1 ? "" : "s"}.`,
+      });
+    } catch (err) {
+      console.error("Failed to save landing catalog:", err);
+      setLandingStatus({ type: "error", message: "Failed to save. Please try again." });
+    } finally {
+      setLandingSaving(false);
     }
   };
 
@@ -959,6 +1016,52 @@ export default function ProfilePage() {
                   </Button>
                 </div>
               </form>
+            )}
+          </div>
+        </Card>
+
+        {/* Landing catalog */}
+        <Card className="hcard">
+          <div className="flex items-center gap-3 mb-4">
+            <div className="p-2 rounded-md bg-green-500/10 text-green-500 shrink-0">
+              <span className="material-symbols-outlined text-[20px]">list</span>
+            </div>
+            <h3 className="text-base sm:text-lg font-semibold">Landing catalog</h3>
+          </div>
+          <div className="flex flex-col gap-4">
+            <p className="text-xs sm:text-sm text-text-muted">
+              Choose which models appear in the public landing page catalog. Leave empty to show every available model. The order you pick is the order shown.
+            </p>
+            <Select
+              mode="multiple"
+              placeholder="Search models…"
+              value={landingModels}
+              onChange={setLandingModels}
+              options={[
+                ...landingOptions,
+                ...landingModels
+                  .filter((id) => !landingOptions.some((o) => o.value === id))
+                  .map((id) => ({ value: id, label: id })),
+              ]}
+              loading={landingLoading}
+              disabled={loading}
+              showSearch
+              optionFilterProp="label"
+              maxTagCount="responsive"
+              className="w-full"
+            />
+            <div className="flex flex-col sm:flex-row gap-2">
+              <Button type="primary" onClick={saveLandingModels} loading={landingSaving} disabled={loading} className="w-full sm:w-auto">
+                Save catalog
+              </Button>
+              <Button onClick={() => setLandingModels([])} disabled={loading || landingModels.length === 0} className="w-full sm:w-auto">
+                Show all models
+              </Button>
+            </div>
+            {landingStatus.message && (
+              <p className={`text-xs sm:text-sm ${landingStatus.type === "error" ? "text-red-500" : "text-green-500"}`}>
+                {landingStatus.message}
+              </p>
             )}
           </div>
         </Card>

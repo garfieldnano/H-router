@@ -7,6 +7,7 @@ import {
   fetchWithTimeout,
   normalizeModelsResponse,
   resolveCatalogModels,
+  resolvePublishedModels,
   formatLatency,
   buildCodeSamples,
 } from "@/shared/utils/landing.js";
@@ -171,6 +172,36 @@ describe("resolveCatalogModels", () => {
   it("reports empty when neither source has models", () => {
     expect(resolveCatalogModels({ liveModels: [], fallbackModels: [] })).toEqual({ models: [], total: 0, source: "empty" });
     expect(resolveCatalogModels({})).toEqual({ models: [], total: 0, source: "empty" });
+  });
+});
+
+// ---------------------------------------------------------------- resolvePublishedModels
+describe("resolvePublishedModels", () => {
+  const models = [
+    { id: "a/one", name: "One", ownedBy: "A" },
+    { id: "b/two", name: "Two", ownedBy: "B" },
+    { id: "c/three", name: "Three", ownedBy: "C" },
+  ];
+
+  it("returns everything when the admin picked nothing", () => {
+    expect(resolvePublishedModels({ models, picked: [] })).toEqual(models);
+    expect(resolvePublishedModels({ models })).toEqual(models);
+    expect(resolvePublishedModels({ models, picked: null })).toEqual(models);
+  });
+
+  it("keeps only the picked ids, in the picked order", () => {
+    const r = resolvePublishedModels({ models, picked: ["c/three", "a/one"] });
+    expect(r.map((m) => m.id)).toEqual(["c/three", "a/one"]);
+  });
+
+  it("drops picked ids that no longer exist and collapses duplicates", () => {
+    const r = resolvePublishedModels({ models, picked: ["b/two", "gone/model", "b/two", "a/one"] });
+    expect(r.map((m) => m.id)).toEqual(["b/two", "a/one"]);
+  });
+
+  it("tolerates missing inputs", () => {
+    expect(resolvePublishedModels({})).toEqual([]);
+    expect(resolvePublishedModels({ models: null, picked: ["a/one"] })).toEqual([]);
   });
 });
 

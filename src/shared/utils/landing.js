@@ -54,6 +54,28 @@ export function resolveCatalogModels({ adminModels, liveModels, fallbackModels, 
   return { models: [], total: 0, source: "empty" };
 }
 
+// Restrict the admin-published model list to the admin's landing picks.
+// `picked` is the settings.landingModels array (model ids in display order).
+// An empty or missing list means no restriction: every model stays. A
+// non-empty list keeps only the picked ids that still exist, in the picked
+// order (a picked model that was later disabled or removed drops out
+// instead of reappearing), with duplicates collapsed.
+export function resolvePublishedModels({ models, picked } = {}) {
+  const all = Array.isArray(models) ? models : [];
+  const ids = Array.isArray(picked) ? picked.filter((id) => typeof id === "string" && id) : [];
+  if (ids.length === 0) return all;
+  const byId = new Map(all.map((m) => [m.id, m]));
+  const out = [];
+  const seen = new Set();
+  for (const id of ids) {
+    if (seen.has(id)) continue;
+    seen.add(id);
+    const m = byId.get(id);
+    if (m) out.push(m);
+  }
+  return out;
+}
+
 // Format a measured round-trip (ms) for the status panel. Never invents a
 // number: non-finite input renders as a dash.
 export function formatLatency(ms) {

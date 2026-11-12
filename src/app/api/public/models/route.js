@@ -1,16 +1,21 @@
 import { NextResponse } from "next/server";
 import { getDisabledModels } from "@/lib/disabledModelsDb";
+import { getSettings } from "@/lib/localDb";
 import { AI_MODELS } from "@/shared/constants/config";
 import { AI_PROVIDERS, getProviderAlias, ALIAS_TO_ID } from "@/shared/constants/providers";
+import { resolvePublishedModels } from "@/shared/utils/landing.js";
 import { getCustomModels } from "@/models";
 
 // GET /api/public/models — public catalog for the landing page.
 //
 // Returns the models the admin panel publishes: the curated AI_MODELS list
-// minus models the admin disabled, plus the admin's custom models. This is
-// the admin panel's model settings as the public sees them — the landing
-// catalog reads this endpoint first, so disabling a model in the Console
-// removes it from the landing, and adding a custom model publishes it.
+// minus models the admin disabled, plus the admin's custom models —
+// restricted to settings.landingModels when the admin picked a landing
+// catalog in Settings (empty = show everything). This is the admin panel's
+// model settings as the public sees them — the landing catalog reads this
+// endpoint first, so disabling a model in the Console removes it from the
+// landing, adding a custom model publishes it, and picking a landing list
+// shows exactly those models.
 //
 // Shape mirrors GET /v1/models ({ data: [{ id, name, owned_by }] }) so the
 // landing normalizes it with the same helper. Public by design (see
@@ -56,7 +61,20 @@ export async function GET() {
       });
     }
 
-    return NextResponse.json({ data: models, total: models.length });
+    // Landing picker (Settings → Landing catalog): when the admin picked a
+    // list, the catalog shows exactly those models, in the picked order.
+    // Empty/missing = no restriction. Fail-open: a settings read failure
+    // must not blank the public catalog.
+    let picked = [];
+    try {
+      const settings = await getSettings();
+      picked = settings?.landingModels;
+    } catch {
+      picked = [];
+    }
+    const published = resolvePublishedModels({ models, picked });
+
+    return NextResponse.json({ data: published, total: published.length });
   } catch (error) {
     console.log("Error fetching public models:", error);
     return NextResponse.json({ error: "Failed to fetch models" }, { status: 500 });
