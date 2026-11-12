@@ -17,8 +17,11 @@ export default function ThemeToggle({ className, variant = "default" }) {
   const effectiveDark = isDark || domIsDark;
 
   const variants = {
+    // Header button: same bordered treatment as the other header
+    // buttons, so the toggle does not read as a floating glyph.
     default: cn(
       "flex items-center justify-center size-8 rounded-md",
+      "border border-zinc-300 dark:border-zinc-700",
       "text-[var(--daytona-text-muted)] hover:text-[var(--daytona-text)]",
       "hover:bg-[var(--daytona-panel-2)] transition-colors"
     ),

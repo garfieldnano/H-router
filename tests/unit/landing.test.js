@@ -9,6 +9,7 @@ import {
   resolveCatalogModels,
   resolvePublishedModels,
   applyLandingModelNames,
+  humanizeModelName,
   resolveCatalogBrands,
   resolveModelBrand,
   resolvePublicBaseUrl,
@@ -226,7 +227,8 @@ describe("applyLandingModelNames", () => {
     });
     expect(r[0].name).toBe("DeepSeek V4.1 Flash");
     expect(r[0].id).toBe("coarena/deepseek-v4-1-flash-1017");
-    expect(r[1].name).toBe("gemini-3-8-flash");
+    // No custom name -> human-readable fallback, never the raw id.
+    expect(r[1].name).toBe("Gemini 3.8 Flash");
   });
 
   it("ignores empty or whitespace-only names and tolerates missing inputs", () => {
@@ -234,10 +236,34 @@ describe("applyLandingModelNames", () => {
       "coarena/deepseek-v4-1-flash-1017": "   ",
       "coarena/gemini-3-8-flash": "",
     });
-    expect(r.map((m) => m.name)).toEqual(["deepseek-v4-1-flash-1017", "gemini-3-8-flash"]);
-    expect(applyLandingModelNames(models, null)).toEqual(models);
-    expect(applyLandingModelNames(models)).toEqual(models);
+    expect(r.map((m) => m.name)).toEqual(["DeepSeek V4.1 Flash 1017", "Gemini 3.8 Flash"]);
+    expect(applyLandingModelNames(models, null).map((m) => m.name)).toEqual([
+      "DeepSeek V4.1 Flash 1017",
+      "Gemini 3.8 Flash",
+    ]);
+    expect(applyLandingModelNames(models).map((m) => m.name)).toEqual([
+      "DeepSeek V4.1 Flash 1017",
+      "Gemini 3.8 Flash",
+    ]);
     expect(applyLandingModelNames(null, { "coarena/deepseek-v4-1-flash-1017": "X" })).toEqual([]);
+  });
+
+  it("keeps a distinct display name that is already human-readable", () => {
+    const r = applyLandingModelNames(
+      [{ id: "coarena/gemini-3-8-flash", name: "Gemini Flash (PRO)", ownedBy: "coarena" }],
+      {}
+    );
+    expect(r[0].name).toBe("Gemini Flash (PRO)");
+  });
+});
+
+// ---------------------------------------------------------------- humanizeModelName
+describe("humanizeModelName", () => {
+  it("title-cases words and joins version segments with a dot", () => {
+    expect(humanizeModelName("gemini-3-8-flash")).toBe("Gemini 3.8 Flash");
+    expect(humanizeModelName("claude-fable-5")).toBe("Claude Fable 5");
+    expect(humanizeModelName("coarena/deepseek-v4-1-flash-1017")).toBe("DeepSeek V4.1 Flash 1017");
+    expect(humanizeModelName("qwen3.5-plus")).toBe("Qwen3.5 Plus");
   });
 });
 

@@ -140,15 +140,50 @@ export function resolvePublishedModels({ models, picked } = {}) {
   return out;
 }
 
+// Human-readable display name for a bare model id ("gemini-3-8-flash" ->
+// "Gemini 3.8 Flash", "claude-fable-5" -> "Claude Fable 5"). Consecutive
+// version segments (digits, or v+digits) join with "." ("3"+"8" -> "3.8",
+// "v4"+"1" -> "V4.1"). Pure.
+const BRAND_WORDS = { deepseek: "DeepSeek", qwen: "Qwen", kimi: "Kimi", glm: "GLM", xai: "xAI" };
+export function humanizeModelName(id) {
+  if (!id || typeof id !== "string") return id;
+  const bare = id.split("/").pop();
+  const parts = bare.split(/[-_]/).filter(Boolean);
+  const tokens = [];
+  for (const p of parts) {
+    const isVersion = /^\d+$/.test(p) || /^v\d+$/i.test(p);
+    if (isVersion && tokens.length > 0 && tokens[tokens.length - 1].version) {
+      tokens[tokens.length - 1].text += `.${p.replace(/^v/i, "")}`;
+    } else {
+      tokens.push({ text: p, version: isVersion });
+    }
+  }
+  return tokens
+    .map(({ text, version }) => {
+      if (version) return text.replace(/^v/i, "V");
+      const lower = text.toLowerCase();
+      return BRAND_WORDS[lower] || lower.charAt(0).toUpperCase() + lower.slice(1);
+    })
+    .join(" ");
+}
+
 // Apply the admin's Landing catalog renames (settings.landingModelNames:
 // model id -> custom display name) to a published model list. A custom
-// name replaces the model's name; an empty/absent name keeps it. Pure.
+// name replaces the model's name; an empty/absent name keeps it. When a
+// model has no custom name and its name is still the raw id (or absent),
+// fall back to a human-readable name from the id so every catalog row
+// shows a display name instead of a lowercase id. Pure.
 export function applyLandingModelNames(models, customNames) {
   const all = Array.isArray(models) ? models : [];
   const names = customNames && typeof customNames === "object" && !Array.isArray(customNames) ? customNames : {};
   return all.map((m) => {
     const custom = names[m.id];
-    return typeof custom === "string" && custom.trim() ? { ...m, name: custom.trim() } : m;
+    if (typeof custom === "string" && custom.trim()) return { ...m, name: custom.trim() };
+    const bare = typeof m.id === "string" ? m.id.split("/").pop() : "";
+    if (!m.name || m.name === bare || m.name === m.id) {
+      return { ...m, name: humanizeModelName(m.id) };
+    }
+    return m;
   });
 }
 

@@ -19,14 +19,19 @@
 const MARQUEE_MIN = 7;
 
 function BrandChip({ brand, hidden }) {
+  // The DeepSeek whale artwork is shorter than the other marks (its
+  // pixels fill 128x95 of a 128 canvas, vs ~118x118 for Gemini and
+  // 128x128 for Claude), so it renders a touch larger to match the
+  // others' optical size.
+  const tall = brand.name === "DeepSeek";
   return (
-    <li aria-hidden={hidden || undefined} className="flex shrink-0 items-center gap-2">
+    <li aria-hidden={hidden || undefined} className="flex shrink-0 items-center gap-2.5">
       {brand.logo ? (
-        <img src={brand.logo} alt="" aria-hidden="true" width={20} height={20} loading="lazy" className="h-5 w-5" />
+        <img src={brand.logo} alt="" aria-hidden="true" width={tall ? 28 : 24} height={tall ? 28 : 24} loading="lazy" className={tall ? "h-7 w-7" : "h-6 w-6"} />
       ) : (
         <span
           aria-hidden="true"
-          className="flex h-5 w-5 items-center justify-center rounded-md bg-zinc-900 text-[11px] font-extrabold text-white"
+          className="flex h-6 w-6 items-center justify-center rounded-md bg-zinc-900 text-[11px] font-extrabold text-white"
         >
           {brand.name.charAt(0)}
         </span>
@@ -41,20 +46,20 @@ export default function BrandStrip({ brands } = {}) {
   if (!Array.isArray(list) || list.length === 0) return null;
   const marquee = list.length >= MARQUEE_MIN;
   return (
-    <section aria-label="Brand model yang dilayani" className="mx-auto mt-14 w-full max-w-6xl px-6">
-      <p className="text-center text-xs font-bold uppercase tracking-widest text-zinc-400 dark:text-zinc-500">
+    <section aria-label="Brand model yang dilayani" className="mx-auto mt-10 w-full max-w-6xl px-6">
+      <p className="text-center text-xs font-bold uppercase tracking-widest text-zinc-500 dark:text-zinc-500">
         Satu kunci — model dari brand-brand ini
       </p>
       {marquee ? (
-        <div className="brand-marquee mt-4 overflow-hidden">
-          <ul className="brand-marquee-track flex w-max items-center gap-2 md:gap-3">
+        <div className="brand-marquee mt-5 overflow-hidden">
+          <ul className="brand-marquee-track flex w-max items-center gap-8 md:gap-10">
             {[...list, ...list, ...list, ...list].map((b, i) => (
               <BrandChip key={`${b.name}-${i}`} brand={b} hidden={i >= list.length} />
             ))}
           </ul>
         </div>
       ) : (
-        <ul className="mt-4 flex flex-wrap items-center justify-center gap-2 md:gap-3">
+        <ul className="mx-auto mt-5 flex max-w-2xl flex-wrap items-center justify-center gap-6 md:gap-10">
           {list.map((b) => (
             <BrandChip key={b.name} brand={b} />
           ))}

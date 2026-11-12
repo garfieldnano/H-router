@@ -166,13 +166,15 @@ const DAYTONA_LIGHT_COMPONENTS = {
     primaryColor: "#ffffff",
     defaultBg: "#ffffff",
     defaultColor: "#0a0a0a",
-    defaultBorderColor: "#e4e4e7",
+    // Light-mode default buttons (Masuk, Dokumentasi, Salin) need a
+    // visible border on white — the old #e4e4e7 was almost borderless.
+    defaultBorderColor: "#a1a1aa",
     defaultHoverBg: "#fafafa",
     defaultHoverColor: "#000000",
-    defaultHoverBorderColor: "#d4d4d8",
+    defaultHoverBorderColor: "#71717a",
     defaultActiveBg: "#f4f4f5",
     defaultActiveColor: "#000000",
-    defaultActiveBorderColor: "#d4d4d8",
+    defaultActiveBorderColor: "#71717a",
     primaryShadow: "none",
     defaultShadow: "none",
     dangerShadow: "none",
@@ -231,7 +233,8 @@ const DAYTONA_LIGHT_COMPONENTS = {
   },
   Tabs: {
     inkBarColor: "#05f170",
-    itemColor: "#71717a",
+    // Inactive tabs must read as tabs, not disabled text.
+    itemColor: "#52525b",
     itemHoverColor: "#0a0a0a",
     itemActiveColor: "#0a0a0a",
     itemSelectedColor: "#0a0a0a",
@@ -240,7 +243,10 @@ const DAYTONA_LIGHT_COMPONENTS = {
   },
   Tag: {
     defaultBg: "#f4f4f5",
-    defaultColor: "#52525b",
+    // Chips (feature list) read as disabled when the text is too pale;
+    // zinc-700 on a bordered chip is clearly intentional.
+    defaultColor: "#3f3f46",
+    defaultBorderColor: "#d4d4d8",
   },
   Modal: {
     contentBg: "#ffffff",

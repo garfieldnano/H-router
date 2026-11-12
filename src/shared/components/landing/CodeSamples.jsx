@@ -29,8 +29,8 @@ export default function CodeSamples({ sampleModelId, baseUrl = LANDING_CONFIG.ba
   );
 
   return (
-    <section id="mulai" aria-label="Mulai" className="mx-auto mt-20 w-full max-w-6xl scroll-mt-24 px-6">
-      <p className="text-xs font-bold uppercase tracking-widest text-[#05a843] dark:text-[#05f170]">Mulai</p>
+    <section id="mulai" aria-label="Mulai" className="mx-auto mt-16 w-full max-w-6xl scroll-mt-24 px-6">
+      <p className="text-xs font-bold uppercase tracking-widest text-[#027a39] dark:text-[#05f170]">Mulai</p>
       <Typography.Title level={2} className="!mt-2 !text-3xl !font-extrabold !tracking-tight md:!text-4xl">
         Mulai dari sini.
       </Typography.Title>
@@ -42,7 +42,7 @@ export default function CodeSamples({ sampleModelId, baseUrl = LANDING_CONFIG.ba
         className="mt-8"
         styles={{ body: { padding: 0 } }}
         title={
-          <div className="flex flex-wrap items-center justify-between gap-2">
+          <div className="flex flex-wrap items-center justify-between gap-2 pl-2">
             <Tabs
               size="small"
               activeKey={tab}
@@ -57,7 +57,7 @@ export default function CodeSamples({ sampleModelId, baseUrl = LANDING_CONFIG.ba
         {/* key={tab} remounts the block per tab, so the panel height is
             always computed from the active snippet alone — a shorter
             snippet (cURL) never inherits the taller tab's height. */}
-        <pre key={tab} className="overflow-x-auto p-4 font-mono text-[13px] leading-relaxed text-zinc-800 dark:text-zinc-200">
+        <pre key={tab} className="mb-0 overflow-x-auto px-4 py-3 font-mono text-[13px] leading-relaxed text-zinc-800 dark:text-zinc-200">
           <code>{samples[tab]}</code>
         </pre>
         <Typography.Text type="secondary" className="block border-t border-zinc-200 px-4 py-2 font-mono text-xs dark:border-zinc-800">

@@ -2,6 +2,14 @@
 
 import { useCallback, useEffect, useState } from "react";
 import { Button, Card, Tag, Typography } from "antd";
+import {
+  DashboardOutlined,
+  SendOutlined,
+  KeyOutlined,
+  GiftOutlined,
+  PieChartOutlined,
+  SyncOutlined,
+} from "@ant-design/icons";
 import ThemeToggle from "@/shared/components/ThemeToggle";
 import { useTheme } from "@/shared/hooks/useTheme";
 import { LANDING_CONFIG, FALLBACK_MODELS, LANDING_BRANDS } from "@/shared/constants/landing.js";
@@ -29,26 +37,32 @@ import BrandStrip from "./BrandStrip.jsx";
 // the repo docs — they are deliberately not advertised here.
 const FEATURES = [
   {
+    icon: "dashboard",
     title: "Dashboard member",
     body: "Member masuk dengan API key dan melihat pemakaian serta kuncinya sendiri — read-only, tanpa bisa melihat data member lain.",
   },
   {
+    icon: "send",
     title: "Bot Telegram",
     body: "Beli kunci, klaim trial 1 hari, dan cek kuota — semua dari Telegram, tanpa buka browser.",
   },
   {
+    icon: "key",
     title: "Satu kunci, banyak model",
     body: "Satu API key untuk semua model; format OpenAI & Anthropic, streaming asli, dan reasoning effort.",
   },
   {
+    icon: "gift",
     title: "Trial gratis 1 hari",
     body: "Coba dulu tanpa bayar: klaim trial 1 hari dari bot, kunci langsung aktif.",
   },
   {
+    icon: "pie-chart",
     title: "Kuota transparan",
     body: "Pemakaian dan sisa kuota tercatat dan bisa dicek sendiri kapan saja, di dashboard atau bot.",
   },
   {
+    icon: "sync",
     title: "Failover otomatis",
     body: "Kalau satu jalur bermasalah, request otomatis pindah ke jalur lain — tetap jalan tanpa perlu apa-apa.",
   },
@@ -66,7 +80,7 @@ const STEPS = [
   {
     n: "01",
     title: "Ambil API key",
-    body: "Dapatkan kunci lewat bot Telegram atau dari panel — gratis dan langsung bisa dipakai.",
+    body: "Dapatkan kunci lewat bot Telegram atau panel — gratis, langsung aktif.",
   },
   {
     n: "02",
@@ -76,14 +90,23 @@ const STEPS = [
   {
     n: "03",
     title: "Kirim request",
-    body: "Kirim ke /chat/completions (OpenAI) atau /messages (Anthropic), dengan streaming token demi token.",
+    body: "Kirim ke /chat/completions atau /messages, streaming token demi token.",
   },
   {
     n: "04",
     title: "Pemakaian tercatat",
-    body: "Token dan request tercatat otomatis di dashboard member — transparan, tanpa tagihan tersembunyi.",
+    body: "Pemakaian tercatat otomatis di dashboard — transparan, tanpa tagihan tersembunyi.",
   },
 ];
+
+const FEATURE_ICONS = {
+  dashboard: DashboardOutlined,
+  send: SendOutlined,
+  key: KeyOutlined,
+  gift: GiftOutlined,
+  "pie-chart": PieChartOutlined,
+  sync: SyncOutlined,
+};
 
 // Landing CTAs use the plain Daytona primary button — no text-color
 // override. The antd token + the Daytona CSS layer give it white text
@@ -222,7 +245,7 @@ export default function LandingPage({ baseUrl = LANDING_CONFIG.baseUrl } = {}) {
             spec table on the right. The model count in the badge and the
             subtext follows the admin catalog (1 model when the admin picked
             one, all of them when nothing is picked). */}
-        <section className="mx-auto w-full max-w-6xl px-6 pt-16 md:pt-24">
+        <section className="mx-auto w-full max-w-6xl px-6 pt-12 md:pt-20">
           <div className="grid items-start gap-10 lg:grid-cols-[1.15fr_1fr]">
             <div>
               <Typography.Title
@@ -261,8 +284,18 @@ export default function LandingPage({ baseUrl = LANDING_CONFIG.baseUrl } = {}) {
                   { label: "Streaming", value: "SSE · tools · reasoning" },
                 ].map((row) => (
                   <div key={row.label} className="flex items-center justify-between gap-4 px-5 py-4">
-                    <dt className="text-sm text-zinc-500 dark:text-zinc-400">{row.label}</dt>
-                    <dd className={`text-sm font-medium ${row.mono ? "font-mono" : ""}`}>{row.value}</dd>
+                    <dt className="shrink-0 text-sm text-zinc-500 dark:text-zinc-400">{row.label}</dt>
+                    {row.mono ? (
+                      <dd
+                        className="min-w-0 max-w-[240px] cursor-pointer truncate font-mono text-sm font-medium"
+                        title={`${host} — klik untuk menyalin`}
+                        onClick={() => navigator.clipboard?.writeText(host)}
+                      >
+                        {row.value}
+                      </dd>
+                    ) : (
+                      <dd className="text-sm font-medium">{row.value}</dd>
+                    )}
                   </div>
                 ))}
               </dl>
@@ -288,15 +321,15 @@ export default function LandingPage({ baseUrl = LANDING_CONFIG.baseUrl } = {}) {
         />
 
         {/* ---------------------------------------------------------- cara kerja */}
-        <section id="cara-pakai" aria-label="Cara pakai" className="mx-auto mt-20 w-full max-w-6xl scroll-mt-24 px-6">
-          <p className="text-xs font-bold uppercase tracking-widest text-[#05a843] dark:text-[#05f170]">Cara kerja</p>
+        <section id="cara-pakai" aria-label="Cara pakai" className="mx-auto mt-16 w-full max-w-6xl scroll-mt-24 px-6">
+          <p className="text-xs font-bold uppercase tracking-widest text-[#027a39] dark:text-[#05f170]">Cara kerja</p>
           <Typography.Title level={2} className="!mt-2 !text-3xl !font-extrabold !tracking-tight md:!text-4xl">
             Empat langkah, langsung jalan.
           </Typography.Title>
           <div className="mt-8 grid gap-4 md:grid-cols-4">
             {STEPS.map((s) => (
               <Card key={s.n}>
-                <Typography.Text strong className="font-mono text-sm text-[#05a843] dark:text-[#05f170]">
+                <Typography.Text strong className="font-mono text-sm text-[#027a39] dark:text-[#05f170]">
                   {s.n}
                 </Typography.Text>
                 <Typography.Title level={4} className="!mt-2 !mb-1">
@@ -317,8 +350,8 @@ export default function LandingPage({ baseUrl = LANDING_CONFIG.baseUrl } = {}) {
         <CodeSamples sampleModelId={sampleModelId} baseUrl={baseUrl} />
 
         {/* ---------------------------------------------------------- fitur */}
-        <section id="fitur" aria-label="Fitur" className="mx-auto mt-20 w-full max-w-6xl scroll-mt-24 px-6">
-          <p className="text-xs font-bold uppercase tracking-widest text-[#05a843] dark:text-[#05f170]">Fitur</p>
+        <section id="fitur" aria-label="Fitur" className="mx-auto mt-16 w-full max-w-6xl scroll-mt-24 px-6">
+          <p className="text-xs font-bold uppercase tracking-widest text-[#027a39] dark:text-[#05f170]">Fitur</p>
           <Typography.Title level={2} className="!mt-2 !text-3xl !font-extrabold !tracking-tight md:!text-4xl">
             Satu gateway, lengkap dengan alat jualan.
           </Typography.Title>
@@ -330,14 +363,23 @@ export default function LandingPage({ baseUrl = LANDING_CONFIG.baseUrl } = {}) {
               <Tag key={c}>{c}</Tag>
             ))}
           </div>
-          <div className="mt-8 grid gap-4 md:grid-cols-2">
-            {FEATURES.map((f) => (
-              <Card key={f.title} title={f.title}>
-                <Typography.Paragraph type="secondary" className="!mb-0 !text-sm">
-                  {f.body}
-                </Typography.Paragraph>
-              </Card>
-            ))}
+          <div className="mt-5 grid gap-4 md:grid-cols-2">
+            {FEATURES.map((f) => {
+              const Icon = FEATURE_ICONS[f.icon] || DashboardOutlined;
+              return (
+                <Card key={f.title}>
+                  <span className="flex h-9 w-9 items-center justify-center rounded-lg bg-[#e9fbf0] text-lg text-[#027a39] dark:bg-emerald-950/60 dark:text-[#05f170]">
+                    <Icon />
+                  </span>
+                  <Typography.Title level={4} className="!mt-3 !mb-1">
+                    {f.title}
+                  </Typography.Title>
+                  <Typography.Paragraph type="secondary" className="!mb-0 !text-sm">
+                    {f.body}
+                  </Typography.Paragraph>
+                </Card>
+              );
+            })}
           </div>
         </section>
 
@@ -345,8 +387,8 @@ export default function LandingPage({ baseUrl = LANDING_CONFIG.baseUrl } = {}) {
         {/* Soft green-tint card in the Daytona theme (the old near-black
             card did not match the light theme). The buttons are the plain
             Daytona primary + default — no color override. */}
-        <section className="mx-auto mt-20 w-full max-w-6xl px-6 pb-20">
-          <div className="rounded-2xl border border-[#b8e6c6] bg-[#e9fbf0] px-6 py-14 text-center dark:border-emerald-900 dark:bg-emerald-950/60">
+        <section className="mx-auto mt-16 w-full max-w-6xl px-6 pb-12">
+          <div className="rounded-2xl border border-[#b8e6c6] bg-[#e9fbf0] px-6 py-10 text-center dark:border-emerald-900 dark:bg-emerald-950/60">
             <Typography.Title
               level={2}
               className="!text-3xl !font-extrabold !tracking-tight !text-zinc-900 md:!text-4xl dark:!text-white"
@@ -366,7 +408,7 @@ export default function LandingPage({ baseUrl = LANDING_CONFIG.baseUrl } = {}) {
               >
                 Ambil key gratis
               </Button>
-              <Button size="large" href={LANDING_CONFIG.docsUrl} target="_blank" rel="noreferrer">
+              <Button size="large" href={LANDING_CONFIG.docsUrl} target="_blank" rel="noreferrer" className="bg-transparent">
                 Dokumentasi API
               </Button>
             </div>
@@ -376,7 +418,7 @@ export default function LandingPage({ baseUrl = LANDING_CONFIG.baseUrl } = {}) {
 
       {/* ---------------------------------------------------------- footer */}
       <footer className="border-t border-zinc-200 dark:border-zinc-800">
-        <div className="mx-auto flex w-full max-w-6xl flex-col gap-6 px-6 py-10 md:flex-row md:items-start md:justify-between">
+        <div className="mx-auto flex w-full max-w-6xl flex-col gap-8 px-6 py-8 md:flex-row md:items-start md:justify-between">
           <div>
             <div className="flex items-center gap-2">
               <img src="/h-router-logo.svg" alt="H-router" className="h-7 w-7" />
@@ -386,20 +428,40 @@ export default function LandingPage({ baseUrl = LANDING_CONFIG.baseUrl } = {}) {
               Gateway LLM gratis, dengan alat jualan kunci.
             </p>
           </div>
-          <nav className="flex flex-wrap gap-x-8 gap-y-3 text-sm font-medium text-zinc-600 dark:text-zinc-300">
-            <a href={LANDING_CONFIG.docsUrl} target="_blank" rel="noreferrer" className="hover:text-zinc-900 dark:hover:text-white">
-              Dokumentasi
-            </a>
-            <a href="/login" className="hover:text-zinc-900 dark:hover:text-white">Masuk panel</a>
-            <a href={baseUrl} target="_blank" rel="noreferrer" className="hover:text-zinc-900 dark:hover:text-white">
-              API
-            </a>
-            <a href={LANDING_CONFIG.telegramUrl} target="_blank" rel="noreferrer" className="hover:text-zinc-900 dark:hover:text-white">
-              Telegram
-            </a>
-          </nav>
+          <div className="flex gap-12">
+            <nav className="flex flex-col gap-2.5 text-sm">
+              <span className="text-xs font-bold uppercase tracking-widest text-zinc-500 dark:text-zinc-400">Produk</span>
+              <a href="#katalog" className="font-medium text-zinc-600 hover:text-zinc-900 dark:text-zinc-300 dark:hover:text-white">
+                Model
+              </a>
+              <a href="#cara-pakai" className="font-medium text-zinc-600 hover:text-zinc-900 dark:text-zinc-300 dark:hover:text-white">
+                Cara pakai
+              </a>
+              <a href="#fitur" className="font-medium text-zinc-600 hover:text-zinc-900 dark:text-zinc-300 dark:hover:text-white">
+                Fitur
+              </a>
+              <a href="#mulai" className="font-medium text-zinc-600 hover:text-zinc-900 dark:text-zinc-300 dark:hover:text-white">
+                Mulai
+              </a>
+            </nav>
+            <nav className="flex flex-col gap-2.5 text-sm">
+              <span className="text-xs font-bold uppercase tracking-widest text-zinc-500 dark:text-zinc-400">Lainnya</span>
+              <a href={LANDING_CONFIG.docsUrl} target="_blank" rel="noreferrer" className="font-medium text-zinc-600 hover:text-zinc-900 dark:text-zinc-300 dark:hover:text-white">
+                Dokumentasi
+              </a>
+              <a href="/login" className="font-medium text-zinc-600 hover:text-zinc-900 dark:text-zinc-300 dark:hover:text-white">
+                Masuk panel
+              </a>
+              <a href={baseUrl} target="_blank" rel="noreferrer" className="font-medium text-zinc-600 hover:text-zinc-900 dark:text-zinc-300 dark:hover:text-white">
+                API
+              </a>
+              <a href={LANDING_CONFIG.telegramUrl} target="_blank" rel="noreferrer" className="font-medium text-zinc-600 hover:text-zinc-900 dark:text-zinc-300 dark:hover:text-white">
+                Telegram
+              </a>
+            </nav>
+          </div>
         </div>
-        <p className="border-t border-zinc-200 px-6 py-4 text-center text-xs text-zinc-500 dark:border-zinc-800 dark:text-zinc-400">
+        <p className="border-t border-zinc-200 px-6 py-3 text-center text-xs text-zinc-500 dark:border-zinc-800 dark:text-zinc-400">
           H-router · © 2026
         </p>
       </footer>

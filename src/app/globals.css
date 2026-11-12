@@ -799,6 +799,14 @@ button:disabled,
     color: #00a651;
   }
 
+  /* Secondary text: antd's light-mode colorTextSecondary is ~45%
+     black on white, which reads washed-out in card bodies and
+     captions. Zinc-600 keeps the hierarchy without the pale look.
+     Dark mode keeps antd's own secondary. */
+  html:not(.dark) .ant-typography-secondary {
+    color: #52525b;
+  }
+
   /* ---------- Card ---------- */
   .ant-card {
     background: var(--daytona-panel);

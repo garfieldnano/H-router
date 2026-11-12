@@ -59,8 +59,8 @@ export default function ModelCatalog({ catalog }) {
   const visible = expanded ? models : models.slice(0, PAGE_SIZE);
 
   return (
-    <section id="katalog" aria-label="Katalog model" className="mx-auto mt-20 w-full max-w-6xl scroll-mt-24 px-6">
-      <p className="text-xs font-bold uppercase tracking-widest text-[#05a843] dark:text-[#05f170]">Katalog</p>
+    <section id="katalog" aria-label="Katalog model" className="mx-auto mt-16 w-full max-w-6xl scroll-mt-24 px-6">
+      <p className="text-xs font-bold uppercase tracking-widest text-[#027a39] dark:text-[#05f170]">Katalog</p>
       <Typography.Title level={2} className="!mt-2 !text-3xl !font-extrabold !tracking-tight md:!text-4xl">
         Model yang tersedia.
       </Typography.Title>
