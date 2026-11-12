@@ -181,8 +181,11 @@ export default function DashboardPreview({ modelCount, models, health, host }) {
                     <div
                       className="h-2 rounded-full bg-[#05a843] dark:bg-[#05f170]"
                       style={{ width: `${latencyPct}%` }}
-                      title={`Skala 0–${LATENCY_SCALE_MS} ms`}
                     />
+                  </div>
+                  <div className="mt-1 flex justify-between font-mono text-[10px] text-zinc-500 dark:text-zinc-500">
+                    <span>0</span>
+                    <span>{`${LATENCY_SCALE_MS} ms`}</span>
                   </div>
                 </div>
               ) : (

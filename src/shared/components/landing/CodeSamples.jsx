@@ -62,7 +62,12 @@ export default function CodeSamples({ sampleModelId, baseUrl = LANDING_CONFIG.ba
         </pre>
         <Typography.Text type="secondary" className="block border-t border-zinc-200 px-4 py-2 font-mono text-xs dark:border-zinc-800">
           Base URL{" "}
-          <Typography.Text strong className="font-mono text-xs">
+          <Typography.Text
+            strong
+            className="inline-block max-w-[240px] cursor-pointer truncate align-middle font-mono text-xs"
+            title={baseUrl}
+            onClick={() => navigator.clipboard?.writeText(baseUrl)}
+          >
             {baseUrl}
           </Typography.Text>
         </Typography.Text>
