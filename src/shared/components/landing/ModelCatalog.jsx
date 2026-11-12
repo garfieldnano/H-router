@@ -8,25 +8,22 @@ import CopyButton from "./CopyButton.jsx";
 
 const PAGE_SIZE = 12;
 
-// Brand mark for one catalog row: the model's brand logo (vendored SVG)
-// in a white chip so the monochrome mark reads in both themes, or a
-// styled initial badge when the brand has no logo. Nothing renders when
-// the brand cannot be resolved at all.
+// Brand mark for one catalog row: the model's brand logo only — no chip,
+// no background, so the mark sits clean on the page (dark or light).
+// A styled initial badge only when the brand has no logo. Nothing renders
+// when the brand cannot be resolved at all.
 function BrandAvatar({ model }) {
   const brand = resolveModelBrand({ id: model.id, ownedBy: model.ownedBy, brands: LANDING_BRANDS });
   if (!brand) return null;
+  if (brand.logo) {
+    return <img src={brand.logo} alt={brand.name} width={28} height={28} loading="lazy" className="h-7 w-7 shrink-0" />;
+  }
   return (
-    <span className="flex h-9 w-9 items-center justify-center rounded-lg border border-zinc-200 bg-white shadow-sm">
-      {brand.logo ? (
-        <img src={brand.logo} alt={brand.name} width={20} height={20} loading="lazy" className="h-5 w-5" />
-      ) : (
-        <span
-          aria-hidden="true"
-          className="flex h-5 w-5 items-center justify-center rounded-md bg-zinc-900 text-[11px] font-extrabold text-white"
-        >
-          {brand.name.charAt(0)}
-        </span>
-      )}
+    <span
+      aria-hidden="true"
+      className="flex h-7 w-7 shrink-0 items-center justify-center rounded-md bg-zinc-900 text-[11px] font-extrabold text-white"
+    >
+      {brand.name.charAt(0)}
     </span>
   );
 }

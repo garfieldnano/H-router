@@ -20,10 +20,7 @@ const MARQUEE_MIN = 7;
 
 function BrandChip({ brand, hidden }) {
   return (
-    <li
-      aria-hidden={hidden || undefined}
-      className="flex shrink-0 items-center gap-2 rounded-xl border border-zinc-200 bg-white px-3 py-2 shadow-sm"
-    >
+    <li aria-hidden={hidden || undefined} className="flex shrink-0 items-center gap-2">
       {brand.logo ? (
         <img src={brand.logo} alt="" aria-hidden="true" width={20} height={20} loading="lazy" className="h-5 w-5" />
       ) : (
@@ -34,7 +31,7 @@ function BrandChip({ brand, hidden }) {
           {brand.name.charAt(0)}
         </span>
       )}
-      <span className="text-sm font-bold text-zinc-800">{brand.name}</span>
+      <span className="text-sm font-bold text-zinc-800 dark:text-zinc-100">{brand.name}</span>
     </li>
   );
 }
