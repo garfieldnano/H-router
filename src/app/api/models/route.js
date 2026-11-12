@@ -4,17 +4,50 @@ import { getSettings, getProviderConnections } from "@/lib/localDb";
 import { applyVisionOverrideToCaps } from "@/shared/utils/visionAdapter.js";
 import { getDisabledModels } from "@/lib/disabledModelsDb";
 import { AI_MODELS } from "@/shared/constants/config";
-import { getProviderAlias, ALIAS_TO_ID } from "@/shared/constants/providers";
+import { getProviderAlias, ALIAS_TO_ID, ID_TO_ALIAS } from "@/shared/constants/providers";
 import { getCapabilitiesForModel } from "open-sse/providers/capabilities.js";
 
 // GET /api/models - Get models with aliases
-export async function GET() {
+//
+// ?connectedOnly=1 — only models from providers the admin actually added
+// (an active provider connection). Used by the Landing catalog picker so it
+// lists just the models you can sell, not the whole 1,451-model catalog.
+// Without the flag the full catalog is returned, as before.
+export async function GET(request) {
   try {
+    const connectedOnly =
+      new URL(request?.url || "http://localhost/api/models").searchParams.get("connectedOnly") === "1";
+    let connectedProviders = null;
+    if (connectedOnly) {
+      try {
+        const connections = await getProviderConnections();
+        connectedProviders = new Set(
+          (Array.isArray(connections) ? connections : [])
+            .filter((c) => c?.isActive !== false && c?.provider)
+            .map((c) => c.provider)
+        );
+      } catch {
+        connectedProviders = new Set();
+      }
+    }
+    // A model is sellable when its provider has an active connection. The
+    // connection stores the provider id, so check the id and both alias
+    // directions (a static model's provider may be recorded as an alias).
+    const isConnected = (providerId) => {
+      if (!connectedProviders) return true;
+      if (connectedProviders.has(providerId)) return true;
+      if (ALIAS_TO_ID[providerId] && connectedProviders.has(ALIAS_TO_ID[providerId])) return true;
+      if (ID_TO_ALIAS[providerId] && connectedProviders.has(ID_TO_ALIAS[providerId])) return true;
+      if (getProviderAlias(providerId) && connectedProviders.has(getProviderAlias(providerId))) return true;
+      return false;
+    };
+
     const modelAliases = await getModelAliases();
     const disabled = await getDisabledModels();
 
     const models = AI_MODELS
       .filter((m) => {
+        if (!isConnected(m.provider)) return false;
         const alias = getProviderAlias(m.provider) || m.provider;
         const list = disabled[alias] || disabled[m.provider] || [];
         return !list.includes(m.model);
@@ -74,6 +107,7 @@ export async function GET() {
     const seenRouted = new Set(models.map((m) => m.routedModel));
     const customModels = (await getCustomModels()).filter((m) => {
       if (!m?.id || (m.kind || m.type || "llm") !== "llm") return false;
+      if (!isConnected(m.providerAlias)) return false;
       if (seenRouted.has(`${displayAlias(m.providerAlias)}/${m.id}`)) return false;
       return !seenFull.has(`${m.providerAlias}/${m.id}`);
     });

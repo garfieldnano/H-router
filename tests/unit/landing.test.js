@@ -296,6 +296,25 @@ describe("resolveModelBrand", () => {
     expect(resolveModelBrand({ id: "groq/meta-llama/llama-4-maverick-17b-128e-instruct", ownedBy: "Meta", brands }).name).toBe("Meta");
   });
 
+  it("resolves the real brand from the model family when the provider is an aggregator (coarena)", () => {
+    // coarena is a proxy: the provider alias and owner both say "coarena",
+    // so the brand must come from the model name — never a "coarena" badge.
+    expect(resolveModelBrand({ id: "coarena/claude-opus-5-5", ownedBy: "coarena", brands })).toEqual({
+      name: "Anthropic",
+      logo: "/brands/anthropic.svg",
+    });
+    expect(resolveModelBrand({ id: "coarena/claude-sonnet-5-5", ownedBy: "coarena", brands }).name).toBe("Anthropic");
+    expect(resolveModelBrand({ id: "coarena/claude-haiku-5-5", ownedBy: "coarena", brands }).name).toBe("Anthropic");
+    expect(resolveModelBrand({ id: "coarena/deepseek-v4-1-flash-1017", ownedBy: "coarena", brands })).toEqual({
+      name: "DeepSeek",
+      logo: "/brands/deepseek.svg",
+    });
+    expect(resolveModelBrand({ id: "coarena/gemini-3-8-flash", ownedBy: "coarena", brands })).toEqual({
+      name: "Google Gemini",
+      logo: "/brands/googlegemini.svg",
+    });
+  });
+
   it("returns a text badge when the brand has no vendored logo", () => {
     expect(resolveModelBrand({ id: "oc/model-a", ownedBy: "MerekLain", brands })).toEqual({
       name: "MerekLain",

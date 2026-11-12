@@ -141,7 +141,9 @@ export default function ProfilePage() {
   // Model options for the landing catalog picker (admin /api/models list).
   useEffect(() => {
     setLandingLoading(true);
-    fetch("/api/models")
+    // Landing picker: only models from providers we actually added
+    // (connectedOnly) — not the whole 1,451-model catalog.
+    fetch("/api/models?connectedOnly=1")
       .then((res) => res.json())
       .then((data) => {
         const list = Array.isArray(data?.models) ? data.models : [];

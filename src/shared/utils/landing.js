@@ -212,15 +212,49 @@ const BRAND_BY_OWNER = {
   nvidia: "NVIDIA",
 };
 
-// Resolve one model's brand name from its provider alias, then its owner
-// name. Shared by resolveCatalogBrands (the strip) and resolveModelBrand
-// (one catalog row). Returns null when neither resolves to a name.
+// Model-family prefix (the part after "/") -> brand name. A model served
+// through an aggregator/proxy provider (e.g. coarena) carries the provider's
+// name, not the model's real brand — but the model family itself reveals it
+// (claude-* is Anthropic, deepseek-* is DeepSeek, gemini-* is Google
+// Gemini). Checked after the provider alias and before the owner name, so a
+// known provider still wins and an unknown proxy falls through to the real
+// brand instead of rendering a fake initial-letter badge for the proxy.
+const BRAND_BY_MODEL_PREFIX = [
+  ["claude", "Anthropic"],
+  ["deepseek", "DeepSeek"],
+  ["gemini", "Google Gemini"],
+  ["gpt", "OpenAI"],
+  ["qwen", "Qwen"],
+  ["grok", "xAI"],
+  ["mistral", "Mistral"],
+  ["llama", "Meta"],
+  ["kimi", "Kimi"],
+  ["moonshot", "Kimi"],
+  ["glm", "GLM"],
+  ["minimax", "MiniMax"],
+  ["nemotron", "NVIDIA"],
+];
+function brandNameForModelFamily(modelName) {
+  const name = String(modelName || "").toLowerCase();
+  for (const [prefix, brand] of BRAND_BY_MODEL_PREFIX) {
+    if (name.startsWith(prefix)) return brand;
+  }
+  return null;
+}
+
+// Resolve one model's brand name from its provider alias, then its model
+// family, then its owner name. Shared by resolveCatalogBrands (the strip)
+// and resolveModelBrand (one catalog row). Returns null when neither
+// resolves to a name.
 function brandNameForModel({ id, ownedBy } = {}) {
   if (!id || typeof id !== "string") return null;
-  const provider = id.split("/")[0].toLowerCase();
+  const parts = id.split("/");
+  const provider = parts[0].toLowerCase();
+  const modelName = parts.slice(1).join("/");
   const owner = typeof ownedBy === "string" ? ownedBy.toLowerCase() : "";
   return (
     BRAND_BY_PROVIDER[provider] ||
+    brandNameForModelFamily(modelName) ||
     BRAND_BY_OWNER[owner] ||
     (typeof ownedBy === "string" && ownedBy ? ownedBy : null)
   );
