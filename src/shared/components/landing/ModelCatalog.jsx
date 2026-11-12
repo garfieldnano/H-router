@@ -87,13 +87,6 @@ export default function ModelCatalog({ catalog }) {
                       {m.name || m.id}
                     </Typography.Text>
                   }
-                  description={
-                    m.name && m.name !== m.id ? (
-                      <Typography.Text type="secondary" className="font-mono text-xs">{m.id}</Typography.Text>
-                    ) : m.ownedBy ? (
-                      <Typography.Text type="secondary" className="text-xs">{m.ownedBy}</Typography.Text>
-                    ) : null
-                  }
                 />
               </List.Item>
             )}
