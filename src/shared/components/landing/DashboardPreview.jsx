@@ -80,7 +80,7 @@ export default function DashboardPreview({ modelCount, models, health, host }) {
             <span className="size-3 rounded-full bg-[#febc2e]" />
             <span className="size-3 rounded-full bg-[#28c840]" />
           </span>
-          <span className="font-mono text-sm text-zinc-600 dark:text-zinc-300">{host}/v1</span>
+          <span className="font-mono text-sm text-zinc-600 dark:text-zinc-300">{host}</span>
           <span className={`ml-auto rounded-full px-2.5 py-0.5 text-xs font-bold ${liveClass}`}>
             {liveLabel}
           </span>
