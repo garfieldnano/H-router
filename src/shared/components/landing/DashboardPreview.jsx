@@ -53,6 +53,10 @@ export default function DashboardPreview({ modelCount, models, health, host }) {
   }, []);
 
   const topModel = list[0] || null;
+  // The latency line never shows the upstream provider prefix ("coarena/…")
+  // — the selling page must not reveal where the model is sourced from.
+  // Show the bare model id, the same form the request-flow rows use.
+  const topModelLabel = topModel ? topModel.id.split("/").pop() : null;
   const liveLabel =
     health?.status === "online" ? "live" : health?.status === "offline" ? "offline" : "memeriksa…";
   const liveClass =
@@ -148,7 +152,7 @@ export default function DashboardPreview({ modelCount, models, health, host }) {
                         ) : null;
                       })()}
                       <span className="min-w-0 truncate font-mono text-zinc-700 dark:text-zinc-200">
-                        {topModel.id}
+                        {topModelLabel}
                       </span>
                     </span>
                     <span className="shrink-0 font-mono text-zinc-500 dark:text-zinc-400">

@@ -28,6 +28,30 @@ function BrandAvatar({ model }) {
   );
 }
 
+// Live signal that fills the empty middle of a catalog row: a small
+// equalizer (bars rising/falling, staggered) plus a pulsing "Live" dot.
+// Pure CSS, subtle green, so the row reads as a live model instead of
+// an empty gap between the name and the copy button.
+function LiveSignal() {
+  return (
+    <span className="flex min-w-0 flex-1 items-center justify-center gap-2" aria-hidden="true">
+      <span className="flex h-4 items-end gap-[3px]">
+        {[0, 1, 2, 3, 4].map((i) => (
+          <span
+            key={i}
+            className="animate-wave w-[3px] rounded-full bg-[#05a843] dark:bg-[#05f170]"
+            style={{ height: "100%", animationDelay: `${i * 0.14}s` }}
+          />
+        ))}
+      </span>
+      <span className="flex items-center gap-1.5 text-[11px] font-semibold text-zinc-400 dark:text-zinc-500">
+        <span className="animate-pulse h-1.5 w-1.5 rounded-full bg-[#05a843] dark:bg-[#05f170]" />
+        Live
+      </span>
+    </span>
+  );
+}
+
 // Data-driven model catalog. `catalog` comes from the parent page:
 // { models, total, source, loading } — the admin panel's published list
 // first (source "admin"), live /v1/models data next, FALLBACK_MODELS only
@@ -62,32 +86,30 @@ export default function ModelCatalog({ catalog }) {
         />
       ) : (
         <>
-          <List
-            bordered
-            className="mt-8"
-            dataSource={visible}
-            renderItem={(m) => (
-              <List.Item
-                actions={[
-                  m.tier ? (
-                    <Tag key="tier" color={m.tier === "FREE" ? "green" : "default"}>
-                      {m.tier}
-                    </Tag>
-                  ) : null,
-                  <CopyButton key="copy" text={m.id} />,
-                ]}
+          <div className="mt-8 overflow-hidden rounded-lg border border-zinc-200 dark:border-zinc-800">
+            {visible.map((m) => (
+              <div
+                key={m.id}
+                className="flex cursor-pointer items-center gap-3 border-b border-zinc-200 px-4 py-3 transition-colors last:border-b-0 hover:bg-zinc-50 dark:border-zinc-800 dark:hover:bg-zinc-900/60"
+                onClick={() => navigator.clipboard?.writeText(m.id)}
+                title="Klik untuk menyalin id"
               >
-                <List.Item.Meta
-                  avatar={<BrandAvatar model={m} />}
-                  title={
-                    <Typography.Text strong className={m.name && m.name !== m.id ? "text-sm" : "font-mono text-sm"}>
-                      {m.name || m.id}
-                    </Typography.Text>
-                  }
-                />
-              </List.Item>
-            )}
-          />
+                <BrandAvatar model={m} />
+                <Typography.Text strong className={m.name && m.name !== m.id ? "shrink-0 text-sm" : "shrink-0 font-mono text-sm"}>
+                  {m.name || m.id}
+                </Typography.Text>
+                <LiveSignal />
+                {m.tier ? (
+                  <Tag color={m.tier === "FREE" ? "green" : "default"} className="shrink-0">
+                    {m.tier}
+                  </Tag>
+                ) : null}
+                <span className="shrink-0" onClick={(e) => e.stopPropagation()}>
+                  <CopyButton text={m.id} />
+                </span>
+              </div>
+            ))}
+          </div>
           {total > PAGE_SIZE ? (
             <div className="mt-4 text-center">
               <Button type="default" onClick={() => setExpanded((v) => !v)}>
