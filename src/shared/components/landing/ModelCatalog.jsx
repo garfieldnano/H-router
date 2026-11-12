@@ -29,27 +29,19 @@ function BrandAvatar({ model }) {
 }
 
 // Live signal that fills the empty middle of a catalog row: a "Live"
-// badge at a fixed spot plus a full-width equalizer (many bars spanning
-// the whole middle, staggered) so the animation is long and every row's
-// signal starts at the same x. Pure CSS, subtle green, so the row reads
-// as a live model instead of an empty gap between the name and the copy
-// button.
+// badge at a fixed spot plus a thin line with one soft green glow that
+// travels smoothly left to right, like a packet on a wire. One calm
+// motion — no jumping bars — so the row reads as a live model instead
+// of an empty gap between the name and the copy button.
 function LiveSignal() {
-  const BARS = 22;
   return (
     <span className="flex min-w-0 flex-1 items-center gap-3" aria-hidden="true">
       <span className="flex shrink-0 items-center gap-1.5 text-[11px] font-semibold text-zinc-400 dark:text-zinc-500">
         <span className="animate-pulse h-1.5 w-1.5 rounded-full bg-[#05a843] dark:bg-[#05f170]" />
         Live
       </span>
-      <span className="flex h-4 min-w-0 flex-1 items-end gap-[2px]">
-        {Array.from({ length: BARS }, (_, i) => (
-          <span
-            key={i}
-            className="animate-wave min-w-0 flex-1 rounded-full bg-[#05a843] dark:bg-[#05f170]"
-            style={{ height: "100%", animationDelay: `${(i % 7) * 0.13}s` }}
-          />
-        ))}
+      <span className="relative h-[2px] min-w-0 flex-1 overflow-hidden rounded-full bg-zinc-200 dark:bg-zinc-800">
+        <span className="animate-signal-travel absolute top-0 h-full w-24 rounded-full bg-gradient-to-r from-transparent via-[#05a843] to-transparent dark:via-[#05f170]" />
       </span>
     </span>
   );

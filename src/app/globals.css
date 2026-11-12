@@ -457,13 +457,16 @@ button:disabled,
 }
 .animate-pulse-glow { animation: pulseGlow 3s ease-in-out infinite; }
 
-/* Live signal (landing catalog rows): equalizer bars that rise and fall
-   from the bottom, staggered so the row reads as a live model. */
-@keyframes wave {
-  0%, 100% { transform: scaleY(0.3); }
-  50% { transform: scaleY(1); }
+/* Live signal (landing catalog rows): a soft glow that travels smoothly
+   along a thin line, left to right, like a packet on a wire. One calm
+   motion — no jumping bars. */
+@keyframes signal-travel {
+  0% { left: 0; opacity: 0; }
+  8% { opacity: 1; }
+  92% { opacity: 1; }
+  100% { left: calc(100% - 96px); opacity: 0; }
 }
-.animate-wave { animation: wave 1.1s ease-in-out infinite; transform-origin: bottom; }
+.animate-signal-travel { animation: signal-travel 2.6s ease-in-out infinite; }
 
 /* CTA shimmer + glow pulse */
 @keyframes ctaShimmer {
