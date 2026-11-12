@@ -8,7 +8,9 @@ import {
   formatRelativeTime,
   formatTokenCount,
   normalizeRecentRequests,
+  resolveModelBrand,
 } from "@/shared/utils/landing.js";
+import { LANDING_BRANDS } from "@/shared/constants/landing.js";
 
 const FLOW_POLL_MS = 5000;
 const FLOW_TIMEOUT_MS = 5000;
@@ -138,8 +140,16 @@ export default function DashboardPreview({ modelCount, models, health, host }) {
               {topModel ? (
                 <div className="mt-3">
                   <div className="flex items-center justify-between gap-3 text-sm">
-                    <span className="min-w-0 truncate font-mono text-zinc-700 dark:text-zinc-200">
-                      {topModel.id}
+                    <span className="flex min-w-0 items-center gap-2">
+                      {(() => {
+                        const brand = resolveModelBrand({ id: topModel.id, ownedBy: topModel.ownedBy, brands: LANDING_BRANDS });
+                        return brand?.logo ? (
+                          <img src={brand.logo} alt={brand.name} width={18} height={18} loading="lazy" className="h-[18px] w-[18px] shrink-0" />
+                        ) : null;
+                      })()}
+                      <span className="min-w-0 truncate font-mono text-zinc-700 dark:text-zinc-200">
+                        {topModel.id}
+                      </span>
                     </span>
                     <span className="shrink-0 font-mono text-zinc-500 dark:text-zinc-400">
                       {formatLatencyShort(latencyMs)}
@@ -183,6 +193,12 @@ export default function DashboardPreview({ modelCount, models, health, host }) {
                         {formatTokenCount(r.tokens)} token
                       </span>
                       <span className="text-zinc-400 dark:text-zinc-500">·</span>
+                      {(() => {
+                        const brand = resolveModelBrand({ id: r.model, ownedBy: "", brands: LANDING_BRANDS });
+                        return brand?.logo ? (
+                          <img src={brand.logo} alt={brand.name} width={16} height={16} loading="lazy" className="h-4 w-4 shrink-0" />
+                        ) : null;
+                      })()}
                       <span className="min-w-0 truncate text-zinc-500 dark:text-zinc-400">{r.model}</span>
                       <span className="shrink-0 text-zinc-400 dark:text-zinc-500">
                         {formatRelativeTime(r.timestamp)}
