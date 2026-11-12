@@ -31,11 +31,18 @@ export function normalizeModelsResponse(json) {
   return out;
 }
 
-// Pick what the catalog shows. Live gateway data wins; the editable
-// FALLBACK_MODELS list is used only when the live list is empty
-// (unreachable / requireApiKey on / no models). `limit` caps the first page;
-// `total` is the full count for the "show all" affordance.
-export function resolveCatalogModels({ liveModels, fallbackModels, limit = 12 } = {}) {
+// Pick what the catalog shows. The admin panel's published list wins:
+// when GET /api/public/models answers, its list IS the catalog — even when
+// it is empty (the admin disabled everything), because falling through to
+// the live list would re-publish models the admin just removed. `adminModels`
+// must be an array for the admin source to apply; null/undefined means the
+// admin endpoint was not reached, so the older sources apply in order:
+// live /v1/models data, then the editable FALLBACK_MODELS list. `limit` caps
+// the first page; `total` is the full count for the "show all" affordance.
+export function resolveCatalogModels({ adminModels, liveModels, fallbackModels, limit = 12 } = {}) {
+  if (Array.isArray(adminModels)) {
+    return { models: adminModels.slice(0, limit), total: adminModels.length, source: "admin" };
+  }
   const live = Array.isArray(liveModels) ? liveModels : [];
   if (live.length > 0) {
     return { models: live.slice(0, limit), total: live.length, source: "live" };

@@ -134,6 +134,26 @@ describe("resolveCatalogModels", () => {
   const live = Array.from({ length: 20 }, (_, i) => ({ id: `m/${i}`, name: `m/${i}`, ownedBy: "" }));
   const fallback = [{ id: "h-router/cadangan", name: "Cadangan", tier: "FREE" }];
 
+  it("prefers the admin panel list over live and fallback data", () => {
+    const admin = Array.from({ length: 15 }, (_, i) => ({ id: `admin/${i}`, name: `admin/${i}`, ownedBy: "" }));
+    const r = resolveCatalogModels({ adminModels: admin, liveModels: live, fallbackModels: fallback, limit: 12 });
+    expect(r.source).toBe("admin");
+    expect(r.models).toHaveLength(12);
+    expect(r.total).toBe(15);
+    expect(r.models[0].id).toBe("admin/0");
+  });
+
+  it("honors an empty admin list instead of falling through to live or fallback", () => {
+    const r = resolveCatalogModels({ adminModels: [], liveModels: live, fallbackModels: fallback });
+    expect(r).toEqual({ models: [], total: 0, source: "admin" });
+  });
+
+  it("falls through to live data when the admin endpoint was not reached", () => {
+    const r = resolveCatalogModels({ adminModels: undefined, liveModels: live, fallbackModels: fallback, limit: 12 });
+    expect(r.source).toBe("live");
+    expect(r.total).toBe(20);
+  });
+
   it("prefers live data and caps the first page", () => {
     const r = resolveCatalogModels({ liveModels: live, fallbackModels: fallback, limit: 12 });
     expect(r.source).toBe("live");

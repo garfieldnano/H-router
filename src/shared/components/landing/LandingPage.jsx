@@ -106,13 +106,32 @@ export default function LandingPage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // One live fetch of the gateway's own model list; the catalog and the
-  // code sample share it. Falls back to FALLBACK_MODELS when the gateway
-  // list is unreachable without a key. Hard 10s timeout: a hung request
-  // must never leave the catalog on "Memuat model…" forever.
+  // The catalog follows the admin panel: first the public admin-published
+  // list (GET /api/public/models — curated models minus admin-disabled,
+  // plus admin custom models, no key needed). When that endpoint answers,
+  // its list is the catalog even when empty — the admin disabled everything
+  // on purpose, so falling through would re-publish removed models. Only
+  // when the admin endpoint is unreachable do we try the live /v1/models
+  // list (needs a key remotely), then FALLBACK_MODELS. Hard 10s timeout
+  // per fetch: a hung request must never leave the catalog on
+  // "Memuat model…" forever. The catalog and the code sample share the
+  // resolved list.
   useEffect(() => {
     let cancelled = false;
     (async () => {
+      try {
+        const res = await fetchWithTimeout("/api/public/models", { timeoutMs: 10000 });
+        if (res.ok) {
+          const admin = normalizeModelsResponse(await res.json());
+          if (!cancelled) {
+            setCatalog({ ...resolveCatalogModels({ adminModels: admin, fallbackModels: FALLBACK_MODELS }), loading: false });
+          }
+          return;
+        }
+        // Non-OK from the admin endpoint: fall through to /v1/models.
+      } catch {
+        // Admin endpoint unreachable: fall through to /v1/models.
+      }
       try {
         const res = await fetchWithTimeout("/v1/models", { timeoutMs: 10000 });
         if (!res.ok) throw new Error(`HTTP ${res.status}`);

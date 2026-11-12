@@ -71,7 +71,11 @@ export default function StatusPanel({ modelCount, modelsSource }) {
         </div>
         <Typography.Text type="secondary" className="mt-4 block text-xs">
           Status dibaca langsung dari <Typography.Text code>/api/health</Typography.Text>
-          {modelsSource === "live" ? (
+          {modelsSource === "admin" ? (
+            <>
+              ; jumlah model mengikuti pengaturan model di Konsol admin
+            </>
+          ) : modelsSource === "live" ? (
             <>
               ; jumlah model dari <Typography.Text code>/v1/models</Typography.Text> gateway ini
             </>

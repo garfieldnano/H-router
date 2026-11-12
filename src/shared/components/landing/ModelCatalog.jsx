@@ -7,10 +7,11 @@ import CopyButton from "./CopyButton.jsx";
 const PAGE_SIZE = 12;
 
 // Data-driven model catalog. `catalog` comes from the parent page:
-// { models, total, source, loading } — live /v1/models data first,
-// FALLBACK_MODELS only when the gateway list is unreachable, empty state
-// when neither source has anything. Tiers render only when the entry
-// actually carries one ("FREE"/"PRO"); live entries have none.
+// { models, total, source, loading } — the admin panel's published list
+// first (source "admin"), live /v1/models data next, FALLBACK_MODELS only
+// when the gateway list is unreachable, empty state when neither source
+// has anything. Tiers render only when the entry actually carries one
+// ("FREE"/"PRO"); live entries have none.
 export default function ModelCatalog({ catalog }) {
   const [expanded, setExpanded] = useState(false);
   const { models, total, source, loading } = catalog;
@@ -73,9 +74,11 @@ export default function ModelCatalog({ catalog }) {
             </div>
           ) : null}
           <Typography.Text type="secondary" className="mt-3 block text-xs">
-            {source === "live"
-              ? "Daftar ini dibaca langsung dari /v1/models gateway ini."
-              : "Daftar ini dari konfigurasi cadangan — gateway tidak mengembalikan daftar model tanpa kunci."}
+            {source === "admin"
+              ? "Daftar ini mengikuti pengaturan model di Konsol admin."
+              : source === "live"
+                ? "Daftar ini dibaca langsung dari /v1/models gateway ini."
+                : "Daftar ini dari konfigurasi cadangan — gateway tidak mengembalikan daftar model tanpa kunci."}
           </Typography.Text>
         </>
       )}
