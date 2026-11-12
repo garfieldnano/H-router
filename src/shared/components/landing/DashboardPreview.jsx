@@ -1,64 +1,54 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
-import { formatLatency, formatLatencyShort, formatTokenCount, requestLogLatency } from "@/shared/utils/landing.js";
+import { useEffect, useState } from "react";
+import {
+  fetchWithTimeout,
+  formatLatency,
+  formatLatencyShort,
+  formatRelativeTime,
+  formatTokenCount,
+  normalizeRecentRequests,
+} from "@/shared/utils/landing.js";
 
-const LOG_PATHS = ["/v1/chat/completions", "/v1/chat/completions", "/v1/messages"];
-const LOG_VISIBLE = 4;
+const FLOW_POLL_MS = 5000;
+const FLOW_TIMEOUT_MS = 5000;
 
 // Dashboard preview mockup under the hero, matching the reference landing
 // (h-router.web.id): a terminal-style window with the gateway's live
 // numbers — active model count from the catalog, median latency measured
-// by the parent's /api/health poll, request count in the last 24h from
-// /api/health — plus a "latensi per model" bar for the top catalog model
-// and a rotating "aliran permintaan" feed. The feed is a simulation built
-// from the real catalog model ids and the measured latency (labelled as
-// such below the mockup); it is not a live request log — there is no
-// public recent-requests endpoint, and the admin usage feed stays behind
-// auth. Anything unreachable renders as a dash, never an invented number.
+// by the parent's /api/health poll, request and token counts in the last
+// 24h from /api/health — plus a "latensi per model" bar for the top
+// catalog model and a real "aliran permintaan" feed. The feed reads
+// /api/public/recent-requests (the last 4 real gateway requests in the
+// last 24h, newest first) and polls every 5s, so it shows what actually
+// hit this gateway — never simulated rows. When there is no traffic in
+// the window it says so instead of inventing entries; a failed fetch
+// renders a dash. Anything unreachable renders as a dash, never an
+// invented number.
 export default function DashboardPreview({ modelCount, models, health, host }) {
   const list = Array.isArray(models) ? models : [];
   const latencyMs = health?.latencyMs ?? null;
-  const [rows, setRows] = useState([]);
-  const counter = useRef(0);
+  const [requests, setRequests] = useState(null);
 
-  const makeRow = (index) => {
-    const model = list.length > 0 ? list[index % list.length] : null;
-    if (!model) return null;
-    return {
-      key: index,
-      status: 200,
-      path: LOG_PATHS[index % LOG_PATHS.length],
-      latencyMs: requestLogLatency(latencyMs, index),
-      model: model.id,
+  // Real request flow: fetch the last real requests, then poll so new
+  // traffic appears without a reload. A failed fetch leaves the previous
+  // rows in place (null only before the first successful load).
+  useEffect(() => {
+    let cancelled = false;
+    const load = async () => {
+      try {
+        const res = await fetchWithTimeout("/api/public/recent-requests", { timeoutMs: FLOW_TIMEOUT_MS });
+        const rows = normalizeRecentRequests(await res.json());
+        if (!cancelled && rows !== null) setRequests(rows);
+      } catch {}
     };
-  };
-
-  // Seed the feed from the catalog (and reseed when the catalog or the
-  // measured latency changes, so the rows always use real model ids).
-  useEffect(() => {
-    const seed = [];
-    for (let i = 0; i < Math.min(LOG_VISIBLE, list.length); i++) {
-      const row = makeRow(i);
-      if (row) seed.push(row);
-    }
-    counter.current = seed.length;
-    setRows(seed);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [list, latencyMs]);
-
-  // Rotate a new row in every 2.5s so the feed looks alive.
-  useEffect(() => {
-    if (list.length === 0) return undefined;
-    const id = setInterval(() => {
-      const row = makeRow(counter.current);
-      counter.current += 1;
-      if (!row) return;
-      setRows((prev) => [row, ...prev].slice(0, LOG_VISIBLE));
-    }, 2500);
-    return () => clearInterval(id);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [list, latencyMs]);
+    load();
+    const id = setInterval(load, FLOW_POLL_MS);
+    return () => {
+      cancelled = true;
+      clearInterval(id);
+    };
+  }, []);
 
   const topModel = list[0] || null;
   const liveLabel =
@@ -164,42 +154,50 @@ export default function DashboardPreview({ modelCount, models, health, host }) {
               )}
             </div>
 
-            {/* request flow */}
+            {/* request flow — real recent requests, newest first */}
             <div className="mt-6">
               <p className="text-[11px] font-bold uppercase tracking-widest text-zinc-400 dark:text-zinc-500">
                 Aliran permintaan
               </p>
-              {rows.length > 0 ? (
+              {requests === null ? (
+                <p className="mt-3 font-mono text-xs text-zinc-400">—</p>
+              ) : requests.length === 0 ? (
+                <p className="mt-3 font-mono text-xs text-zinc-400">
+                  Belum ada request dalam 24 jam terakhir — kirim request pertama lewat /v1/chat/completions.
+                </p>
+              ) : (
                 <ul className="mt-3 space-y-2 font-mono text-xs">
-                  {rows.map((r) => (
-                    <li key={r.key} className="flex flex-wrap items-center gap-x-2 gap-y-0.5">
-                      <span className="rounded bg-emerald-100 px-1.5 py-0.5 font-bold text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-300">
+                  {requests.map((r) => (
+                    <li key={`${r.timestamp}-${r.model}`} className="flex flex-wrap items-center gap-x-2 gap-y-0.5">
+                      <span
+                        className={`rounded px-1.5 py-0.5 font-bold ${
+                          r.status === "ok"
+                            ? "bg-emerald-100 text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-300"
+                            : "bg-red-100 text-red-700 dark:bg-red-900/40 dark:text-red-300"
+                        }`}
+                      >
                         {r.status}
                       </span>
-                      <span className="text-zinc-700 dark:text-zinc-200">{r.path}</span>
+                      <span className="text-zinc-700 dark:text-zinc-200">{r.endpoint}</span>
                       <span className="text-zinc-400 dark:text-zinc-500">
-                        {typeof r.latencyMs === "number" ? `${r.latencyMs}ms` : "—"}
+                        {formatTokenCount(r.tokens)} token
                       </span>
                       <span className="text-zinc-400 dark:text-zinc-500">·</span>
                       <span className="min-w-0 truncate text-zinc-500 dark:text-zinc-400">{r.model}</span>
-                      <span className="font-bold text-emerald-600 dark:text-emerald-400">ok</span>
+                      <span className="shrink-0 text-zinc-400 dark:text-zinc-500">
+                        {formatRelativeTime(r.timestamp)}
+                      </span>
                     </li>
                   ))}
-                  <li className="flex items-center gap-2 text-zinc-500 dark:text-zinc-400">
-                    <span>POST /v1/chat/completions</span>
-                    <span className="inline-block h-3.5 w-[7px] animate-pulse bg-emerald-600 dark:bg-emerald-400" />
-                  </li>
                 </ul>
-              ) : (
-                <p className="mt-3 text-sm text-zinc-400">Belum ada model di katalog.</p>
               )}
             </div>
           </div>
         </div>
       </div>
       <p className="mt-3 text-center text-xs text-zinc-400 dark:text-zinc-500">
-        Pratinjau dasbor — jumlah model, latensi, dan request 24 jam dibaca langsung dari gateway ini; alur
-        permintaan adalah simulasi dari katalog di atas.
+        Pratinjau dasbor — jumlah model, latensi, request dan token 24 jam, serta aliran permintaan dibaca
+        langsung dari gateway ini (request beneran 24 jam terakhir, diperbarui tiap 5 detik).
       </p>
     </section>
   );

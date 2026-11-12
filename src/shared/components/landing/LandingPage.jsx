@@ -231,7 +231,7 @@ export default function LandingPage({ baseUrl = LANDING_CONFIG.baseUrl } = {}) {
               >
                 Gateway LLM gratis
                 <br />
-                <span className="text-[#5b7a68] dark:text-[#7fb08f]">tanpa ribet.</span>
+                <span className="text-[#05f170]">tanpa ribet.</span>
               </Typography.Title>
               <Typography.Paragraph type="secondary" className="!mt-5 !max-w-xl !text-lg">
                 Satu API key untuk {catalog.loading ? "semua model" : `${catalog.total} model`} — kompatibel

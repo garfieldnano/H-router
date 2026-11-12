@@ -21,6 +21,49 @@ export function resolvePublicBaseUrl({ host, proto, pinnedBaseUrl } = {}) {
   return `${scheme}://${h}/v1`;
 }
 
+// Validate the recent-requests payload: only well-shaped rows pass
+// (a timestamp string, a model id, an endpoint path, a status string,
+// a finite token count). Anything else is dropped, never rendered.
+export function normalizeRecentRequests(value) {
+  if (!value || !Array.isArray(value.requests)) return null;
+  return value.requests
+    .filter(
+      (r) =>
+        r &&
+        typeof r.timestamp === "string" &&
+        typeof r.model === "string" &&
+        r.model.length > 0 &&
+        typeof r.endpoint === "string" &&
+        r.endpoint.length > 0 &&
+        typeof r.status === "string" &&
+        Number.isFinite(r.tokens)
+    )
+    .map((r) => ({
+      timestamp: r.timestamp,
+      model: r.model,
+      endpoint: r.endpoint,
+      status: r.status,
+      tokens: r.tokens,
+    }));
+}
+
+// Relative time for a real request row ("baru saja", "2 mnt lalu",
+// "3 jam lalu"). `now` is injectable for tests. Returns "—" for an
+// unparseable timestamp, and a date (DD/MM) for anything older than a day.
+export function formatRelativeTime(iso, now = Date.now()) {
+  const t = Date.parse(iso);
+  if (!Number.isFinite(t)) return "—";
+  const diff = Math.max(0, now - t);
+  const seconds = Math.floor(diff / 1000);
+  if (seconds < 60) return "baru saja";
+  const minutes = Math.floor(seconds / 60);
+  if (minutes < 60) return `${minutes} mnt lalu`;
+  const hours = Math.floor(minutes / 60);
+  if (hours < 24) return `${hours} jam lalu`;
+  const d = new Date(t);
+  return `${String(d.getDate()).padStart(2, "0")}/${String(d.getMonth() + 1).padStart(2, "0")}`;
+}
+
 // Fetch with a hard timeout. A hung request must never leave the landing
 // page stuck on "Memuat…" forever: callers treat a timeout like any other
 // failure (fallback catalog / offline status). `fetchFn` is injectable for
@@ -119,16 +162,6 @@ export function formatTokenCount(n) {
   if (n >= 1_000_000) return `${Number((n / 1_000_000).toFixed(2))} jt`;
   if (n >= 1_000) return `${Number((n / 1_000).toFixed(1))} rb`;
   return `${Math.round(n)}`;
-}
-
-// Deterministic jitter around the measured base latency for the preview
-// request log: the same (base, index) always yields the same value, within
-// ±60 ms of the base and never below 1 ms. Non-finite input yields null
-// (the log renders a dash instead of inventing a number).
-export function requestLogLatency(baseMs, index) {
-  if (!Number.isFinite(baseMs) || baseMs < 0) return null;
-  const jitter = ((Math.floor(index) * 37) % 121) - 60;
-  return Math.max(1, Math.round(baseMs + jitter));
 }
 
 // Provider alias (the part before "/" in a model id) -> brand name in

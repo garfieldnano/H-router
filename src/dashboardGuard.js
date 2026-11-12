@@ -23,6 +23,7 @@ async function hasValidCliToken(request) {
 const PUBLIC_API_PATHS = [
   "/api/health",
   "/api/public/models",
+  "/api/public/recent-requests",
   "/api/init",
   "/api/locale",
   "/api/auth/login",

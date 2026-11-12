@@ -14,7 +14,8 @@ import {
   formatLatency,
   formatLatencyShort,
   formatTokenCount,
-  requestLogLatency,
+  normalizeRecentRequests,
+  formatRelativeTime,
   buildCodeSamples,
 } from "@/shared/utils/landing.js";
 import { LANDING_CONFIG, FALLBACK_MODELS, LANDING_BRANDS } from "@/shared/constants/landing.js";
@@ -365,23 +366,56 @@ describe("formatTokenCount", () => {
   });
 });
 
-// ---------------------------------------------------------------- requestLogLatency
-describe("requestLogLatency", () => {
-  it("is deterministic and stays within ±60 ms of the base, never below 1", () => {
-    for (let i = 0; i < 200; i++) {
-      const v = requestLogLatency(1067, i);
-      expect(v).toBe(requestLogLatency(1067, i));
-      expect(v).toBeGreaterThanOrEqual(1);
-      expect(v).toBeGreaterThanOrEqual(1067 - 60);
-      expect(v).toBeLessThanOrEqual(1067 + 60);
-    }
-    expect(requestLogLatency(30, 0)).toBe(1); // base 30 - 60 clamps at 1
+// ---------------------------------------------------------------- normalizeRecentRequests
+describe("normalizeRecentRequests", () => {
+  const row = {
+    timestamp: "2026-11-12T15:30:00.000Z",
+    model: "alicode-intl/qwen3.5-plus",
+    endpoint: "/v1/chat/completions",
+    status: "ok",
+    tokens: 1234,
+  };
+
+  it("passes well-shaped rows through unchanged", () => {
+    expect(normalizeRecentRequests({ requests: [row] })).toEqual([row]);
+    expect(normalizeRecentRequests({ requests: [] })).toEqual([]);
   });
 
-  it("returns null for non-finite input", () => {
-    expect(requestLogLatency(NaN, 0)).toBeNull();
-    expect(requestLogLatency(undefined, 0)).toBeNull();
-    expect(requestLogLatency(-5, 0)).toBeNull();
+  it("returns null when the payload is not a requests array", () => {
+    expect(normalizeRecentRequests(null)).toBeNull();
+    expect(normalizeRecentRequests({})).toBeNull();
+    expect(normalizeRecentRequests({ requests: "nope" })).toBeNull();
+  });
+
+  it("drops malformed rows and strips any extra fields", () => {
+    expect(
+      normalizeRecentRequests({
+        requests: [
+          row,
+          { ...row, model: "" },
+          { ...row, tokens: "1234" },
+          { ...row, timestamp: 123 },
+          { ...row, apiKey: "sk-secret", cost: 9.99 },
+        ],
+      })
+    ).toEqual([row, row]);
+  });
+});
+
+// ---------------------------------------------------------------- formatRelativeTime
+describe("formatRelativeTime", () => {
+  const now = Date.parse("2026-11-12T15:30:00.000Z");
+
+  it("says 'baru saja' under a minute, minutes then hours", () => {
+    expect(formatRelativeTime("2026-11-12T15:29:30.000Z", now)).toBe("baru saja");
+    expect(formatRelativeTime("2026-11-12T15:28:00.000Z", now)).toBe("2 mnt lalu");
+    expect(formatRelativeTime("2026-11-12T13:30:00.000Z", now)).toBe("2 jam lalu");
+  });
+
+  it("falls back to DD/MM past a day and a dash for bad input", () => {
+    expect(formatRelativeTime("2026-11-10T15:30:00.000Z", now)).toBe("10/11");
+    expect(formatRelativeTime("not-a-date", now)).toBe("—");
+    expect(formatRelativeTime(null, now)).toBe("—");
   });
 });
 
