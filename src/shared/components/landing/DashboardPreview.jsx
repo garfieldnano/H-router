@@ -182,9 +182,9 @@ export default function DashboardPreview({ modelCount, models, health, host }) {
               ) : (
                 <ul className="mt-3 space-y-2 font-mono text-xs">
                   {requests.map((r) => (
-                    <li key={`${r.timestamp}-${r.model}`} className="flex flex-wrap items-center gap-x-2 gap-y-0.5">
+                    <li key={`${r.timestamp}-${r.model}`} className="flex items-center gap-3">
                       <span
-                        className={`rounded px-1.5 py-0.5 font-bold ${
+                        className={`w-9 shrink-0 rounded px-1.5 py-0.5 text-center font-bold ${
                           r.status === "ok"
                             ? "bg-emerald-100 text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-300"
                             : "bg-red-100 text-red-700 dark:bg-red-900/40 dark:text-red-300"
@@ -192,19 +192,20 @@ export default function DashboardPreview({ modelCount, models, health, host }) {
                       >
                         {r.status}
                       </span>
-                      <span className="text-zinc-700 dark:text-zinc-200">{r.endpoint}</span>
-                      <span className="text-zinc-400 dark:text-zinc-500">
+                      <span className="shrink-0 text-zinc-700 dark:text-zinc-200">{r.endpoint}</span>
+                      <span className="w-28 shrink-0 text-right tabular-nums text-zinc-400 dark:text-zinc-500">
                         {formatTokenCount(r.tokens)} token
                       </span>
-                      <span className="text-zinc-400 dark:text-zinc-500">·</span>
-                      {(() => {
-                        const brand = resolveModelBrand({ id: r.model, ownedBy: "", brands: LANDING_BRANDS });
-                        return brand?.logo ? (
-                          <img src={brand.logo} alt={brand.name} width={16} height={16} loading="lazy" className="h-4 w-4 shrink-0" />
-                        ) : null;
-                      })()}
-                      <span className="min-w-0 truncate text-zinc-500 dark:text-zinc-400">{r.model}</span>
-                      <span className="shrink-0 text-zinc-400 dark:text-zinc-500">
+                      <span className="flex min-w-0 flex-1 items-center gap-2.5">
+                        {(() => {
+                          const brand = resolveModelBrand({ id: r.model, ownedBy: "", brands: LANDING_BRANDS });
+                          return brand?.logo ? (
+                            <img src={brand.logo} alt={brand.name} width={16} height={16} loading="lazy" className="h-4 w-4 shrink-0" />
+                          ) : null;
+                        })()}
+                        <span className="min-w-0 truncate text-zinc-500 dark:text-zinc-400">{r.model}</span>
+                      </span>
+                      <span className="w-20 shrink-0 text-right text-zinc-400 dark:text-zinc-500">
                         {formatRelativeTime(r.timestamp)}
                       </span>
                     </li>
