@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { getDisabledModels } from "@/lib/disabledModelsDb";
-import { getSettings } from "@/lib/localDb";
+import { getSettings, getProviderConnections } from "@/lib/localDb";
 import { AI_MODELS } from "@/shared/constants/config";
 import { AI_PROVIDERS, getProviderAlias, ALIAS_TO_ID } from "@/shared/constants/providers";
 import { resolvePublishedModels } from "@/shared/utils/landing.js";
@@ -48,16 +48,38 @@ export async function GET() {
     // Custom models ride along, with the same dedup as GET /api/models: a
     // custom row that routes to an already-listed model is a pure shadow
     // and is dropped so it cannot replace the real entry's name.
+    //
+    // Display alias: a user-created provider (e.g. an OpenAI-compatible
+    // one) is stored under its raw id (openai-compatible-chat-…), but the
+    // gateway routes it by the friendly prefix the admin gave it (e.g.
+    // "coarena") — the same prefix /v1/models uses. Resolve it here so the
+    // public catalog, the Settings picker and /v1/models all show the same
+    // id (coarena/claude-fable-5), not the raw provider id.
+    let prefixByProvider = new Map();
+    try {
+      const connections = await getProviderConnections();
+      for (const conn of Array.isArray(connections) ? connections : []) {
+        const prefix = conn?.providerSpecificData?.prefix;
+        if (conn?.provider && typeof prefix === "string" && prefix.trim()) {
+          prefixByProvider.set(conn.provider, prefix.trim());
+        }
+      }
+    } catch {
+      prefixByProvider = new Map();
+    }
+    const displayAlias = (providerId) =>
+      prefixByProvider.get(providerId) || getProviderAlias(providerId) || providerId;
     const seenRouted = new Set(models.map((m) => m.id));
     const customModels = (await getCustomModels()).filter((m) => {
       if (!m?.id || (m.kind || m.type || "llm") !== "llm") return false;
-      return !seenRouted.has(`${m.providerAlias}/${m.id}`);
+      return !seenRouted.has(`${displayAlias(m.providerAlias)}/${m.id}`);
     });
     for (const m of customModels) {
+      const alias = displayAlias(m.providerAlias);
       models.push({
-        id: `${m.providerAlias}/${m.id}`,
+        id: `${alias}/${m.id}`,
         name: m.name || m.id,
-        owned_by: displayName(m.providerAlias),
+        owned_by: displayName(alias),
       });
     }
 

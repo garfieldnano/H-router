@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { getModelAliases, setModelAlias, getCustomModels } from "@/models";
-import { getSettings } from "@/lib/localDb";
+import { getSettings, getProviderConnections } from "@/lib/localDb";
 import { applyVisionOverrideToCaps } from "@/shared/utils/visionAdapter.js";
 import { getDisabledModels } from "@/lib/disabledModelsDb";
 import { AI_MODELS } from "@/shared/constants/config";
@@ -48,11 +48,33 @@ export async function GET() {
     // resolve the survivors' provider id, not the UI alias: the capability
     // tables are keyed by provider id, and an alias like `ocg` misses the
     // provider-scoped entries and falls back to the generic patterns.
+    //
+    // Display alias: a user-created provider is stored under its raw id
+    // (openai-compatible-chat-…), but the gateway routes it by the friendly
+    // prefix the admin gave it (e.g. "coarena") — the same prefix /v1/models
+    // uses. The picker's value (routedModel) uses the friendly alias so the
+    // landing catalog, the public catalog and /v1/models all agree
+    // (coarena/claude-fable-5); fullModel keeps the raw id so alias lookups
+    // and capability tables (keyed by provider id) keep working.
+    let prefixByProvider = new Map();
+    try {
+      const connections = await getProviderConnections();
+      for (const conn of Array.isArray(connections) ? connections : []) {
+        const prefix = conn?.providerSpecificData?.prefix;
+        if (conn?.provider && typeof prefix === "string" && prefix.trim()) {
+          prefixByProvider.set(conn.provider, prefix.trim());
+        }
+      }
+    } catch {
+      prefixByProvider = new Map();
+    }
+    const displayAlias = (providerId) =>
+      prefixByProvider.get(providerId) || getProviderAlias(providerId) || providerId;
     const seenFull = new Set(models.map((m) => m.fullModel));
     const seenRouted = new Set(models.map((m) => m.routedModel));
     const customModels = (await getCustomModels()).filter((m) => {
       if (!m?.id || (m.kind || m.type || "llm") !== "llm") return false;
-      if (seenRouted.has(`${m.providerAlias}/${m.id}`)) return false;
+      if (seenRouted.has(`${displayAlias(m.providerAlias)}/${m.id}`)) return false;
       return !seenFull.has(`${m.providerAlias}/${m.id}`);
     });
     for (const m of customModels) {
@@ -64,7 +86,7 @@ export async function GET() {
         model: m.id,
         name: m.name || m.id,
         fullModel,
-        routedModel: fullModel,
+        routedModel: `${displayAlias(m.providerAlias)}/${m.id}`,
         alias: modelAliases[fullModel] || m.id,
         caps: {
           vision: c.vision,
