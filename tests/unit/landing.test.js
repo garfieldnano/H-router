@@ -291,7 +291,7 @@ describe("resolveModelBrand", () => {
   it("resolves a model to its brand with the vendored logo", () => {
     expect(resolveModelBrand({ id: "alicode-intl/qwen3.5-plus", ownedBy: "Alibaba Coding", brands })).toEqual({
       name: "Qwen",
-      logo: "/brands/qwen.svg",
+      logo: "/providers/qwen.png",
     });
     expect(resolveModelBrand({ id: "groq/meta-llama/llama-4-maverick-17b-128e-instruct", ownedBy: "Meta", brands }).name).toBe("Meta");
   });
@@ -299,19 +299,21 @@ describe("resolveModelBrand", () => {
   it("resolves the real brand from the model family when the provider is an aggregator (coarena)", () => {
     // coarena is a proxy: the provider alias and owner both say "coarena",
     // so the brand must come from the model name — never a "coarena" badge.
+    // Logos are the same /providers/*.png files the admin Providers menu
+    // uses, so the landing and the admin show identical brand marks.
     expect(resolveModelBrand({ id: "coarena/claude-opus-5-5", ownedBy: "coarena", brands })).toEqual({
       name: "Anthropic",
-      logo: "/brands/anthropic.svg",
+      logo: "/providers/anthropic.png",
     });
     expect(resolveModelBrand({ id: "coarena/claude-sonnet-5-5", ownedBy: "coarena", brands }).name).toBe("Anthropic");
     expect(resolveModelBrand({ id: "coarena/claude-haiku-5-5", ownedBy: "coarena", brands }).name).toBe("Anthropic");
     expect(resolveModelBrand({ id: "coarena/deepseek-v4-1-flash-1017", ownedBy: "coarena", brands })).toEqual({
       name: "DeepSeek",
-      logo: "/brands/deepseek.svg",
+      logo: "/providers/deepseek.png",
     });
     expect(resolveModelBrand({ id: "coarena/gemini-3-8-flash", ownedBy: "coarena", brands })).toEqual({
       name: "Google Gemini",
-      logo: "/brands/googlegemini.svg",
+      logo: "/providers/gemini.png",
     });
   });
 

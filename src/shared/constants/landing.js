@@ -46,21 +46,23 @@ export const FALLBACK_MODELS = [
 // LLM brands served by this gateway, for the logo strip under the hero.
 // Static on purpose: the strip renders even when /v1/models is unreachable.
 // Derived 2026-11-11 from this gateway's own live /v1/models (model
-// families present in the list). Logos are vendored in public/brands/
-// (simple-icons, CC0) — `logo: null` means no usable logo exists for the
-// brand (Kimi, GLM, xAI have no simple-icons entry) and renders a styled
-// text badge instead. Never hotlink a logo CDN at runtime.
+// families present in the list). Logos are the SAME files the admin
+// Providers menu uses (public/providers/<id>.png) so the landing and the
+// admin show identical brand marks — `logo: null` means no usable logo
+// exists for the brand and renders a styled text badge instead. Meta has
+// no providers/*.png, so it keeps its simple-icons SVG. Never hotlink a
+// logo CDN at runtime.
 export const LANDING_BRANDS = [
-  { name: "OpenAI", logo: "/brands/openai.svg" },
-  { name: "Anthropic", logo: "/brands/anthropic.svg" },
-  { name: "Google Gemini", logo: "/brands/googlegemini.svg" },
-  { name: "DeepSeek", logo: "/brands/deepseek.svg" },
+  { name: "OpenAI", logo: "/providers/openai.png" },
+  { name: "Anthropic", logo: "/providers/anthropic.png" },
+  { name: "Google Gemini", logo: "/providers/gemini.png" },
+  { name: "DeepSeek", logo: "/providers/deepseek.png" },
   { name: "Meta", logo: "/brands/meta.svg" },
-  { name: "Qwen", logo: "/brands/qwen.svg" },
-  { name: "Mistral", logo: "/brands/mistralai.svg" },
-  { name: "NVIDIA", logo: "/brands/nvidia.svg" },
-  { name: "MiniMax", logo: "/brands/minimax.svg" },
-  { name: "Kimi", logo: "/brands/moonshot.svg" },
-  { name: "GLM", logo: "/brands/zai.svg" },
-  { name: "xAI", logo: "/brands/xai.svg" },
+  { name: "Qwen", logo: "/providers/qwen.png" },
+  { name: "Mistral", logo: "/providers/mistral.png" },
+  { name: "NVIDIA", logo: "/providers/nvidia.png" },
+  { name: "MiniMax", logo: "/providers/minimax.png" },
+  { name: "Kimi", logo: "/providers/kimi.png" },
+  { name: "GLM", logo: "/providers/glm.png" },
+  { name: "xAI", logo: "/providers/xai.png" },
 ];
