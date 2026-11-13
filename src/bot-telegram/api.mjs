@@ -54,6 +54,13 @@ export class BotApiClient {
   getMemberUsage(memberId, period = "today") { return this.get(`/api/bot/member/${memberId}/usage?period=${encodeURIComponent(period)}`); }
   getMemberDaily(memberId) { return this.get(`/api/bot/member/${memberId}/daily`); }
   getMemberKeys(memberId) { return this.get(`/api/bot/member/${memberId}/keys`); }
+  // Transaction history (PRD §5.1 "TRANSACTION HISTORY"): the member's
+  // own orders, newest first. The bot orders route supports memberId.
+  listMemberOrders(memberId, limit = 10) { return this.get(`/api/bot/orders?memberId=${encodeURIComponent(memberId)}&limit=${limit}`); }
+  // Model catalog (PRD §5.1 "AVAILABLE MODELS"): the public catalog —
+  // same list the landing page shows (admin-published models only).
+  // Public endpoint, no bot secret needed; the extra header is ignored.
+  listPublicModels() { return this.get("/api/public/models"); }
 
   // -- shop -------------------------------------------------------------
   listPackages() { return this.get("/api/bot/packages"); }
