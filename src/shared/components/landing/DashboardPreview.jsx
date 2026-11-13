@@ -83,7 +83,7 @@ export default function DashboardPreview({ modelCount, models, health, host }) {
             <span className="size-3 rounded-full bg-[#febc2e]" />
             <span className="size-3 rounded-full bg-[#28c840]" />
           </span>
-          <span className="font-mono text-sm text-zinc-600 dark:text-zinc-300">{host}</span>
+          <span className="min-w-0 flex-1 truncate font-mono text-sm text-zinc-600 dark:text-zinc-300">{host}</span>
           <span className={`ml-auto rounded-full px-2.5 py-0.5 text-xs font-bold ${liveClass}`}>
             {liveLabel}
           </span>
@@ -207,7 +207,7 @@ export default function DashboardPreview({ modelCount, models, health, host }) {
               ) : (
                 <ul className="mt-3 space-y-2 font-mono text-xs">
                   {requests.map((r) => (
-                    <li key={`${r.timestamp}-${r.model}`} className="flex items-center gap-3">
+                    <li key={`${r.timestamp}-${r.model}`} className="flex items-center gap-2 sm:gap-3">
                       <span
                         className={`w-9 shrink-0 rounded px-1.5 py-0.5 text-center font-bold ${
                           r.status === "ok"
@@ -217,24 +217,25 @@ export default function DashboardPreview({ modelCount, models, health, host }) {
                       >
                         {r.status}
                       </span>
-                      <span className="shrink-0 text-zinc-700 dark:text-zinc-200">{r.endpoint}</span>
-                      <span className="w-28 shrink-0 text-right tabular-nums text-zinc-500 dark:text-zinc-500">
+                      <span className="hidden shrink-0 text-zinc-700 sm:inline dark:text-zinc-200">{r.endpoint}</span>
+                      <span className="w-24 shrink-0 text-right tabular-nums text-zinc-500 sm:w-28 dark:text-zinc-500">
                         {formatTokenCount(r.tokens)} token
                       </span>
-                      <span className="flex min-w-0 shrink-0 items-center gap-2.5">
+                      <span className="flex min-w-0 flex-1 items-center gap-2 sm:flex-none sm:gap-2.5">
                         {(() => {
                           const brand = resolveModelBrand({ id: r.model, ownedBy: "", brands: LANDING_BRANDS });
                           return brand?.logo ? (
                             <img src={brand.logo} alt={brand.name} width={16} height={16} loading="lazy" className="h-4 w-4 shrink-0" />
                           ) : null;
                         })()}
-                        <span className="max-w-60 truncate text-zinc-500 dark:text-zinc-400">{r.model}</span>
+                        <span className="min-w-0 truncate text-zinc-500 sm:max-w-60 dark:text-zinc-400">{r.model}</span>
                       </span>
                       {/* The gap between the model name and the timestamp
                           was empty — fill it with the same calm traveling
                           signal the catalog rows use (thin line, one soft
-                          green glow gliding left to right). */}
-                      <span className="relative h-[2px] min-w-0 flex-1 overflow-hidden rounded-full bg-zinc-200 dark:bg-zinc-800" aria-hidden="true">
+                          green glow gliding left to right). Hidden on
+                          mobile, where the row is already full. */}
+                      <span className="relative hidden h-[2px] min-w-0 flex-1 overflow-hidden rounded-full bg-zinc-200 sm:block dark:bg-zinc-800" aria-hidden="true">
                         <span className="animate-signal-travel absolute top-0 h-full w-24 rounded-full bg-gradient-to-r from-transparent via-[#05a843] to-transparent dark:via-[#05f170]" />
                       </span>
                       <span className="w-20 shrink-0 text-right text-zinc-500 dark:text-zinc-500">
